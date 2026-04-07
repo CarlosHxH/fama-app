@@ -1,0 +1,21 @@
+# dependencies & build
+node_modules
+.next
+out
+
+# env & local
+.env
+.env*.local
+
+# vcs & editor
+.git
+.gitignore
+.cursor
+*.md
+
+# generated inside image (from prisma generate in deps stage)
+generated
+
+# misc
+npm-debug.log*
+.DS_Store

@@ -1,5 +1,8 @@
 import { Inter, Playfair_Display } from "next/font/google";
 
+import "./cobranca-shared.css";
+import "./cobranca-jazigo.css";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-cobranca-inter",
@@ -12,8 +15,14 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+export const metadata = {
+  title: "Regularização de Jazigo – Jardim das Palmeiras",
+  description:
+    "Portal de regularização e pagamento de anuidades de jazigos do Cemitério Jardim das Palmeiras.",
+};
+
 /**
- * Tipografia e fundo da área /cobranca (alinhado ao protótipo PaginaCobranca).
+ * Estilos alinhados a PaginaCobranca/cobranca-jazigo.html (tokens + cobranca-jazigo.css).
  */
 export default function CobrancaLayout({
   children,
@@ -21,10 +30,7 @@ export default function CobrancaLayout({
   return (
     <div
       lang="pt-BR"
-      className={`${inter.variable} ${playfair.variable} min-h-screen bg-[#f5f2ed] font-sans text-[#1c1c1c] antialiased`}
-      style={{
-        fontFamily: "var(--font-cobranca-inter), system-ui, sans-serif",
-      }}
+      className={`cobranca-root ${inter.variable} ${playfair.variable} antialiased`}
     >
       {children}
     </div>

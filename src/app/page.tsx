@@ -43,8 +43,8 @@ export default async function Home() {
             {APP_NAME}
           </h1>
           <p className="mt-3 text-[0.95rem] leading-relaxed text-[#4a4a4a]">
-            Aceda ao portal para consultar débitos e efetuar pagamentos via PIX
-            de forma segura.
+            Aceda ao portal para consultar débitos e efetuar pagamentos (PIX,
+            boleto ou cartão via Asaas) de forma segura.
           </p>
 
           <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">

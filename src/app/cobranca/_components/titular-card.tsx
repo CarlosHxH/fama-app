@@ -10,72 +10,207 @@ type SessionUser = {
 
 type TitularCardProps = {
   user: SessionUser | undefined;
+  onOpenEditTitular?: () => void;
+  onOpenResp?: () => void;
 };
 
 /**
- * Cartão do titular com mini-resumo e corpo expansível (sem edição — sem API).
+ * Cartão do titular — estrutura e classes de cobranca-jazigo.html.
  */
-export function TitularCard({ user }: TitularCardProps) {
+export function TitularCard({
+  user,
+  onOpenEditTitular,
+  onOpenResp,
+}: TitularCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const nome = user?.name ?? "—";
-  const doc = user?.cpfCnpj ?? (user?.email ? `Email: ${user.email}` : "—");
+  const doc = user?.cpfCnpj ?? "—";
 
   return (
-    <div className="mb-6 overflow-hidden rounded-xl border border-[#ddd9d0] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#2d5a3d] px-4 py-3 text-white">
-        <div className="flex items-center gap-2 text-[0.85rem] font-bold">
-          <span aria-hidden>👤</span>
-          <span className="hidden sm:inline">
+    <div className="card" id="titular-card" style={{ marginBottom: "1.5rem" }}>
+      <div className="card-header" style={{ justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <span className="icon">👤</span>
+          <span className="hide-on-mobile">
             Dados do Titular (Cessionário) / Pagador
           </span>
-          <span className="sm:hidden">Dados titular</span>
+          <span className="show-on-mobile">Dados Titular</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          aria-expanded={expanded}
-          className="rounded-md border border-white/30 bg-white/15 px-2 py-1 text-[0.65rem] font-bold hover:bg-white/25"
+        <div
+          style={{ display: "flex", gap: "0.5rem" }}
+          id="titular-controls-top"
         >
-          {expanded ? "▲ Recolher" : "🔍 Ver detalhes"}
-        </button>
+          <button
+            type="button"
+            className="collapsible-btn"
+            id="titular-expand-btn"
+            aria-expanded={expanded}
+            aria-controls="titular-card-body"
+            style={{
+              background: "rgba(255,255,255,0.2)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              fontWeight: "bold",
+              padding: "0.3rem 0.6rem",
+              fontSize: "0.7rem",
+            }}
+            onClick={() => setExpanded((e) => !e)}
+          >
+            {expanded ? "⬆️ Recolher" : "🔍 Ver Detalhes"}
+          </button>
+          <button
+            type="button"
+            className="collapsible-btn"
+            style={{
+              background: "rgba(255,255,255,0.2)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              fontWeight: "bold",
+              padding: "0.3rem 0.6rem",
+              fontSize: "0.7rem",
+            }}
+            onClick={() => onOpenEditTitular?.()}
+          >
+            ✏️ Editar
+          </button>
+        </div>
       </div>
-      <div className="border-b border-[#ddd9d0] bg-[#f5f2ed] px-4 py-4 sm:px-6">
-        <p className="text-[0.65rem] font-bold tracking-wide text-[#7a7a7a] uppercase">
-          Titular (Cessionário)
-        </p>
-        <p className="mt-0.5 text-[1rem] font-extrabold text-[#1a3a2a]">
-          {nome}
-        </p>
-        <p className="text-[0.8rem] font-semibold text-[#4a4a4a]">{doc}</p>
+
+      <div
+        id="titular-mini-info"
+        style={{
+          padding: "1rem 1.5rem",
+          background: "var(--cream)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
+        >
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}
+          >
+            <div
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: "var(--text-light)",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Titular (Cessionário)
+            </div>
+            <div
+              id="mini-nome"
+              style={{
+                fontWeight: 800,
+                color: "var(--green-dark)",
+                fontSize: "1rem",
+              }}
+            >
+              {nome}
+            </div>
+            <div
+              id="mini-doc"
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--text-mid)",
+                fontWeight: 600,
+              }}
+            >
+              {doc}
+            </div>
+          </div>
+          <div id="mini-resp-section" style={{ display: "none" }} />
+          <div id="mini-add-resp-container" style={{ display: "none" }} />
+        </div>
       </div>
-      {expanded ? (
-        <div className="border-t border-[#ddd9d0] px-4 py-4 sm:px-6">
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <dt className="text-[0.65rem] font-bold text-[#7a7a7a] uppercase">
-                Nome completo
-              </dt>
-              <dd className="mt-0.5 font-semibold text-[#1a3a2a]">{nome}</dd>
+
+      <div
+        className="card-body"
+        id="titular-card-body"
+        style={{
+          display: expanded ? "block" : "none",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div className="info-grid">
+          <div className="info-field full">
+            <label>Nome Completo</label>
+            <div className="value" id="titular-nome">
+              {nome}
             </div>
-            <div>
-              <dt className="text-[0.65rem] font-bold text-[#7a7a7a] uppercase">
-                CPF / CNPJ
-              </dt>
-              <dd className="mt-0.5 font-semibold">{user?.cpfCnpj ?? "—"}</dd>
+          </div>
+          <div className="info-field">
+            <label>CPF / CNPJ</label>
+            <div className="value" id="titular-doc">
+              {doc}
             </div>
-            <div>
-              <dt className="text-[0.65rem] font-bold text-[#7a7a7a] uppercase">
-                Email
-              </dt>
-              <dd className="mt-0.5 font-semibold">{user?.email ?? "—"}</dd>
+          </div>
+          <div className="info-field">
+            <label>Data de Nascimento</label>
+            <div className="value" id="titular-nasc">
+              —
             </div>
-          </dl>
-          <p className="mt-4 text-center text-[0.68rem] text-[#7a7a7a]">
-            Alteração de dados pelo portal não está disponível nesta versão.
+          </div>
+          <div className="info-field full">
+            <label>Telefone(s)</label>
+            <div className="value" id="titular-fones" style={{ lineHeight: 1.5 }}>
+              —
+            </div>
+          </div>
+          <div className="info-field full">
+            <label>Endereço de Cobrança</label>
+            <div className="value" id="titular-end">
+              —
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="full-add-resp-container"
+          style={{
+            marginTop: "1.25rem",
+            paddingTop: "1.25rem",
+            borderTop: "1px dashed var(--border)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <button
+            type="button"
+            className="btn-primary"
+            id="btn-add-resp-full"
+            style={{
+              background: "transparent",
+              color: "var(--green-mid)",
+              border: "1.5px solid var(--green-mid)",
+              fontWeight: 700,
+              maxWidth: "280px",
+              padding: "0.6rem 1.2rem",
+              fontSize: "0.85rem",
+              boxShadow: "none",
+            }}
+            onClick={() => onOpenResp?.()}
+          >
+            ➕ ADICIONAR RESPONSÁVEL FINANCEIRO
+          </button>
+          <p
+            style={{
+              fontSize: "0.68rem",
+              color: "var(--text-light)",
+              marginTop: "0.5rem",
+              letterSpacing: "0.01em",
+            }}
+          >
+            Deseja que outra pessoa realize o pagamento?
           </p>
         </div>
-      ) : null}
+
+        <div className="info-field full" id="resp-info-display" style={{ display: "none" }} />
+        <div id="resp-history-container" style={{ display: "none" }} />
+      </div>
     </div>
   );
 }

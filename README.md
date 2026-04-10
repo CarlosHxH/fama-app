@@ -1,6 +1,8 @@
 # fama-app
 
-Aplicação web (portal de cobrança) em **Next.js**, com área autenticada, integração **Asaas** (PIX) e API **tRPC**. O login é feito **apenas com CPF ou CNPJ** (11 ou 14 dígitos), **sem palavra-passe** — o fluxo usa NextAuth com credenciais normalizadas no servidor.
+Aplicação web (portal de cobrança) em **Next.js**, com área autenticada, integração **Asaas** (PIX, boleto, cartão via link) e API **tRPC**. O login do titular é feito **com CPF ou CNPJ** (11 ou 14 dígitos), **sem palavra-passe** — NextAuth com credenciais normalizadas no servidor. O **painel admin** usa e-mail + palavra-passe (`/admin/login`) com perfis `AdminStaffRole` (ex.: FINANCEIRO para emitir cobranças, OPERACIONAL para contactos, VIEWER só leitura).
+
+**Sincronização legado:** job `npm run job:sync-sqlserver` copia tabelas do SQL Server para a tabela Postgres **`registros_sync_mssql`** (modelo Prisma `MssqlSyncRecord`, payload JSON). Em produção pode agendar-se `GET /api/cron/sync-sqlserver` com `Authorization: Bearer CRON_SECRET` (ver `vercel.json`). Outros nomes físicos em PT: `usuarios`, `cobrancas_asaas`, `execucoes_sincronizacao`, etc. (ver `prisma/schema.prisma` com `@@map`).
 
 Baseada no [T3 Stack](https://create.t3.gg/) (`create-t3-app`).
 
@@ -70,6 +72,7 @@ npm run dev:fresh
 ## Documentação adicional
 
 - [Documentação T3](https://create.t3.gg/)
+- [Remapeamento SQL Server → Postgres](docs/remapeamento-sqlserver-postgres.md)
 - Novas variáveis de ambiente: alinhar com `src/env.js` (schema `@t3-oss/env-nextjs`)
 
 ## Deploy

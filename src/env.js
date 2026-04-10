@@ -11,7 +11,7 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    ASAAS_API_KEY: z.string().min(1).optional(),
+    ASAAS_API_KEY: z.string().min(1).default("$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OmJhMTA5ZTE2LTg0MDgtNDc1My1hM2ZmLWVhMWZmODFhMzkxZjo6JGFhY2hfMDEwNjZiNTQtNzdkZi00NTU0LTkwYmMtMTQ1ZDAyMzRmYjcy"),
     ASAAS_API_URL: z.string().url().default("https://sandbox.asaas.com/api/v3"),
     ASAAS_WEBHOOK_TOKEN: z.string().optional(),
   },

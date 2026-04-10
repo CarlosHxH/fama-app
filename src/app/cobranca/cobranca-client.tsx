@@ -1,7 +1,7 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { api } from "~/trpc/react";
 import { isBillingPaid, isBillingPendingPayment } from "~/lib/billing-status";
@@ -12,9 +12,15 @@ import {
   CobrancaLegalBox,
   CobrancaNoticeBox,
 } from "./_components/cobranca-notices";
-import { CheckoutPanel, type PayMethod } from "./_components/checkout-panel";
+import {
+  CheckoutPanel,
+  type PayMethod,
+  billingTypeToPayMethod,
+} from "./_components/checkout-panel";
+import { CobrancaStaticModals } from "./_components/cobranca-static-modals";
 import { HeroStepper } from "./_components/hero-stepper";
-import { JazigosPlaceholder } from "./_components/jazigos-placeholder";
+import { JazigosAccordion } from "./_components/jazigos-accordion";
+import { LegacySnapshotCard } from "./_components/legacy-snapshot-card";
 import { ParcelasList } from "./_components/parcelas-list";
 import { PixModal } from "./_components/pix-modal";
 import { TitularCard } from "./_components/titular-card";
@@ -29,7 +35,7 @@ function centsToBrl(cents: number) {
 }
 
 /**
- * Área de cobrança: layout estilo PaginaCobranca (duas colunas, stepper 4 passos, PIX via Asaas).
+ * Área de cobrança — layout e classes alinhados a PaginaCobranca/cobranca-jazigo.html.
  */
 export function CobrancaClient() {
   const { data: session } = useSession();
@@ -40,7 +46,12 @@ export function CobrancaClient() {
   const [valueReais, setValueReais] = useState("10,00");
   const [description, setDescription] = useState("");
   const [cpfCnpj, setCpfCnpj] = useState("");
+  const [emailBilling, setEmailBilling] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
+  const [openTitular, setOpenTitular] = useState(false);
+  const [openResp, setOpenResp] = useState(false);
+  const [openCard, setOpenCard] = useState(false);
+  const [openBoleto, setOpenBoleto] = useState(false);
 
   const utils = api.useUtils();
   const listQuery = api.billing.listMine.useQuery(undefined, {
@@ -56,11 +67,28 @@ export function CobrancaClient() {
     [listQuery.data, selectedId],
   );
 
-  const createPix = api.billing.createPix.useMutation({
+  useEffect(() => {
+    const s = session?.user?.email;
+    if (s) setEmailBilling(s);
+  }, [session?.user?.email]);
+
+  useEffect(() => {
+    if (selected?.asaasBillingType) {
+      setPayMethod(billingTypeToPayMethod(selected.asaasBillingType));
+    }
+  }, [selected?.id, selected?.asaasBillingType]);
+
+  const createCharge = api.billing.createCharge.useMutation({
     onSuccess: async (row) => {
       await utils.billing.listMine.invalidate();
       setSelectedId(row.id);
-      setPixModalOpen(true);
+      if (row.asaasBillingType === "PIX") {
+        setPixModalOpen(true);
+      } else if (row.asaasBillingType === "BOLETO") {
+        setOpenBoleto(true);
+      } else {
+        setOpenCard(true);
+      }
     },
   });
 
@@ -85,17 +113,34 @@ export function CobrancaClient() {
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
     const cents = parseValueToCents(valueReais);
-    createPix.mutate({
+    const billingType =
+      payMethod === "pix"
+        ? "PIX"
+        : payMethod === "boleto"
+          ? "BOLETO"
+          : "CREDIT_CARD";
+    createCharge.mutate({
       valueCents: cents,
       description: description || undefined,
       dueDate,
       cpfCnpj: cpfCnpj.replace(/\D/g, "") || undefined,
+      email: emailBilling.trim() || undefined,
+      billingType,
     });
   }
 
   function onConfirmPayment() {
     if (!selected || !isBillingPendingPayment(selected.status)) return;
-    setPixModalOpen(true);
+    const method = billingTypeToPayMethod(selected.asaasBillingType);
+    if (method === "pix") {
+      setPixModalOpen(true);
+      return;
+    }
+    if (method === "card") {
+      setOpenCard(true);
+      return;
+    }
+    setOpenBoleto(true);
   }
 
   const payerName =
@@ -104,20 +149,35 @@ export function CobrancaClient() {
     session?.user?.email ??
     "Titular";
 
+  const cardModalTotal = selected
+    ? centsToBrl(selected.valueCents)
+    : "R$ 0,00";
+
+  const listLoading = listQuery.isLoading;
+  const listError = listQuery.isError
+    ? (listQuery.error?.message ?? "Erro desconhecido.")
+    : null;
+
   return (
     <>
       <CobrancaHeader
         isAdmin={session?.user?.role === "ADMIN"}
         onSignOut={() => signOut({ callbackUrl: "/login" })}
       />
-      <HeroStepper currentStep={currentStep} />
+      <main id="main-cobranca" tabIndex={-1} aria-labelledby="cobranca-page-title">
+        <HeroStepper currentStep={currentStep} />
 
-      <div className="page-wrapper mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_min(380px,100%)] lg:items-start">
-          <div className="min-w-0">
-            <TitularCard user={session?.user} />
+        <div className="page-wrapper">
+          <div className="left-col">
+            <TitularCard
+              user={session?.user}
+              onOpenEditTitular={() => setOpenTitular(true)}
+              onOpenResp={() => setOpenResp(true)}
+            />
             <ParcelasList
               payments={listQuery.data}
+              listLoading={listLoading}
+              listError={listError}
               hidePaid={hidePaid}
               onToggleHidePaid={() => setHidePaid((v) => !v)}
               selectedId={selectedId}
@@ -129,13 +189,17 @@ export function CobrancaClient() {
               onDescriptionChange={setDescription}
               cpfCnpj={cpfCnpj}
               onCpfCnpjChange={setCpfCnpj}
+              emailBilling={emailBilling}
+              onEmailBillingChange={setEmailBilling}
+              emailRequired={!session?.user?.email}
               onCreateSubmit={onCreate}
-              createPending={createPix.isPending}
-              createError={createPix.error?.message ?? null}
+              createPending={createCharge.isPending}
+              createError={createCharge.error?.message ?? null}
             />
+            <LegacySnapshotCard />
+            <JazigosAccordion />
             <CobrancaNoticeBox />
             <CobrancaLegalBox />
-            <JazigosPlaceholder />
           </div>
 
           <CheckoutPanel
@@ -147,10 +211,11 @@ export function CobrancaClient() {
             payMethod={payMethod}
             onPayMethod={setPayMethod}
             onConfirmPayment={onConfirmPayment}
-            confirmDisabled={listQuery.isLoading}
+            confirmDisabled={listLoading}
+            listLoading={listLoading}
           />
         </div>
-      </div>
+      </main>
 
       <CobrancaFooter />
 
@@ -159,6 +224,20 @@ export function CobrancaClient() {
         payment={selected}
         onClose={() => setPixModalOpen(false)}
         centsToBrl={centsToBrl}
+      />
+
+      <CobrancaStaticModals
+        user={session?.user}
+        payment={selected}
+        openTitular={openTitular}
+        openResp={openResp}
+        openCard={openCard}
+        openBoleto={openBoleto}
+        onCloseTitular={() => setOpenTitular(false)}
+        onCloseResp={() => setOpenResp(false)}
+        onCloseCard={() => setOpenCard(false)}
+        onCloseBoleto={() => setOpenBoleto(false)}
+        cardModalTotal={cardModalTotal}
       />
     </>
   );

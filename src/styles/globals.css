@@ -1,6 +1,20 @@
+/* Tailwind CSS v4 — ver postcss.config.js e devDependency tailwindcss */
 @import "tailwindcss";
 
+/* Paleta alinhada a cobranca-shared (Jardim das Palmeiras): verdes + creme/branco */
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-jardim-green-dark: #1a3a2a;
+  --color-jardim-green-mid: #2d5a3d;
+  --color-jardim-green-light: #3d7a52;
+  --color-jardim-cream: #f5f2ed;
+  --color-jardim-cream-dark: #ede9e0;
+  --color-jardim-white: #ffffff;
+  --color-jardim-border: #ddd9d0;
+  --color-jardim-text: #1c1c1c;
+  --color-jardim-text-muted: #4a4a4a;
+  --color-jardim-text-light: #7a7a7a;
+  --color-jardim-gold: #b8972a;
 }

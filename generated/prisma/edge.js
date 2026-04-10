@@ -204,7 +204,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\generated\\prisma",
+      "value": "c:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -218,7 +218,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\prisma\\schema.prisma",
+    "sourceFilePath": "c:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

@@ -12,7 +12,9 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
+import { resolveAdminStaffRole } from "~/server/auth/admin-staff-role";
 import { db } from "~/server/db";
+import type { AdminStaffRole } from "../../../generated/prisma/client";
 
 /**
  * 1. CONTEXT
@@ -133,11 +135,44 @@ export const protectedProcedure = t.procedure
   });
 
 /**
- * Apenas utilizadores com `role === ADMIN` (JWT).
+ * Apenas utilizadores com `role === ADMIN` (qualquer `AdminStaffRole`, incl. VIEWER).
  */
 export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.session.user.role !== "ADMIN") {
     throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return next({ ctx });
+});
+
+function staffRole(ctx: {
+  session: { user: { role: string; adminStaffRole?: AdminStaffRole | null } };
+}): AdminStaffRole | null {
+  return resolveAdminStaffRole(
+    ctx.session.user.role as "USER" | "ADMIN",
+    ctx.session.user.adminStaffRole ?? undefined,
+  );
+}
+
+/** FINANCEIRO ou SUPER_ADMIN — emitir cobranças Asaas. */
+export const adminFinanceProcedure = adminProcedure.use(({ ctx, next }) => {
+  const r = staffRole(ctx);
+  if (r !== "FINANCEIRO" && r !== "SUPER_ADMIN") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "A sua função não permite emitir cobranças.",
+    });
+  }
+  return next({ ctx });
+});
+
+/** OPERACIONAL ou SUPER_ADMIN — dados de contacto de titulares. */
+export const adminOperationalProcedure = adminProcedure.use(({ ctx, next }) => {
+  const r = staffRole(ctx);
+  if (r !== "OPERACIONAL" && r !== "SUPER_ADMIN") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "A sua função não permite alterar contactos de clientes.",
+    });
   }
   return next({ ctx });
 });

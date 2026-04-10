@@ -1,4 +1,6 @@
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter } from "next/font/google";
+
+import "./login.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -6,14 +8,14 @@ const inter = Inter({
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-login-playfair",
-  display: "swap",
-});
+export const metadata = {
+  title: "Identificação do Titular – Jardim das Palmeiras",
+  description:
+    "Acesse o portal de regularização de jazigos do Cemitério Jardim das Palmeiras informando seu CPF ou CNPJ.",
+};
 
 /**
- * Tipografia específica da rota /login (Inter + Playfair), alinhada ao protótipo PaginaCobranca.
+ * Rota /login alinhada ao protótipo PaginaCobranca/login.html (Inter + estilos locais).
  */
 export default function LoginLayout({
   children,
@@ -21,7 +23,7 @@ export default function LoginLayout({
   return (
     <div
       lang="pt-BR"
-      className={`${inter.variable} ${playfair.variable} min-h-screen font-sans antialiased`}
+      className={`${inter.variable} min-h-screen bg-[#f5f2ed] font-sans antialiased text-[#1c1c1c]`}
       style={{ fontFamily: "var(--font-login-inter), system-ui, sans-serif" }}
     >
       {children}

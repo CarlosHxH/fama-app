@@ -1,0 +1,443 @@
+/* Tokens (PaginaCobranca/css/shared.css) + login (PaginaCobranca/css/login.css), cabeçalho alinhado ao login.html inline */
+:root {
+  --green-dark: #1a3a2a;
+  --green-mid: #2d5a3d;
+  --green-light: #3d7a52;
+  --gold: #b8972a;
+  --gold-light: #d4af5a;
+  --cream: #f5f2ed;
+  --cream-dark: #ede9e0;
+  --white: #ffffff;
+  --text-dark: #1c1c1c;
+  --text-mid: #4a4a4a;
+  --text-light: #7a7a7a;
+  --border: #ddd9d0;
+  --danger: #c0392b;
+  --success: #27ae60;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.16);
+}
+
+/* ── FUNDO DECORATIVO ─────────────────────────── */
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(245, 242, 237, 0.98) 0%,
+    rgba(237, 233, 224, 0.96) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-pattern {
+  position: fixed;
+  inset: 0;
+  opacity: 0.2;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #ddd9d0 0,
+    #ddd9d0 1px,
+    transparent 0,
+    transparent 50%
+  );
+  background-size: 20px 20px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.deco-circle {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(184, 151, 42, 0.06);
+  border: 1px solid rgba(184, 151, 42, 0.08);
+  z-index: 0;
+  pointer-events: none;
+}
+.deco-circle.c1 {
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  right: -100px;
+}
+.deco-circle.c2 {
+  width: 300px;
+  height: 300px;
+  bottom: -80px;
+  left: -80px;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ── CARD DE LOGIN ───────────────────── */
+.login-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cabeçalho como login.html (branco, Inter no título) */
+.login-header {
+  background: white;
+  padding: 2.5rem 2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.login-header img {
+  max-height: 100px;
+  width: auto;
+  max-width: 280px;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+}
+
+.login-header h1 {
+  font-family: var(--font-login-inter), "Inter", sans-serif;
+  font-size: 1.6rem;
+  color: var(--green-dark);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.login-header p {
+  color: var(--text-mid);
+  font-size: 0.9rem;
+}
+
+.login-body {
+  padding: 2.25rem 2rem 2rem;
+}
+
+/* ── BADGE DE ETAPA ──────────────────── */
+.step-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.72rem;
+  color: var(--green-mid);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.step-badge::before {
+  content: "1";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  color: white;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── CAMPO ───────────────────────────── */
+.field {
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-light);
+  margin-bottom: 0.45rem;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap .input-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.7rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: var(--font-login-inter), "Inter", sans-serif;
+  color: var(--text-dark);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.04em;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.field input:focus {
+  border-color: var(--green-light);
+  box-shadow: 0 0 0 3px rgba(61, 122, 82, 0.12);
+}
+
+.field input.error {
+  border-color: var(--danger);
+}
+.field input.valid {
+  border-color: var(--success);
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  margin-top: 0.35rem;
+}
+
+/* ── ERRO ────────────────────────────── */
+.error-box {
+  display: none;
+  background: #fdecea;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: var(--danger);
+  font-weight: 500;
+  margin-bottom: 1rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.error-box.show {
+  display: flex;
+}
+
+/* ── SUCESSO ─────────────────────────── */
+.success-box {
+  display: none;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #166534;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.success-box.show {
+  display: flex;
+}
+
+.success-box .s-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+
+/* ── BOTÃO ───────────────────────────── */
+.btn-entrar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 1rem;
+  min-height: 52px;
+  background: linear-gradient(
+    135deg,
+    var(--green-dark) 0%,
+    var(--green-mid) 100%
+  );
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-login-inter), "Inter", sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.25s;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 0.5rem;
+}
+
+.btn-entrar:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26, 58, 42, 0.35);
+}
+
+.btn-entrar:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-entrar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+  flex-shrink: 0;
+}
+
+.spinner.show {
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── DIVISOR ─────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  font-size: 0.72rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── AVISO DE SEGURANÇA ──────────────── */
+.security-note {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* ── CARD DE AJUDA ───────────────────── */
+.help-box {
+  background: #fdfaf5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+
+.help-box strong {
+  color: var(--green-dark);
+}
+
+.help-wa {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #25d366;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: transform 0.2s;
+}
+
+.help-wa:hover {
+  transform: scale(1.03);
+}
+
+/* ── FOOTER ─────────────────────────── */
+.login-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-light);
+}
+
+.login-footer strong {
+  color: var(--text-mid);
+}
+
+@media (max-width: 480px) {
+  .login-body {
+    padding: 1.75rem 1.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding: 1.5rem 0.75rem;
+  }
+  .login-body {
+    padding: 1.5rem 1rem 1.25rem;
+  }
+  .login-card img {
+    max-height: 75px !important;
+  }
+  .login-card h1 {
+    font-size: 1.3rem !important;
+  }
+  .help-wa {
+    font-size: 0.78rem !important;
+  }
+}
+
+/* Badge da rota /admin/login */
+.admin-step-badge::before {
+  content: "A";
+  font-size: 0.55rem;
+}

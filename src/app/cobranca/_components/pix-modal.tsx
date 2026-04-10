@@ -13,7 +13,7 @@ type PixModalProps = {
 };
 
 /**
- * Modal de pagamento PIX (QR + copia e cola + estado de sucesso).
+ * Modal PIX — estrutura próxima a `#modal-pix` do HTML estático.
  */
 export function PixModal({
   open,
@@ -40,7 +40,8 @@ export function PixModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4"
+      className="modal-overlay open"
+      id="modal-pix"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget && paid) onClose();
@@ -48,49 +49,35 @@ export function PixModal({
     >
       <div
         ref={dialogRef}
+        className="modal"
+        style={{ maxWidth: "450px" }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="pix-modal-title"
         tabIndex={-1}
-        className="max-h-[min(90vh,640px)] w-full max-w-[450px] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {paid ? (
-          <>
-            <div className="text-center text-3xl" aria-hidden>
-              ✅
-            </div>
+        {!paid ? (
+          <div id="pix-waiting-state">
+            <div style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>⚡</div>
             <h3
               id="pix-modal-title"
-              className="mt-2 text-center text-[1.15rem] font-extrabold text-[#1a3a2a]"
+              style={{
+                color: "var(--green-dark)",
+                marginBottom: "0.5rem",
+              }}
             >
-              Pagamento confirmado
+              Aguardando Pagamento
             </h3>
-            <p className="mt-3 text-center text-[0.85rem] leading-relaxed text-[#4a4a4a]">
-              Recebemos o PIX com sucesso. Valor:{" "}
-              <strong>{centsToBrl(payment.valueCents)}</strong>.
-            </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-6 w-full rounded-lg bg-[#1a3a2a] py-3 text-[0.85rem] font-bold text-white hover:bg-[#2d5a3d]"
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-mid)",
+                marginBottom: "1.5rem",
+              }}
             >
-              Concluir
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="text-center text-2xl" aria-hidden>
-              ⚡
-            </div>
-            <h3
-              id="pix-modal-title"
-              className="mt-2 text-center text-[1.05rem] font-extrabold text-[#1a3a2a]"
-            >
-              Aguardando pagamento
-            </h3>
-            <p className="mt-2 text-center text-[0.8rem] text-[#4a4a4a]">
-              Escaneie o QR Code ou copie a chave Pix no seu banco. Valor:{" "}
+              Escaneie o QR Code abaixo ou copie a chave Pix para realizar o
+              pagamento no seu aplicativo bancário. Valor:{" "}
               <strong>{centsToBrl(payment.valueCents)}</strong>
             </p>
             {qrSrc ? (
@@ -98,43 +85,122 @@ export function PixModal({
               <img
                 src={qrSrc}
                 alt="QR Code PIX"
-                className="mx-auto mt-4 max-w-[200px] rounded-xl border border-[#ddd9d0] bg-white p-2"
+                className="pix-qr"
+                style={{
+                  marginBottom: "1.5rem",
+                  width: "180px",
+                  height: "180px",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  padding: "10px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  background: "white",
+                }}
               />
             ) : (
-              <p className="mt-4 text-center text-[0.75rem] text-amber-800">
-                QR Code ainda não disponível; use o código copia e cola abaixo.
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--text-mid)",
+                  marginBottom: "1rem",
+                }}
+              >
+                QR Code ainda não disponível; use o código copia e cola.
               </p>
             )}
             {payment.pixCopyPaste ? (
-              <div className="mt-4 rounded-lg border border-dashed border-[#2d5a3d] bg-[#f8faf9] p-3">
-                <p className="text-[0.6rem] font-bold text-[#2d5a3d] uppercase">
-                  Pix copia e cola
-                </p>
-                <pre className="mt-1 max-h-28 overflow-auto font-mono text-[0.7rem] break-all text-[#1c1c1c]">
-                  {payment.pixCopyPaste}
-                </pre>
-                <button
-                  type="button"
-                  onClick={() =>
-                    void navigator.clipboard.writeText(payment.pixCopyPaste!)
-                  }
-                  className="mt-2 w-full rounded-lg bg-[#2d5a3d] py-2 text-[0.75rem] font-bold text-white"
+              <div
+                style={{
+                  background: "#f8faf9",
+                  border: "1px dashed var(--green-mid)",
+                  padding: "1rem",
+                  borderRadius: "8px",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    color: "var(--green-mid)",
+                    marginBottom: "0.4rem",
+                    textAlign: "left",
+                  }}
                 >
-                  Copiar código
-                </button>
+                  Chave Pix (Copia e Cola)
+                </div>
+                <div
+                  id="pix-key-text"
+                  style={{
+                    fontSize: "0.75rem",
+                    fontFamily: "monospace",
+                    wordBreak: "break-all",
+                    textAlign: "left",
+                    color: "var(--text-dark)",
+                  }}
+                >
+                  {payment.pixCopyPaste}
+                </div>
               </div>
             ) : null}
-            <p className="mt-4 flex items-center justify-center gap-2 text-[0.72rem] text-[#7a7a7a]">
-              <span aria-hidden>⏳</span>A verificar pagamento…
-            </p>
             <button
               type="button"
+              className="btn-primary"
+              style={{ background: "var(--green-mid)", marginBottom: "0.5rem" }}
+              onClick={() =>
+                payment.pixCopyPaste &&
+                void navigator.clipboard.writeText(payment.pixCopyPaste)
+              }
+            >
+              📋 Copiar Chave Pix
+            </button>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                color: "var(--text-light)",
+                fontSize: "0.75rem",
+              }}
+            >
+              <span className="spinner-small">⏳</span> Verificando pagamento em
+              tempo real...
+            </div>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ marginTop: "1rem", width: "100%" }}
               onClick={onClose}
-              className="mt-4 w-full rounded-lg border border-[#ddd9d0] py-2.5 text-[0.8rem] font-semibold text-[#4a4a4a] hover:bg-[#f5f2ed]"
             >
               Fechar (continua em aberto)
             </button>
-          </>
+          </div>
+        ) : (
+          <div id="pix-success-state">
+            <div className="checkmark">✅</div>
+            <h3
+              id="pix-modal-title"
+              style={{ color: "var(--green-dark)" }}
+            >
+              Pagamento Confirmado!
+            </h3>
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: "var(--text-mid)",
+                margin: "1rem 0",
+              }}
+            >
+              Recebemos seu Pix com sucesso. Valor:{" "}
+              <strong>{centsToBrl(payment.valueCents)}</strong>.
+            </p>
+            <button type="button" className="btn-primary" onClick={onClose}>
+              Concluir
+            </button>
+          </div>
         )}
       </div>
     </div>

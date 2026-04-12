@@ -19,7 +19,7 @@ const config = {
   },
   outputFileTracingRoot: projectRoot,
   outputFileTracingIncludes: {
-    "/api/**/*": ["./generated/prisma/**/*"],
+    "/api/**/*": ["./prisma/generated/**/*"],
   },
 };
 

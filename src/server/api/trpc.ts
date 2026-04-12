@@ -12,9 +12,13 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
-import { resolveAdminStaffRole } from "~/server/auth/admin-staff-role";
+import {
+  canEditCustomerContacts,
+  canIssueCharges,
+  resolveStaffRole,
+} from "~/server/auth/admin-staff-role";
 import { db } from "~/server/db";
-import type { AdminStaffRole } from "../../../generated/prisma/client";
+import type { Role } from "../../../generated/prisma/client";
 
 /**
  * 1. CONTEXT
@@ -135,28 +139,30 @@ export const protectedProcedure = t.procedure
   });
 
 /**
- * Apenas utilizadores com `role === ADMIN` (qualquer `AdminStaffRole`, incl. VIEWER).
+ * Sessão do painel (`accountKind === 'admin'`), staff em `users`.
  */
 export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.session.user.role !== "ADMIN") {
+  if (ctx.session.user.accountKind !== "admin") {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({ ctx });
 });
 
 function staffRole(ctx: {
-  session: { user: { role: string; adminStaffRole?: AdminStaffRole | null } };
-}): AdminStaffRole | null {
-  return resolveAdminStaffRole(
-    ctx.session.user.role as "USER" | "ADMIN",
-    ctx.session.user.adminStaffRole ?? undefined,
+  session: {
+    user: { accountKind: string; staffRole?: Role | null };
+  };
+}): Role | null {
+  return resolveStaffRole(
+    ctx.session.user.accountKind as "portal" | "admin",
+    ctx.session.user.staffRole ?? undefined,
   );
 }
 
-/** FINANCEIRO ou SUPER_ADMIN — emitir cobranças Asaas. */
+/** ADMIN ou MANAGER — emitir cobranças Asaas. */
 export const adminFinanceProcedure = adminProcedure.use(({ ctx, next }) => {
   const r = staffRole(ctx);
-  if (r !== "FINANCEIRO" && r !== "SUPER_ADMIN") {
+  if (!canIssueCharges(r)) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "A sua função não permite emitir cobranças.",
@@ -165,10 +171,10 @@ export const adminFinanceProcedure = adminProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-/** OPERACIONAL ou SUPER_ADMIN — dados de contacto de titulares. */
+/** ADMIN ou MANAGER — dados de contacto de titulares. */
 export const adminOperationalProcedure = adminProcedure.use(({ ctx, next }) => {
   const r = staffRole(ctx);
-  if (r !== "OPERACIONAL" && r !== "SUPER_ADMIN") {
+  if (!canEditCustomerContacts(r)) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "A sua função não permite alterar contactos de clientes.",

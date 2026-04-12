@@ -24,29 +24,32 @@ describe("shouldRejectAdminLoginBeforeVerify", () => {
     expect(shouldRejectAdminLoginBeforeVerify(null)).toBe(true);
   });
 
-  it("rejeita USER", () => {
+  it("rejeita inativo", () => {
     expect(
       shouldRejectAdminLoginBeforeVerify({
-        role: "USER",
-        passwordHash: "$2a$12$xxx",
+        role: "ADMIN",
+        password: "$2a$12$xxx",
+        active: false,
       }),
     ).toBe(true);
   });
 
-  it("rejeita ADMIN sem passwordHash", () => {
+  it("rejeita sem password", () => {
     expect(
       shouldRejectAdminLoginBeforeVerify({
         role: "ADMIN",
-        passwordHash: null,
+        password: "",
+        active: true,
       }),
     ).toBe(true);
   });
 
-  it("aceita ADMIN com hash", () => {
+  it("aceita staff com password", () => {
     expect(
       shouldRejectAdminLoginBeforeVerify({
         role: "ADMIN",
-        passwordHash: "$2a$12$hashed",
+        password: "$2a$12$hashed",
+        active: true,
       }),
     ).toBe(false);
   });

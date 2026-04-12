@@ -4,8 +4,8 @@ import { z } from "zod";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import {
-  mapAsaasPaymentStatusToBilling,
-  resolveStatusTransition,
+  mapAsaasPaymentStatusToPortal,
+  resolvePortalStatusTransition,
 } from "~/server/billing/asaas-payment-status";
 
 const webhookBodySchema = z.object({
@@ -21,7 +21,7 @@ const webhookBodySchema = z.object({
 });
 
 /**
- * Webhook Asaas: atualiza `BillingPayment` de forma idempotente.
+ * Webhook Asaas: atualiza `PortalPayment` de forma idempotente.
  * Configure o mesmo token em `ASAAS_WEBHOOK_TOKEN` e no painel Asaas (header `asaas-access-token`).
  */
 export async function POST(request: Request) {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const { payment } = parsed.data;
-    const row = await db.billingPayment.findUnique({
+    const row = await db.portalPayment.findUnique({
       where: { asaasPaymentId: payment.id },
     });
 
@@ -54,23 +54,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const mapped = mapAsaasPaymentStatusToBilling(payment.status);
-    const transition = resolveStatusTransition(row.status, mapped);
+    const mapped = mapAsaasPaymentStatusToPortal(payment.status);
+    const current = row.status.toUpperCase() as typeof mapped;
+    const transition = resolvePortalStatusTransition(current, mapped);
     const nextStatus = transition ?? row.status;
 
-    const paidAtStr = payment.clientPaymentDate ?? payment.paymentDate;
-    const paidAtDate =
-      mapped === "RECEIVED" && !row.paidAt
-        ? paidAtStr
-          ? new Date(paidAtStr)
-          : new Date()
-        : undefined;
-
-    await db.billingPayment.update({
+    await db.portalPayment.update({
       where: { id: row.id },
       data: {
         status: nextStatus,
-        ...(paidAtDate ? { paidAt: paidAtDate } : {}),
       },
     });
 

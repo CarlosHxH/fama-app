@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { hash } from "bcrypt-ts";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient, Prisma } from "../generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -17,39 +17,27 @@ function normalizeDigits(input: string): string {
   return input.replace(/\D/g, "");
 }
 
-/** IDs Asaas fictícios (só para desenvolvimento — não chamam a API). */
 const SEED_ASAAS_PENDING = "seed_asaas_pay_pending_001";
 const SEED_ASAAS_RECEIVED = "seed_asaas_pay_received_001";
 
+const SEED_CUSTOMER_ID = 1n;
+
 /**
- * Dados de teste idempotentes: admin, titular USER, cobranças de exemplo, post.
+ * Dados de teste: staff `User` (admin) e `Customer` (portal) + pagamentos de exemplo.
  *
- * Variáveis opcionais:
- * - SEED_ADMIN_CPF_CNPJ (default 24971563792)
- * - SEED_ADMIN_EMAIL
- * - SEED_TITULAR_CPF_CNPJ (default 52998224725) — login em /login como titular
- * - SEED_TITULAR_EMAIL (opcional)
- * - SEED_ADMIN_PASSWORD — palavra-passe para /admin/login (e-mail + senha); gera passwordHash
- * - SEED_ONLY_ADMIN=1 — só cria/atualiza o admin
+ * - SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD — login em /admin/login
+ * - SEED_TITULAR_CPF_CNPJ (default 52998224725) — login em /login (portal)
+ * - SEED_ONLY_ADMIN=1 — só cria staff admin
  */
 async function main() {
   const onlyAdmin = process.env.SEED_ONLY_ADMIN === "1";
 
-  const adminCpf = normalizeDigits(
-    process.env.SEED_ADMIN_CPF_CNPJ ?? "24971563792",
-  );
-  if (adminCpf.length !== 11 && adminCpf.length !== 14) {
-    throw new Error(
-      "SEED_ADMIN_CPF_CNPJ deve ter 11 dígitos (CPF) ou 14 (CNPJ).",
-    );
-  }
-
   const adminEmailRaw = process.env.SEED_ADMIN_EMAIL?.trim();
   const adminPasswordPlain = process.env.SEED_ADMIN_PASSWORD?.trim();
 
-  let passwordHash: string | undefined;
+  let adminPasswordHashed: string | undefined;
   if (adminPasswordPlain && adminPasswordPlain.length > 0) {
-    passwordHash = await hash(adminPasswordPlain, 12);
+    adminPasswordHashed = await hash(adminPasswordPlain, 12);
   }
 
   const adminEmailDefault = "admin@seed.local";
@@ -57,49 +45,42 @@ async function main() {
     adminEmailRaw && adminEmailRaw.length > 0
       ? adminEmailRaw.toLowerCase()
       : null;
-  if (passwordHash && !adminEmail) {
+  if (adminPasswordHashed && !adminEmail) {
     adminEmail = adminEmailDefault;
     console.warn(
-      `[seed] SEED_ADMIN_EMAIL não definido — a usar ${adminEmailDefault} para login em /admin/login.`,
+      `[seed] SEED_ADMIN_EMAIL não definido — a usar ${adminEmailDefault} para /admin/login.`,
+    );
+  }
+
+  if (!adminEmail || !adminPasswordHashed) {
+    throw new Error(
+      "Defina SEED_ADMIN_EMAIL e SEED_ADMIN_PASSWORD para criar o utilizador staff (tabela users).",
     );
   }
 
   const admin = await prisma.user.upsert({
-    where: { cpfCnpj: adminCpf },
+    where: { email: adminEmail },
     create: {
-      cpfCnpj: adminCpf,
+      email: adminEmail,
       name: "Administrador (seed)",
+      password: adminPasswordHashed,
       role: "ADMIN",
-      adminStaffRole: "SUPER_ADMIN",
-      ...(adminEmail ? { email: adminEmail } : {}),
-      ...(passwordHash ? { passwordHash } : {}),
+      active: true,
     },
     update: {
       name: "Administrador (seed)",
+      password: adminPasswordHashed,
       role: "ADMIN",
-      adminStaffRole: "SUPER_ADMIN",
-      ...(adminEmail ? { email: adminEmail } : {}),
-      ...(passwordHash ? { passwordHash } : {}),
+      active: true,
     },
   });
 
   console.info(
-    `[seed] Admin: cpfCnpj=${admin.cpfCnpj} role=${admin.role}${admin.email ? ` email=${admin.email}` : ""}${passwordHash ? " passwordHash=definido (login /admin/login)" : ""}`,
+    `[seed] Staff admin: id=${admin.id} email=${admin.email} (login /admin/login)`,
   );
 
   if (onlyAdmin) {
-    console.info("[seed] SEED_ONLY_ADMIN=1 — titular/cobranças/post ignorados.");
-    console.info("\n[seed] Resumo admin:");
-    console.info(`  • Login por CPF em /login: ${adminCpf}`);
-    if (admin.email && passwordHash) {
-      console.info(
-        `  • Login em /admin/login: e-mail ${admin.email} + palavra-passe (SEED_ADMIN_PASSWORD)`,
-      );
-    } else if (!passwordHash) {
-      console.info(
-        "  • /admin/login: defina SEED_ADMIN_PASSWORD (e SEED_ADMIN_EMAIL opcional) e volte a correr o seed.",
-      );
-    }
+    console.info("[seed] SEED_ONLY_ADMIN=1 — cliente portal ignorado.");
     return;
   }
 
@@ -118,102 +99,82 @@ async function main() {
       ? titularEmailRaw.toLowerCase()
       : null;
 
-  const titular = await prisma.user.upsert({
-    where: { cpfCnpj: titularCpf },
+  await prisma.customer.upsert({
+    where: { id: SEED_CUSTOMER_ID },
     create: {
+      id: SEED_CUSTOMER_ID,
+      fullName: "Titular de teste (seed)",
       cpfCnpj: titularCpf,
-      name: "Titular de teste (seed)",
-      role: "USER",
-      ...(titularEmail ? { email: titularEmail } : {}),
+      email: titularEmail,
     },
     update: {
-      name: "Titular de teste (seed)",
-      role: "USER",
+      fullName: "Titular de teste (seed)",
+      cpfCnpj: titularCpf,
       ...(titularEmail ? { email: titularEmail } : {}),
     },
   });
 
-  console.info(
-    `[seed] Titular: cpfCnpj=${titular.cpfCnpj} — use este documento no /login para testar cobrança.`,
-  );
-
-  // O tipo do delegate pode ficar "error typed" no lint deste arquivo fora de `src`.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  const phoneCount = await prisma.clientPhone.count({
-    where: { userId: titular.id },
+  const phoneCount = await prisma.phone.count({
+    where: { customerId: SEED_CUSTOMER_ID },
   });
   if (phoneCount === 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    await prisma.clientPhone.create({
+    await prisma.phone.create({
       data: {
-        userId: titular.id,
-        telefone: "11987654321",
-        observacoes: "Contacto de exemplo (seed) — preferencial manhã",
+        customerId: SEED_CUSTOMER_ID,
+        number: "11987654321",
+        type: "CELULAR",
+        observations: "Contacto de exemplo (seed)",
       },
     });
-    console.info("[seed] Telefone de exemplo criado para o titular.");
+    console.info("[seed] Telefone de exemplo criado para o cliente.");
   }
 
   const dueSoon = new Date();
   dueSoon.setDate(dueSoon.getDate() + 7);
 
-  await prisma.billingPayment.upsert({
+  await prisma.portalPayment.upsert({
     where: { asaasPaymentId: SEED_ASAAS_PENDING },
     create: {
-      userId: titular.id,
+      customerId: SEED_CUSTOMER_ID,
+      invoiceId: null,
       asaasPaymentId: SEED_ASAAS_PENDING,
-      valueCents: 150_50,
+      paymentMethod: "PIX",
       status: "PENDING",
-      description: "Cobrança de teste — pendente (seed)",
-      dueDate: dueSoon,
+      value: new Prisma.Decimal("150.50"),
     },
     update: {
-      valueCents: 150_50,
       status: "PENDING",
-      description: "Cobrança de teste — pendente (seed)",
-      dueDate: dueSoon,
-      paidAt: null,
+      value: new Prisma.Decimal("150.50"),
+      paymentMethod: "PIX",
     },
   });
 
-  const paidAt = new Date();
-  paidAt.setDate(paidAt.getDate() - 3);
-
-  await prisma.billingPayment.upsert({
+  await prisma.portalPayment.upsert({
     where: { asaasPaymentId: SEED_ASAAS_RECEIVED },
     create: {
-      userId: titular.id,
+      customerId: SEED_CUSTOMER_ID,
+      invoiceId: null,
       asaasPaymentId: SEED_ASAAS_RECEIVED,
-      valueCents: 89_90,
+      paymentMethod: "PIX",
       status: "RECEIVED",
-      description: "Cobrança de teste — recebida (seed)",
-      dueDate: paidAt,
-      paidAt,
+      value: new Prisma.Decimal("89.90"),
     },
     update: {
-      valueCents: 89_90,
       status: "RECEIVED",
-      description: "Cobrança de teste — recebida (seed)",
-      paidAt,
+      value: new Prisma.Decimal("89.90"),
+      paymentMethod: "PIX",
     },
   });
 
   console.info(
-    `[seed] Cobranças: ${SEED_ASAAS_PENDING} (PENDING), ${SEED_ASAAS_RECEIVED} (RECEIVED)`,
+    `[seed] Cliente portal cod_cessionario=${SEED_CUSTOMER_ID} CPF=${titularCpf}`,
   );
-
-  console.info("\n[seed] Concluído. Resumo rápido:");
-  console.info(`  • Login admin (CPF em /login): ${adminCpf}`);
-  if (admin.email && passwordHash) {
-    console.info(
-      `  • Login admin (/admin/login): e-mail ${admin.email} + palavra-passe (SEED_ADMIN_PASSWORD)`,
-    );
-  } else if (!passwordHash) {
-    console.info(
-      "  • Login /admin/login: defina SEED_ADMIN_PASSWORD (e opcionalmente SEED_ADMIN_EMAIL) e volte a correr o seed.",
-    );
-  }
-  console.info(`  • Login titular: CPF/CNPJ ${titularCpf}`);
+  console.info(
+    `[seed] Pagamentos exemplo: ${SEED_ASAAS_PENDING} (PENDING), ${SEED_ASAAS_RECEIVED} (RECEIVED)`,
+  );
+  console.info("\n[seed] Concluído.");
+  console.info(`  • /admin/login: ${adminEmail} + SEED_ADMIN_PASSWORD`);
+  console.info(`  • /login (portal): CPF/CNPJ ${titularCpf}`);
 }
 
 main()

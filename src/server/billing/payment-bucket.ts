@@ -14,11 +14,11 @@ function startOfUtcDay(d: Date): Date {
 }
 
 /**
- * Filtro por “atraso / pendente / em dia / recebido” para listagens admin.
+ * Filtro por atraso / pendente / em dia / recebido para listagens admin (`PortalPayment`).
  */
 export function buildPaymentBucketWhere(
   bucket: PaymentBucket | undefined,
-): Prisma.BillingPaymentWhereInput | undefined {
+): Prisma.PortalPaymentWhereInput | undefined {
   const today = startOfUtcDay(new Date());
   switch (bucket) {
     case "overdue":
@@ -26,8 +26,14 @@ export function buildPaymentBucketWhere(
         OR: [
           { status: "OVERDUE" },
           {
-            status: "PENDING",
-            dueDate: { lt: today },
+            AND: [
+              { status: "PENDING" },
+              {
+                invoice: {
+                  is: { dueDate: { lt: today } },
+                },
+              },
+            ],
           },
         ],
       };
@@ -36,10 +42,15 @@ export function buildPaymentBucketWhere(
     case "pending_current":
       return {
         status: "PENDING",
-        OR: [{ dueDate: null }, { dueDate: { gte: today } }],
+        OR: [
+          { invoiceId: null },
+          { invoice: { is: { dueDate: { gte: today } } } },
+        ],
       };
     case "received":
-      return { status: "RECEIVED" };
+      return {
+        OR: [{ status: "RECEIVED" }, { status: "CONFIRMED" }],
+      };
     case "all":
     default:
       return undefined;

@@ -1,7 +1,8 @@
-/** Alinhado ao enum Prisma `BillingPaymentStatus`. */
+/** Estados de cobrança no portal (Asaas / `PortalPayment.status`). */
 export type BillingPaymentStatus =
   | "PENDING"
   | "RECEIVED"
+  | "CONFIRMED"
   | "OVERDUE"
   | "REFUNDED"
   | "CANCELLED"
@@ -9,7 +10,7 @@ export type BillingPaymentStatus =
 
 /** Cobranças consideradas quitadas para UI (parcelas pagas). */
 export function isBillingPaid(status: BillingPaymentStatus): boolean {
-  return status === "RECEIVED";
+  return status === "RECEIVED" || status === "CONFIRMED";
 }
 
 /** Pode ser selecionada para pagamento PIX pendente. */

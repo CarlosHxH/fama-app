@@ -93,12 +93,14 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  createdById: 'createdById'
+  email: 'email',
+  password: 'password',
+  role: 'role',
+  active: 'active',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -124,42 +126,128 @@ exports.Prisma.SessionScalarFieldEnum = {
   expires: 'expires'
 };
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  email: 'email',
-  emailVerified: 'emailVerified',
-  image: 'image',
-  passwordHash: 'passwordHash',
-  role: 'role',
-  asaasCustomerId: 'asaasCustomerId',
-  cpfCnpj: 'cpfCnpj'
-};
-
-exports.Prisma.BillingPaymentScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  asaasPaymentId: 'asaasPaymentId',
-  valueCents: 'valueCents',
-  status: 'status',
-  description: 'description',
-  dueDate: 'dueDate',
-  paidAt: 'paidAt',
-  pixCopyPaste: 'pixCopyPaste',
-  pixQrCodeBase64: 'pixQrCodeBase64',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.VerificationTokenScalarFieldEnum = {
   identifier: 'identifier',
   token: 'token',
   expires: 'expires'
 };
 
+exports.Prisma.CustomerScalarFieldEnum = {
+  id: 'id',
+  fullName: 'fullName',
+  cpfCnpj: 'cpfCnpj',
+  email: 'email',
+  passwordHash: 'passwordHash',
+  firstAccess: 'firstAccess',
+  asaasCustomerId: 'asaasCustomerId',
+  lastSyncAt: 'lastSyncAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomerPlanScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  status: 'status',
+  hasFinancialResp: 'hasFinancialResp',
+  sector: 'sector',
+  quadra: 'quadra',
+  lote: 'lote'
+};
+
+exports.Prisma.FinancialResponsibleScalarFieldEnum = {
+  id: 'id',
+  customerPlanId: 'customerPlanId',
+  name: 'name',
+  cpfCnpj: 'cpfCnpj',
+  email: 'email',
+  phone: 'phone',
+  payerCustomerId: 'payerCustomerId'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  planId: 'planId',
+  dueDate: 'dueDate',
+  value: 'value',
+  status: 'status',
+  paymentDate: 'paymentDate',
+  receivedValue: 'receivedValue',
+  discount: 'discount',
+  interest: 'interest',
+  paymentMode: 'paymentMode',
+  bankId: 'bankId',
+  ourNumber: 'ourNumber',
+  installment: 'installment',
+  paymentFormId: 'paymentFormId'
+};
+
+exports.Prisma.PortalPaymentScalarFieldEnum = {
+  id: 'id',
+  invoiceId: 'invoiceId',
+  customerId: 'customerId',
+  asaasPaymentId: 'asaasPaymentId',
+  paymentMethod: 'paymentMethod',
+  status: 'status',
+  invoiceUrl: 'invoiceUrl',
+  bankSlipUrl: 'bankSlipUrl',
+  pixCopyPaste: 'pixCopyPaste',
+  value: 'value',
+  netValue: 'netValue',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChangeRequestScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  type: 'type',
+  oldData: 'oldData',
+  newData: 'newData',
+  status: 'status',
+  reviewedBy: 'reviewedBy',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AddressScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  street: 'street',
+  number: 'number',
+  complement: 'complement',
+  neighborhood: 'neighborhood',
+  city: 'city',
+  state: 'state',
+  zipCode: 'zipCode',
+  isMain: 'isMain'
+};
+
+exports.Prisma.PhoneScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  number: 'number',
+  type: 'type',
+  observations: 'observations'
+};
+
+exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  customerId: 'customerId',
+  expiresAt: 'expiresAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -171,27 +259,51 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.UserRole = exports.$Enums.UserRole = {
-  USER: 'USER',
-  ADMIN: 'ADMIN'
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.Role = exports.$Enums.Role = {
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  EMPLOYEE: 'EMPLOYEE'
 };
 
-exports.BillingPaymentStatus = exports.$Enums.BillingPaymentStatus = {
+exports.BoletoStatus = exports.$Enums.BoletoStatus = {
+  ABERTO: 'ABERTO',
+  QUITADO: 'QUITADO',
+  VENCIDO: 'VENCIDO',
+  CANCELADO: 'CANCELADO'
+};
+
+exports.ChangeType = exports.$Enums.ChangeType = {
+  ADDRESS: 'ADDRESS',
+  PHONE: 'PHONE',
+  PERSONAL: 'PERSONAL'
+};
+
+exports.RequestStatus = exports.$Enums.RequestStatus = {
   PENDING: 'PENDING',
-  RECEIVED: 'RECEIVED',
-  OVERDUE: 'OVERDUE',
-  REFUNDED: 'REFUNDED',
-  CANCELLED: 'CANCELLED',
-  UNKNOWN: 'UNKNOWN'
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
 };
 
 exports.Prisma.ModelName = {
-  Post: 'Post',
+  User: 'User',
   Account: 'Account',
   Session: 'Session',
-  User: 'User',
-  BillingPayment: 'BillingPayment',
-  VerificationToken: 'VerificationToken'
+  VerificationToken: 'VerificationToken',
+  Customer: 'Customer',
+  CustomerPlan: 'CustomerPlan',
+  FinancialResponsible: 'FinancialResponsible',
+  Invoice: 'Invoice',
+  PortalPayment: 'PortalPayment',
+  ChangeRequest: 'ChangeRequest',
+  Address: 'Address',
+  Phone: 'Phone',
+  RefreshToken: 'RefreshToken'
 };
 /**
  * Create the Client
@@ -204,7 +316,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "c:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\generated\\prisma",
+      "value": "C:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -218,7 +330,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "c:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\carlo\\Desktop\\FacilMova\\fama-app\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -232,7 +344,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -241,13 +352,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below\n  // Further reading:\n  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema\n  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Post {\n  id        Int      @id @default(autoincrement())\n  name      String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  createdBy   User   @relation(fields: [createdById], references: [id])\n  createdById String\n\n  @@index([name])\n}\n\n// Necessary for Next auth\nmodel Account {\n  id                       String  @id @default(cuid())\n  userId                   String\n  type                     String\n  provider                 String\n  providerAccountId        String\n  refresh_token            String? // @db.Text\n  access_token             String? // @db.Text\n  expires_at               Int?\n  token_type               String?\n  scope                    String?\n  id_token                 String? // @db.Text\n  session_state            String?\n  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n  refresh_token_expires_in Int?\n\n  @@unique([provider, providerAccountId])\n}\n\nmodel Session {\n  id           String   @id @default(cuid())\n  sessionToken String   @unique\n  userId       String\n  expires      DateTime\n  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nenum UserRole {\n  USER\n  ADMIN\n}\n\nenum BillingPaymentStatus {\n  PENDING\n  RECEIVED\n  OVERDUE\n  REFUNDED\n  CANCELLED\n  UNKNOWN\n}\n\nmodel User {\n  id              String           @id @default(cuid())\n  name            String?\n  email           String?          @unique\n  emailVerified   DateTime?\n  image           String?\n  passwordHash    String?\n  role            UserRole         @default(USER)\n  asaasCustomerId String?          @unique\n  cpfCnpj         String?          @unique\n  accounts        Account[]\n  sessions        Session[]\n  posts           Post[]\n  billingPayments BillingPayment[]\n}\n\nmodel BillingPayment {\n  id              String               @id @default(cuid())\n  userId          String\n  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)\n  asaasPaymentId  String               @unique\n  valueCents      Int\n  status          BillingPaymentStatus @default(PENDING)\n  description     String?\n  dueDate         DateTime?\n  paidAt          DateTime?\n  pixCopyPaste    String?              @db.Text\n  pixQrCodeBase64 String?              @db.Text\n  createdAt       DateTime             @default(now())\n  updatedAt       DateTime             @updatedAt\n\n  @@index([userId])\n  @@index([status])\n  @@index([createdAt])\n}\n\nmodel VerificationToken {\n  identifier String\n  token      String   @unique\n  expires    DateTime\n\n  @@unique([identifier, token])\n}\n",
-  "inlineSchemaHash": "524a456cf2b9d4dbf80b152a2cda5c51ad85b4aeeb9f30a32dc2d63a5641637f",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// ── SISTEMA DE ACESSO (ADMIN/DASHBOARD) ──────────────────────────────────────\n\nenum Role {\n  ADMIN\n  MANAGER\n  EMPLOYEE\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String\n  email     String   @unique\n  password  String\n  role      Role     @default(EMPLOYEE)\n  active    Boolean  @default(true)\n  createdAt DateTime @default(now()) @map(\"created_at\")\n\n  accounts Account[]\n  sessions Session[]\n\n  @@map(\"users\")\n}\n\n// =============================================================================\n// NEXTAUTH — Portal do cliente Acesso admin\n// =============================================================================\n\nmodel Account {\n  id                       String  @id @default(cuid())\n  userId                   String\n  type                     String\n  provider                 String\n  providerAccountId        String\n  refresh_token            String? @db.Text\n  access_token             String? @db.Text\n  expires_at               Int?\n  token_type               String?\n  scope                    String?\n  id_token                 String? @db.Text\n  session_state            String?\n  refresh_token_expires_in Int?\n  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([provider, providerAccountId])\n  @@map(\"contas_oauth\")\n}\n\nmodel Session {\n  id           String   @id @default(cuid())\n  sessionToken String   @unique\n  userId       String\n  expires      DateTime\n  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@map(\"sessoes\")\n}\n\nmodel VerificationToken {\n  identifier String\n  token      String   @unique\n  expires    DateTime\n\n  @@unique([identifier, token])\n  @@map(\"tokens_verificacao\")\n}\n\n// ── CLIENTE E PERFIL (Cessionarios.csv) ──────────────────────────────────────\nmodel Customer {\n  id              BigInt  @id @map(\"cod_cessionario\")\n  fullName        String  @map(\"full_name\")\n  cpfCnpj         String? @unique @map(\"cpf_cnpj\")\n  email           String?\n  passwordHash    String? @map(\"password_hash\")\n  firstAccess     Boolean @default(true) @map(\"first_access\")\n  asaasCustomerId String? @unique @map(\"asaas_customer_id\") @db.VarChar(50)\n\n  // Auditoria e Sync\n  lastSyncAt DateTime @default(now()) @map(\"last_sync_at\")\n  updatedAt  DateTime @updatedAt @map(\"updated_at\")\n\n  // Relacionamentos\n  plans                       CustomerPlan[]\n  addresses                   Address[]\n  phones                      Phone[]\n  payments                    PortalPayment[]\n  changeRequests              ChangeRequest[]\n  refreshTokens               RefreshToken[]\n  financialResponsibleAsPayer FinancialResponsible[] @relation(\"FinancialResponsiblePayer\")\n\n  @@map(\"customers\")\n}\n\n// ── PLANOS E JAZIGOS (Conforme cobranca-jazigo.html) ─────────────────────────\nmodel CustomerPlan {\n  id               BigInt  @id @map(\"cod_cessionario_plano\")\n  customerId       BigInt  @map(\"customer_id\")\n  status           String? @db.Char(1) // A=Ativo, I=Inativo\n  hasFinancialResp Boolean @default(false) @map(\"has_financial_resp\")\n\n  // Informações do Jazigo (Sincronizadas ou locais)\n  sector String? @map(\"setor\") // Ex: \"Setor A\"\n  quadra String?\n  lote   String?\n\n  customer             Customer              @relation(fields: [customerId], references: [id])\n  financialResponsible FinancialResponsible?\n  invoices             Invoice[]\n\n  @@map(\"customer_plans\")\n}\n\n// ── RESPONSÁVEL FINANCEIRO (Lógica Filho/Pagador) ────────────────────────────\nmodel FinancialResponsible {\n  id             BigInt @id @default(autoincrement())\n  customerPlanId BigInt @unique @map(\"customer_plan_id\")\n\n  name    String\n  cpfCnpj String  @map(\"cpf_cnpj\")\n  email   String?\n  phone   String?\n\n  // Relacionamento com o plano e opcionalmente com outro Customer\n  payerCustomerId BigInt?      @map(\"payer_customer_id\")\n  plan            CustomerPlan @relation(fields: [customerPlanId], references: [id], onDelete: Cascade)\n  payer           Customer?    @relation(\"FinancialResponsiblePayer\", fields: [payerCustomerId], references: [id])\n\n  @@map(\"financial_responsible\")\n}\n\n// ── FINANCEIRO (Boletos.csv + Asaas) ──────────────────────────────────────────\nmodel Invoice {\n  id      BigInt       @id @map(\"cod_boleto\")\n  planId  BigInt       @map(\"plan_id\")\n  dueDate DateTime     @map(\"due_date\") @db.Date\n  value   Decimal      @map(\"valor_titulo\") @db.Decimal(15, 2)\n  status  BoletoStatus @default(ABERTO)\n\n  // --- Campos de Histórico (Vindos do SQL Server / Boletos.csv) ---\n  paymentDate   DateTime? @map(\"data_liquid\") @db.Date // DataLiquid\n  receivedValue Decimal?  @map(\"valor_recebido\") @db.Decimal(15, 2) // ValorRecebido\n  discount      Decimal?  @map(\"descontos\") @db.Decimal(15, 2)\n  interest      Decimal?  @map(\"juros_mora\") @db.Decimal(15, 2)\n  paymentMode   String?   @map(\"modo_baixa\") @db.VarChar(50) // AUTOMÁTICA, MANUAL\n  bankId        String?   @map(\"num_banco\") @db.VarChar(10)\n  ourNumber     String?   @map(\"nosso_numero\") @db.VarChar(50)\n  installment   String?   @map(\"parcela\") @db.VarChar(10)\n\n  // Relacionamento com a Forma de Pagamento Legada (Formas_Pagto.csv)\n  paymentFormId Int? @map(\"cod_forma_pag\")\n\n  // Relacionamentos\n  plan           CustomerPlan    @relation(fields: [planId], references: [id])\n  portalPayments PortalPayment[] // Pagamentos via Asaas vinculados a esta fatura\n\n  @@map(\"boletos\")\n}\n\nenum BoletoStatus {\n  ABERTO\n  QUITADO\n  VENCIDO\n  CANCELADO\n}\n\nmodel PortalPayment {\n  id         String  @id @default(uuid())\n  invoiceId  BigInt? @map(\"invoice_id\")\n  customerId BigInt  @map(\"customer_id\")\n\n  // Gateway Asaas\n  asaasPaymentId String @unique @map(\"asaas_payment_id\")\n  paymentMethod  String @map(\"payment_method\") // CREDIT_CARD, PIX, BOLETO\n  status         String // PENDING, RECEIVED, CONFIRMED, OVERDUE\n\n  // Links de Pagamento (Usados no seu HTML)\n  invoiceUrl   String? @map(\"invoice_url\") @db.Text\n  bankSlipUrl  String? @map(\"bank_slip_url\") @db.Text\n  pixCopyPaste String? @map(\"pix_copy_paste\") @db.Text\n\n  value    Decimal  @db.Decimal(15, 2)\n  netValue Decimal? @map(\"net_value\") @db.Decimal(15, 2)\n\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  customer Customer @relation(fields: [customerId], references: [id])\n  invoice  Invoice? @relation(fields: [invoiceId], references: [id])\n\n  @@map(\"portal_payments\")\n}\n\n// ── SOLICITAÇÕES E AUXILIARES ────────────────────────────────────────────────\nmodel ChangeRequest {\n  id         Int           @id @default(autoincrement())\n  customerId BigInt        @map(\"customer_id\")\n  type       ChangeType\n  oldData    Json?         @map(\"old_data\")\n  newData    Json          @map(\"new_data\")\n  status     RequestStatus @default(PENDING)\n  reviewedBy String?       @map(\"reviewed_by\")\n  createdAt  DateTime      @default(now()) @map(\"created_at\")\n\n  customer Customer @relation(fields: [customerId], references: [id])\n\n  @@map(\"change_requests\")\n}\n\nenum ChangeType {\n  ADDRESS\n  PHONE\n  PERSONAL\n}\n\nenum RequestStatus {\n  PENDING\n  APPROVED\n  REJECTED\n}\n\nmodel Address {\n  id           Int     @id @default(autoincrement())\n  customerId   BigInt  @map(\"customer_id\")\n  street       String\n  number       String?\n  complement   String?\n  neighborhood String?\n  city         String\n  state        String  @db.Char(2)\n  zipCode      String  @map(\"zip_code\")\n  isMain       Boolean @default(true) @map(\"is_main\")\n\n  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)\n\n  @@map(\"addresses\")\n}\n\nmodel Phone {\n  id           Int     @id @default(autoincrement())\n  customerId   BigInt  @map(\"customer_id\")\n  number       String\n  type         String? // WHATSAPP, FIXO, CELULAR\n  observations String?\n\n  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)\n\n  @@index([customerId], name: \"idx_phone_customer\")\n  @@map(\"phones\")\n}\n\nmodel RefreshToken {\n  id         String   @id @default(cuid())\n  token      String   @unique\n  customerId BigInt   @map(\"customer_id\")\n  expiresAt  DateTime @map(\"expires_at\")\n\n  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)\n\n  @@map(\"refresh_tokens\")\n}\n",
+  "inlineSchemaHash": "8dc2fce85402f4b14198c503b1dcd1087f2beb31873e0b105a235411f71183af",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdBy\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"PostToUser\"},{\"name\":\"createdById\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"Account\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"providerAccountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires_at\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"token_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"scope\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"id_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"session_state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AccountToUser\"},{\"name\":\"refresh_token_expires_in\",\"kind\":\"scalar\",\"type\":\"Int\"}],\"dbName\":null},\"Session\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sessionToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SessionToUser\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"emailVerified\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"image\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"passwordHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"UserRole\"},{\"name\":\"asaasCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cpfCnpj\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accounts\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToUser\"},{\"name\":\"sessions\",\"kind\":\"object\",\"type\":\"Session\",\"relationName\":\"SessionToUser\"},{\"name\":\"posts\",\"kind\":\"object\",\"type\":\"Post\",\"relationName\":\"PostToUser\"},{\"name\":\"billingPayments\",\"kind\":\"object\",\"type\":\"BillingPayment\",\"relationName\":\"BillingPaymentToUser\"}],\"dbName\":null},\"BillingPayment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"BillingPaymentToUser\"},{\"name\":\"asaasPaymentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"valueCents\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"BillingPaymentStatus\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dueDate\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"paidAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"pixCopyPaste\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pixQrCodeBase64\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"VerificationToken\":{\"fields\":[{\"name\":\"identifier\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"active\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"accounts\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToUser\"},{\"name\":\"sessions\",\"kind\":\"object\",\"type\":\"Session\",\"relationName\":\"SessionToUser\"}],\"dbName\":\"users\"},\"Account\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"providerAccountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires_at\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"token_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"scope\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"id_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"session_state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token_expires_in\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AccountToUser\"}],\"dbName\":\"contas_oauth\"},\"Session\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sessionToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SessionToUser\"}],\"dbName\":\"sessoes\"},\"VerificationToken\":{\"fields\":[{\"name\":\"identifier\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"tokens_verificacao\"},\"Customer\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"cod_cessionario\"},{\"name\":\"fullName\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"full_name\"},{\"name\":\"cpfCnpj\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"cpf_cnpj\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"passwordHash\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"password_hash\"},{\"name\":\"firstAccess\",\"kind\":\"scalar\",\"type\":\"Boolean\",\"dbName\":\"first_access\"},{\"name\":\"asaasCustomerId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"asaas_customer_id\"},{\"name\":\"lastSyncAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"last_sync_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"},{\"name\":\"plans\",\"kind\":\"object\",\"type\":\"CustomerPlan\",\"relationName\":\"CustomerToCustomerPlan\"},{\"name\":\"addresses\",\"kind\":\"object\",\"type\":\"Address\",\"relationName\":\"AddressToCustomer\"},{\"name\":\"phones\",\"kind\":\"object\",\"type\":\"Phone\",\"relationName\":\"CustomerToPhone\"},{\"name\":\"payments\",\"kind\":\"object\",\"type\":\"PortalPayment\",\"relationName\":\"CustomerToPortalPayment\"},{\"name\":\"changeRequests\",\"kind\":\"object\",\"type\":\"ChangeRequest\",\"relationName\":\"ChangeRequestToCustomer\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"CustomerToRefreshToken\"},{\"name\":\"financialResponsibleAsPayer\",\"kind\":\"object\",\"type\":\"FinancialResponsible\",\"relationName\":\"FinancialResponsiblePayer\"}],\"dbName\":\"customers\"},\"CustomerPlan\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"cod_cessionario_plano\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hasFinancialResp\",\"kind\":\"scalar\",\"type\":\"Boolean\",\"dbName\":\"has_financial_resp\"},{\"name\":\"sector\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"setor\"},{\"name\":\"quadra\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lote\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"CustomerToCustomerPlan\"},{\"name\":\"financialResponsible\",\"kind\":\"object\",\"type\":\"FinancialResponsible\",\"relationName\":\"CustomerPlanToFinancialResponsible\"},{\"name\":\"invoices\",\"kind\":\"object\",\"type\":\"Invoice\",\"relationName\":\"CustomerPlanToInvoice\"}],\"dbName\":\"customer_plans\"},\"FinancialResponsible\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"customerPlanId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_plan_id\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cpfCnpj\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"cpf_cnpj\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"payerCustomerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"payer_customer_id\"},{\"name\":\"plan\",\"kind\":\"object\",\"type\":\"CustomerPlan\",\"relationName\":\"CustomerPlanToFinancialResponsible\"},{\"name\":\"payer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"FinancialResponsiblePayer\"}],\"dbName\":\"financial_responsible\"},\"Invoice\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"cod_boleto\"},{\"name\":\"planId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"plan_id\"},{\"name\":\"dueDate\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"due_date\"},{\"name\":\"value\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"valor_titulo\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"BoletoStatus\"},{\"name\":\"paymentDate\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"data_liquid\"},{\"name\":\"receivedValue\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"valor_recebido\"},{\"name\":\"discount\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"descontos\"},{\"name\":\"interest\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"juros_mora\"},{\"name\":\"paymentMode\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"modo_baixa\"},{\"name\":\"bankId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"num_banco\"},{\"name\":\"ourNumber\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"nosso_numero\"},{\"name\":\"installment\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"parcela\"},{\"name\":\"paymentFormId\",\"kind\":\"scalar\",\"type\":\"Int\",\"dbName\":\"cod_forma_pag\"},{\"name\":\"plan\",\"kind\":\"object\",\"type\":\"CustomerPlan\",\"relationName\":\"CustomerPlanToInvoice\"},{\"name\":\"portalPayments\",\"kind\":\"object\",\"type\":\"PortalPayment\",\"relationName\":\"InvoiceToPortalPayment\"}],\"dbName\":\"boletos\"},\"PortalPayment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoiceId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"invoice_id\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"asaasPaymentId\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"asaas_payment_id\"},{\"name\":\"paymentMethod\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"payment_method\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoiceUrl\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"invoice_url\"},{\"name\":\"bankSlipUrl\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"bank_slip_url\"},{\"name\":\"pixCopyPaste\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"pix_copy_paste\"},{\"name\":\"value\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"netValue\",\"kind\":\"scalar\",\"type\":\"Decimal\",\"dbName\":\"net_value\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"updated_at\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"CustomerToPortalPayment\"},{\"name\":\"invoice\",\"kind\":\"object\",\"type\":\"Invoice\",\"relationName\":\"InvoiceToPortalPayment\"}],\"dbName\":\"portal_payments\"},\"ChangeRequest\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"type\",\"kind\":\"enum\",\"type\":\"ChangeType\"},{\"name\":\"oldData\",\"kind\":\"scalar\",\"type\":\"Json\",\"dbName\":\"old_data\"},{\"name\":\"newData\",\"kind\":\"scalar\",\"type\":\"Json\",\"dbName\":\"new_data\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"RequestStatus\"},{\"name\":\"reviewedBy\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"reviewed_by\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"created_at\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"ChangeRequestToCustomer\"}],\"dbName\":\"change_requests\"},\"Address\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"street\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"complement\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"neighborhood\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"city\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"zipCode\",\"kind\":\"scalar\",\"type\":\"String\",\"dbName\":\"zip_code\"},{\"name\":\"isMain\",\"kind\":\"scalar\",\"type\":\"Boolean\",\"dbName\":\"is_main\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"AddressToCustomer\"}],\"dbName\":\"addresses\"},\"Phone\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"observations\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"CustomerToPhone\"}],\"dbName\":\"phones\"},\"RefreshToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"customerId\",\"kind\":\"scalar\",\"type\":\"BigInt\",\"dbName\":\"customer_id\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\",\"dbName\":\"expires_at\"},{\"name\":\"customer\",\"kind\":\"object\",\"type\":\"Customer\",\"relationName\":\"CustomerToRefreshToken\"}],\"dbName\":\"refresh_tokens\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

@@ -37,20 +37,26 @@ function parseReaisToCents(input: string): number {
 /**
  * Formulário admin: gerar cobrança Asaas (PIX, boleto ou cartão) para um titular.
  */
-function canEmitCharges(
-  role: string | undefined,
-  staff: string | null | undefined,
-) {
-  if (role !== "ADMIN") return false;
-  const s = staff ?? "SUPER_ADMIN";
-  return s === "FINANCEIRO" || s === "SUPER_ADMIN";
+function canEmitCharges(session: {
+  user?: {
+    accountKind?: string;
+    role?: string;
+    staffRole?: string | null;
+  };
+}) {
+  if (
+    session.user?.accountKind !== "admin" ||
+    session.user?.role !== "ADMIN"
+  ) {
+    return false;
+  }
+  const s = session.user.staffRole ?? "EMPLOYEE";
+  return s === "ADMIN" || s === "MANAGER";
 }
 
 export function PagamentosClient() {
   const { data: session, status } = useSession();
-  const staff = (session?.user as { adminStaffRole?: string | null } | undefined)
-    ?.adminStaffRole;
-  const allowed = canEmitCharges(session?.user?.role, staff);
+  const allowed = canEmitCharges({ user: session?.user });
 
   const [search, setSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -106,7 +112,7 @@ export function PagamentosClient() {
       <div className="mx-auto max-w-lg px-4 py-12 text-center">
         <p className="text-sm text-jardim-text-muted">
           A sua função no painel não inclui emitir cobranças. Contacte um
-          administrador se precisar de acesso FINANCEIRO ou SUPER_ADMIN.
+          administrador se precisar do papel ADMIN ou MANAGER.
         </p>
       </div>
     );
@@ -296,19 +302,23 @@ export function PagamentosClient() {
             <p className="mt-1 text-xs text-jardim-text-muted">
               ID Asaas: {successPayment.asaasPaymentId}
             </p>
-            {successPayment.checkoutUrl ? (
-              <Link
-                href={successPayment.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 font-medium text-jardim-green-mid underline-offset-2 hover:underline"
-              >
-                Abrir link de pagamento <ExternalLink className="h-4 w-4" />
-              </Link>
-            ) : null}
-            {successPayment.boletoDigitableLine ? (
+            {(() => {
+              const payUrl =
+                successPayment.invoiceUrl ?? successPayment.bankSlipUrl;
+              return payUrl ? (
+                <Link
+                  href={payUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 font-medium text-jardim-green-mid underline-offset-2 hover:underline"
+                >
+                  Abrir link de pagamento <ExternalLink className="h-4 w-4" />
+                </Link>
+              ) : null;
+            })()}
+            {successPayment.pixCopyPaste ? (
               <p className="mt-2 break-all font-mono text-xs">
-                Linha: {successPayment.boletoDigitableLine}
+                PIX copia-e-cola disponível no registo (portal).
               </p>
             ) : null}
           </div>

@@ -47,6 +47,7 @@ const CHART_COLORS = [
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Em aberto",
   RECEIVED: "Recebido",
+  CONFIRMED: "Confirmado",
   OVERDUE: "Vencido",
   REFUNDED: "Estornado",
   CANCELLED: "Cancelado",
@@ -56,6 +57,7 @@ const STATUS_LABEL: Record<string, string> = {
 function statusBadgeClass(status: string) {
   switch (status) {
     case "RECEIVED":
+    case "CONFIRMED":
       return "bg-jardim-green-mid/12 text-jardim-green-dark ring-jardim-green-mid/25";
     case "PENDING":
       return "bg-jardim-cream-dark text-jardim-green-mid ring-jardim-border";
@@ -502,7 +504,7 @@ export function AdminDashboard() {
                       </td>
                       <td className="max-w-[200px] truncate px-5 py-3.5 font-medium text-jardim-text sm:max-w-xs sm:px-6">
                         <span className="block truncate">
-                          {p.user.name ?? p.user.email ?? p.userId}
+                          {p.user.name ?? p.user.email ?? p.customerId?.toString?.() ?? "—"}
                         </span>
                         {p.user.cpfCnpj ? (
                           <span className="block truncate text-[11px] text-jardim-text-muted">
@@ -511,7 +513,7 @@ export function AdminDashboard() {
                         ) : null}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 text-xs text-jardim-text-muted sm:px-6">
-                        {p.asaasBillingType ?? "PIX"}
+                        {p.paymentMethod ?? "PIX"}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 tabular-nums text-jardim-green-dark sm:px-6">
                         {brl.format(p.valueCents / 100)}

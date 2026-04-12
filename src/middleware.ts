@@ -22,9 +22,13 @@ export async function middleware(request: NextRequest) {
 
   const isLoggedIn = !!token;
   const role = token?.role as string | undefined;
+  const accountKind = token?.accountKind as string | undefined;
 
   if (pathname.startsWith("/login")) {
     if (isLoggedIn) {
+      if (accountKind === "admin") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
       return NextResponse.redirect(new URL("/cobranca", request.url));
     }
     return NextResponse.next();
@@ -35,6 +39,9 @@ export async function middleware(request: NextRequest) {
       const url = new URL("/login", request.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
+    }
+    if (accountKind !== "portal") {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
     return NextResponse.next();
   }
@@ -59,7 +66,7 @@ export async function middleware(request: NextRequest) {
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
-    if (role !== "ADMIN") {
+    if (role !== "ADMIN" || accountKind !== "admin") {
       return NextResponse.redirect(new URL("/cobranca", request.url));
     }
     return NextResponse.next();

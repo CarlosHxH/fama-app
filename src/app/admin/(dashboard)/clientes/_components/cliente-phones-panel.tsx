@@ -14,13 +14,13 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
   const utils = api.useUtils();
   const list = api.admin.listUserPhones.useQuery({ userId });
 
-  const [telefone, setTelefone] = useState("");
-  const [observacoes, setObservacoes] = useState("");
+  const [number, setNumber] = useState("");
+  const [observations, setObservations] = useState("");
 
   const createMut = api.admin.createUserPhone.useMutation({
     onSuccess: async () => {
-      setTelefone("");
-      setObservacoes("");
+      setNumber("");
+      setObservations("");
       await utils.admin.listUserPhones.invalidate({ userId });
       await utils.admin.listUsers.invalidate();
     },
@@ -41,18 +41,18 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
     },
   });
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTelefone, setEditTelefone] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editNumber, setEditNumber] = useState("");
   const [editObs, setEditObs] = useState("");
 
   function startEdit(row: {
-    id: string;
-    telefone: string;
-    observacoes: string | null;
+    id: number;
+    number: string;
+    observations: string | null;
   }) {
     setEditingId(row.id);
-    setEditTelefone(row.telefone);
-    setEditObs(row.observacoes ?? "");
+    setEditNumber(row.number);
+    setEditObs(row.observations ?? "");
   }
 
   function cancelEdit() {
@@ -99,8 +99,8 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                         <td className="px-3 py-2 align-top">
                           <input
                             className="w-full min-w-[10rem] rounded-lg border border-jardim-border bg-jardim-white px-2 py-1.5 text-sm tabular-nums"
-                            value={editTelefone}
-                            onChange={(e) => setEditTelefone(e.target.value)}
+                            value={editNumber}
+                            onChange={(e) => setEditNumber(e.target.value)}
                             aria-label="Telefone"
                           />
                         </td>
@@ -122,8 +122,8 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                             onClick={() =>
                               updateMut.mutate({
                                 id: row.id,
-                                telefone: editTelefone.trim(),
-                                observacoes: editObs.trim() || null,
+                                number: editNumber.trim(),
+                                observations: editObs.trim() || null,
                               })
                             }
                           >
@@ -141,12 +141,12 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                     ) : (
                       <>
                         <td className="px-3 py-2.5 font-medium tabular-nums text-jardim-text">
-                          {row.telefone}
+                          {row.number}
                         </td>
                         <td className="max-w-md px-3 py-2.5 text-jardim-text-muted">
-                          {row.observacoes?.trim() ? (
+                          {row.observations?.trim() ? (
                             <span className="whitespace-pre-wrap break-words">
-                              {row.observacoes}
+                              {row.observations}
                             </span>
                           ) : (
                             <span className="text-jardim-text-light">—</span>
@@ -168,9 +168,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                             onClick={() => {
                               if (
                                 typeof window !== "undefined" &&
-                                window.confirm(
-                                  "Remover este telefone?",
-                                )
+                                window.confirm("Remover este telefone?")
                               ) {
                                 deleteMut.mutate({ id: row.id });
                               }
@@ -194,12 +192,12 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
         className="mt-4 flex flex-col gap-3 rounded-xl border border-dashed border-jardim-border bg-jardim-white/80 p-3 sm:flex-row sm:flex-wrap sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
-          const t = telefone.trim();
+          const t = number.trim();
           if (t.length < 8) return;
           createMut.mutate({
             userId,
-            telefone: t,
-            observacoes: observacoes.trim() || undefined,
+            number: t,
+            observations: observations.trim() || undefined,
           });
         }}
       >
@@ -211,8 +209,8 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
             type="tel"
             className="w-full rounded-lg border border-jardim-border bg-jardim-white px-3 py-2 text-sm tabular-nums focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
             placeholder="ex. 11999998888"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
             autoComplete="tel"
           />
         </div>
@@ -224,13 +222,13 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
             type="text"
             className="w-full rounded-lg border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
             placeholder="ex. Contacto preferencial, horário…"
-            value={observacoes}
-            onChange={(e) => setObservacoes(e.target.value)}
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
           />
         </div>
         <button
           type="submit"
-          disabled={createMut.isPending || telefone.trim().length < 8}
+          disabled={createMut.isPending || number.trim().length < 8}
           className={cn(
             "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-white transition-opacity",
             "bg-jardim-green hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50",

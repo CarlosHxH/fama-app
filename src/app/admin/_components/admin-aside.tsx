@@ -24,19 +24,27 @@ const NAV_FINANCE = {
   icon: Receipt,
 } as const;
 
-function canEmitCharges(role: string | undefined, staff: string | null | undefined) {
-  if (role !== "ADMIN") return false;
-  const s = staff ?? "SUPER_ADMIN";
-  return s === "FINANCEIRO" || s === "SUPER_ADMIN";
+function canEmitCharges(session: {
+  user?: {
+    accountKind?: string;
+    role?: string;
+    staffRole?: string | null;
+  };
+}) {
+  if (
+    session.user?.accountKind !== "admin" ||
+    session.user?.role !== "ADMIN"
+  ) {
+    return false;
+  }
+  const s = session.user.staffRole ?? "EMPLOYEE";
+  return s === "ADMIN" || s === "MANAGER";
 }
 
 export function AdminAside() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const finance = canEmitCharges(
-    session?.user?.role,
-    (session?.user as { adminStaffRole?: string | null })?.adminStaffRole,
-  );
+  const finance = canEmitCharges({ user: session?.user });
 
   const NAV = finance
     ? ([

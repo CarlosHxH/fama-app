@@ -5,8 +5,9 @@ import {
 } from "./billing-status";
 
 describe("isBillingPaid", () => {
-  it("RECEIVED é pago", () => {
+  it("RECEIVED e CONFIRMED são pagos", () => {
     expect(isBillingPaid("RECEIVED")).toBe(true);
+    expect(isBillingPaid("CONFIRMED")).toBe(true);
   });
 
   it("outros estados não são pagos", () => {

@@ -121,12 +121,14 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  createdById: 'createdById'
+  email: 'email',
+  password: 'password',
+  role: 'role',
+  active: 'active',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -152,42 +154,128 @@ exports.Prisma.SessionScalarFieldEnum = {
   expires: 'expires'
 };
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  email: 'email',
-  emailVerified: 'emailVerified',
-  image: 'image',
-  passwordHash: 'passwordHash',
-  role: 'role',
-  asaasCustomerId: 'asaasCustomerId',
-  cpfCnpj: 'cpfCnpj'
-};
-
-exports.Prisma.BillingPaymentScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  asaasPaymentId: 'asaasPaymentId',
-  valueCents: 'valueCents',
-  status: 'status',
-  description: 'description',
-  dueDate: 'dueDate',
-  paidAt: 'paidAt',
-  pixCopyPaste: 'pixCopyPaste',
-  pixQrCodeBase64: 'pixQrCodeBase64',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.VerificationTokenScalarFieldEnum = {
   identifier: 'identifier',
   token: 'token',
   expires: 'expires'
 };
 
+exports.Prisma.CustomerScalarFieldEnum = {
+  id: 'id',
+  fullName: 'fullName',
+  cpfCnpj: 'cpfCnpj',
+  email: 'email',
+  passwordHash: 'passwordHash',
+  firstAccess: 'firstAccess',
+  asaasCustomerId: 'asaasCustomerId',
+  lastSyncAt: 'lastSyncAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomerPlanScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  status: 'status',
+  hasFinancialResp: 'hasFinancialResp',
+  sector: 'sector',
+  quadra: 'quadra',
+  lote: 'lote'
+};
+
+exports.Prisma.FinancialResponsibleScalarFieldEnum = {
+  id: 'id',
+  customerPlanId: 'customerPlanId',
+  name: 'name',
+  cpfCnpj: 'cpfCnpj',
+  email: 'email',
+  phone: 'phone',
+  payerCustomerId: 'payerCustomerId'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  planId: 'planId',
+  dueDate: 'dueDate',
+  value: 'value',
+  status: 'status',
+  paymentDate: 'paymentDate',
+  receivedValue: 'receivedValue',
+  discount: 'discount',
+  interest: 'interest',
+  paymentMode: 'paymentMode',
+  bankId: 'bankId',
+  ourNumber: 'ourNumber',
+  installment: 'installment',
+  paymentFormId: 'paymentFormId'
+};
+
+exports.Prisma.PortalPaymentScalarFieldEnum = {
+  id: 'id',
+  invoiceId: 'invoiceId',
+  customerId: 'customerId',
+  asaasPaymentId: 'asaasPaymentId',
+  paymentMethod: 'paymentMethod',
+  status: 'status',
+  invoiceUrl: 'invoiceUrl',
+  bankSlipUrl: 'bankSlipUrl',
+  pixCopyPaste: 'pixCopyPaste',
+  value: 'value',
+  netValue: 'netValue',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChangeRequestScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  type: 'type',
+  oldData: 'oldData',
+  newData: 'newData',
+  status: 'status',
+  reviewedBy: 'reviewedBy',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AddressScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  street: 'street',
+  number: 'number',
+  complement: 'complement',
+  neighborhood: 'neighborhood',
+  city: 'city',
+  state: 'state',
+  zipCode: 'zipCode',
+  isMain: 'isMain'
+};
+
+exports.Prisma.PhoneScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  number: 'number',
+  type: 'type',
+  observations: 'observations'
+};
+
+exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  customerId: 'customerId',
+  expiresAt: 'expiresAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -199,27 +287,51 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.UserRole = exports.$Enums.UserRole = {
-  USER: 'USER',
-  ADMIN: 'ADMIN'
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.Role = exports.$Enums.Role = {
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  EMPLOYEE: 'EMPLOYEE'
 };
 
-exports.BillingPaymentStatus = exports.$Enums.BillingPaymentStatus = {
+exports.BoletoStatus = exports.$Enums.BoletoStatus = {
+  ABERTO: 'ABERTO',
+  QUITADO: 'QUITADO',
+  VENCIDO: 'VENCIDO',
+  CANCELADO: 'CANCELADO'
+};
+
+exports.ChangeType = exports.$Enums.ChangeType = {
+  ADDRESS: 'ADDRESS',
+  PHONE: 'PHONE',
+  PERSONAL: 'PERSONAL'
+};
+
+exports.RequestStatus = exports.$Enums.RequestStatus = {
   PENDING: 'PENDING',
-  RECEIVED: 'RECEIVED',
-  OVERDUE: 'OVERDUE',
-  REFUNDED: 'REFUNDED',
-  CANCELLED: 'CANCELLED',
-  UNKNOWN: 'UNKNOWN'
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
 };
 
 exports.Prisma.ModelName = {
-  Post: 'Post',
+  User: 'User',
   Account: 'Account',
   Session: 'Session',
-  User: 'User',
-  BillingPayment: 'BillingPayment',
-  VerificationToken: 'VerificationToken'
+  VerificationToken: 'VerificationToken',
+  Customer: 'Customer',
+  CustomerPlan: 'CustomerPlan',
+  FinancialResponsible: 'FinancialResponsible',
+  Invoice: 'Invoice',
+  PortalPayment: 'PortalPayment',
+  ChangeRequest: 'ChangeRequest',
+  Address: 'Address',
+  Phone: 'Phone',
+  RefreshToken: 'RefreshToken'
 };
 
 /**

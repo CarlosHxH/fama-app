@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { runSync } from "~/jobs/sqlserver-sync/run-sync";
-import { loadJobEnv } from "~/jobs/sqlserver-sync/job-env";
-import { db } from "~/server/db";
-
 /**
- * Sincronização MSSQL → Postgres (mesmo fluxo que `npm run job:sync-sqlserver`).
+ * Cron MSSQL → Postgres desativado (modelos `SyncRun` / `MssqlSyncRecord` removidos).
  * Proteger com `CRON_SECRET` (Authorization: Bearer &lt;secret&gt;).
  */
 export async function GET(req: Request) {
@@ -15,12 +11,12 @@ export async function GET(req: Request) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  try {
-    const env = loadJobEnv();
-    const result = await runSync(db, env);
-    return NextResponse.json(result);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
+  return NextResponse.json(
+    {
+      ok: false,
+      message:
+        "Sincronização desativada: o schema atual não inclui filas ETL. Use migrações de dados dedicadas quando disponível.",
+    },
+    { status: 503 },
+  );
 }

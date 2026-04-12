@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -8,43 +5,54 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-  // Further reading:
-  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ── SISTEMA DE ACESSO (ADMIN/DASHBOARD) ──────────────────────────────────────
 
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
 }
 
-// Necessary for Next auth
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EMPLOYEE)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+// =============================================================================
+// NEXTAUTH — Portal do cliente Acesso admin
+// =============================================================================
+
 model Account {
   id                       String  @id @default(cuid())
   userId                   String
   type                     String
   provider                 String
   providerAccountId        String
-  refresh_token            String? // @db.Text
-  access_token             String? // @db.Text
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
   expires_at               Int?
   token_type               String?
   scope                    String?
-  id_token                 String? // @db.Text
+  id_token                 String? @db.Text
   session_state            String?
-  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("contas_oauth")
 }
 
 model Session {
@@ -53,56 +61,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum BillingPaymentStatus {
-  PENDING
-  RECEIVED
-  OVERDUE
-  REFUNDED
-  CANCELLED
-  UNKNOWN
-}
-
-model User {
-  id              String           @id @default(cuid())
-  name            String?
-  email           String?          @unique
-  emailVerified   DateTime?
-  image           String?
-  passwordHash    String?
-  role            UserRole         @default(USER)
-  asaasCustomerId String?          @unique
-  cpfCnpj         String?          @unique
-  accounts        Account[]
-  sessions        Session[]
-  posts           Post[]
-  billingPayments BillingPayment[]
-}
-
-model BillingPayment {
-  id              String               @id @default(cuid())
-  userId          String
-  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  asaasPaymentId  String               @unique
-  valueCents      Int
-  status          BillingPaymentStatus @default(PENDING)
-  description     String?
-  dueDate         DateTime?
-  paidAt          DateTime?
-  pixCopyPaste    String?              @db.Text
-  pixQrCodeBase64 String?              @db.Text
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
+  @@map("sessoes")
 }
 
 model VerificationToken {
@@ -111,4 +71,199 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("tokens_verificacao")
+}
+
+// ── CLIENTE E PERFIL (Cessionarios.csv) ──────────────────────────────────────
+model Customer {
+  id              BigInt  @id @map("cod_cessionario")
+  fullName        String  @map("full_name")
+  cpfCnpj         String? @unique @map("cpf_cnpj")
+  email           String?
+  passwordHash    String? @map("password_hash")
+  firstAccess     Boolean @default(true) @map("first_access")
+  asaasCustomerId String? @unique @map("asaas_customer_id") @db.VarChar(50)
+
+  // Auditoria e Sync
+  lastSyncAt DateTime @default(now()) @map("last_sync_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  plans                       CustomerPlan[]
+  addresses                   Address[]
+  phones                      Phone[]
+  payments                    PortalPayment[]
+  changeRequests              ChangeRequest[]
+  refreshTokens               RefreshToken[]
+  financialResponsibleAsPayer FinancialResponsible[] @relation("FinancialResponsiblePayer")
+
+  @@map("customers")
+}
+
+// ── PLANOS E JAZIGOS (Conforme cobranca-jazigo.html) ─────────────────────────
+model CustomerPlan {
+  id               BigInt  @id @map("cod_cessionario_plano")
+  customerId       BigInt  @map("customer_id")
+  status           String? @db.Char(1) // A=Ativo, I=Inativo
+  hasFinancialResp Boolean @default(false) @map("has_financial_resp")
+
+  // Informações do Jazigo (Sincronizadas ou locais)
+  sector String? @map("setor") // Ex: "Setor A"
+  quadra String?
+  lote   String?
+
+  customer             Customer              @relation(fields: [customerId], references: [id])
+  financialResponsible FinancialResponsible?
+  invoices             Invoice[]
+
+  @@map("customer_plans")
+}
+
+// ── RESPONSÁVEL FINANCEIRO (Lógica Filho/Pagador) ────────────────────────────
+model FinancialResponsible {
+  id             BigInt @id @default(autoincrement())
+  customerPlanId BigInt @unique @map("customer_plan_id")
+
+  name    String
+  cpfCnpj String  @map("cpf_cnpj")
+  email   String?
+  phone   String?
+
+  // Relacionamento com o plano e opcionalmente com outro Customer
+  payerCustomerId BigInt?      @map("payer_customer_id")
+  plan            CustomerPlan @relation(fields: [customerPlanId], references: [id], onDelete: Cascade)
+  payer           Customer?    @relation("FinancialResponsiblePayer", fields: [payerCustomerId], references: [id])
+
+  @@map("financial_responsible")
+}
+
+// ── FINANCEIRO (Boletos.csv + Asaas) ──────────────────────────────────────────
+model Invoice {
+  id      BigInt       @id @map("cod_boleto")
+  planId  BigInt       @map("plan_id")
+  dueDate DateTime     @map("due_date") @db.Date
+  value   Decimal      @map("valor_titulo") @db.Decimal(15, 2)
+  status  BoletoStatus @default(ABERTO)
+
+  // --- Campos de Histórico (Vindos do SQL Server / Boletos.csv) ---
+  paymentDate   DateTime? @map("data_liquid") @db.Date // DataLiquid
+  receivedValue Decimal?  @map("valor_recebido") @db.Decimal(15, 2) // ValorRecebido
+  discount      Decimal?  @map("descontos") @db.Decimal(15, 2)
+  interest      Decimal?  @map("juros_mora") @db.Decimal(15, 2)
+  paymentMode   String?   @map("modo_baixa") @db.VarChar(50) // AUTOMÁTICA, MANUAL
+  bankId        String?   @map("num_banco") @db.VarChar(10)
+  ourNumber     String?   @map("nosso_numero") @db.VarChar(50)
+  installment   String?   @map("parcela") @db.VarChar(10)
+
+  // Relacionamento com a Forma de Pagamento Legada (Formas_Pagto.csv)
+  paymentFormId Int? @map("cod_forma_pag")
+
+  // Relacionamentos
+  plan           CustomerPlan    @relation(fields: [planId], references: [id])
+  portalPayments PortalPayment[] // Pagamentos via Asaas vinculados a esta fatura
+
+  @@map("boletos")
+}
+
+enum BoletoStatus {
+  ABERTO
+  QUITADO
+  VENCIDO
+  CANCELADO
+}
+
+model PortalPayment {
+  id         String  @id @default(uuid())
+  invoiceId  BigInt? @map("invoice_id")
+  customerId BigInt  @map("customer_id")
+
+  // Gateway Asaas
+  asaasPaymentId String @unique @map("asaas_payment_id")
+  paymentMethod  String @map("payment_method") // CREDIT_CARD, PIX, BOLETO
+  status         String // PENDING, RECEIVED, CONFIRMED, OVERDUE
+
+  // Links de Pagamento (Usados no seu HTML)
+  invoiceUrl   String? @map("invoice_url") @db.Text
+  bankSlipUrl  String? @map("bank_slip_url") @db.Text
+  pixCopyPaste String? @map("pix_copy_paste") @db.Text
+
+  value    Decimal  @db.Decimal(15, 2)
+  netValue Decimal? @map("net_value") @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  invoice  Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("portal_payments")
+}
+
+// ── SOLICITAÇÕES E AUXILIARES ────────────────────────────────────────────────
+model ChangeRequest {
+  id         Int           @id @default(autoincrement())
+  customerId BigInt        @map("customer_id")
+  type       ChangeType
+  oldData    Json?         @map("old_data")
+  newData    Json          @map("new_data")
+  status     RequestStatus @default(PENDING)
+  reviewedBy String?       @map("reviewed_by")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("change_requests")
+}
+
+enum ChangeType {
+  ADDRESS
+  PHONE
+  PERSONAL
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Address {
+  id           Int     @id @default(autoincrement())
+  customerId   BigInt  @map("customer_id")
+  street       String
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String
+  state        String  @db.Char(2)
+  zipCode      String  @map("zip_code")
+  isMain       Boolean @default(true) @map("is_main")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Phone {
+  id           Int     @id @default(autoincrement())
+  customerId   BigInt  @map("customer_id")
+  number       String
+  type         String? // WHATSAPP, FIXO, CELULAR
+  observations String?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId], name: "idx_phone_customer")
+  @@map("phones")
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  customerId BigInt   @map("customer_id")
+  expiresAt  DateTime @map("expires_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }

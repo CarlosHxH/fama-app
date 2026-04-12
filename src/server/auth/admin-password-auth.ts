@@ -2,9 +2,12 @@
  * Login admin por e-mail + palavra-passe (provider NextAuth `admin-password`).
  */
 
+import type { Role } from "../../../generated/prisma/client";
+
 export type UserRowForAdminPassword = {
-  role: string;
-  passwordHash: string | null;
+  role: Role;
+  password: string;
+  active: boolean;
 } | null;
 
 /**
@@ -25,7 +28,7 @@ export function shouldRejectAdminLoginBeforeVerify(
   user: UserRowForAdminPassword,
 ): boolean {
   if (!user) return true;
-  if (user.role !== "ADMIN") return true;
-  if (!user.passwordHash?.trim()) return true;
+  if (!user.active) return true;
+  if (!user.password?.trim()) return true;
   return false;
 }

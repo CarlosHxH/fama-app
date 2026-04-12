@@ -44,6 +44,7 @@ function statusLabel(status: BillingPaymentStatus): string {
   const map: Record<BillingPaymentStatus, string> = {
     PENDING: "Em aberto",
     RECEIVED: "Pago",
+    CONFIRMED: "Pago",
     OVERDUE: "Vencida",
     REFUNDED: "Estornada",
     CANCELLED: "Cancelada",

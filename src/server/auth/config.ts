@@ -13,9 +13,12 @@ import {
   isValidCpfCnpjLength,
   normalizeCpfCnpjDigits,
 } from "~/server/auth/normalize-cpf-cnpj";
-import type { AdminStaffRole } from "../../../generated/prisma/client";
+import type { Role } from "../../../generated/prisma/client";
 
-/** Papel do utilizador na aplicação (espelha Prisma `UserRole`). */
+/** Portal (titular) vs painel staff. */
+export type AccountKind = "portal" | "admin";
+
+/** Papel na UI: portal = USER; painel staff = ADMIN. */
 export type AppUserRole = "USER" | "ADMIN";
 
 declare module "next-auth" {
@@ -23,16 +26,18 @@ declare module "next-auth" {
     user: {
       id: string;
       role: AppUserRole;
+      accountKind: AccountKind;
       cpfCnpj?: string | null;
-      /** Só para `role === ADMIN`. */
-      adminStaffRole?: AdminStaffRole | null;
+      /** Papel na tabela `users` (só `accountKind === 'admin'`). */
+      staffRole?: Role | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: AppUserRole;
+    accountKind?: AccountKind;
     cpfCnpj?: string | null;
-    adminStaffRole?: AdminStaffRole | null;
+    staffRole?: Role | null;
   }
 }
 
@@ -40,18 +45,17 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: AppUserRole;
+    accountKind: AccountKind;
     cpfCnpj?: string | null;
     email?: string | null;
-    adminStaffRole?: AdminStaffRole | null;
+    staffRole?: Role | null;
   }
 }
 
 /**
  * Dois providers Credentials:
- * - `credentials` — CPF/CNPJ (titular), sem palavra-passe.
- * - `admin-password` — e-mail + palavra-passe para `role === ADMIN` com `passwordHash` definido.
- *
- * @see https://authjs.dev/guides/providers/credentials
+ * - `credentials` — CPF/CNPJ (titular / Customer), sem palavra-passe.
+ * - `admin-password` — e-mail + palavra-passe para staff em `users`.
  */
 export const authConfig = {
   trustHost: true,
@@ -67,15 +71,16 @@ export const authConfig = {
         cpfCnpj: { label: "CPF ou CNPJ", type: "text" },
       },
       authorize: async (credentials) => {
-        const cpfCnpjRaw = typeof credentials?.cpfCnpj === "string" ? credentials.cpfCnpj : "";
+        const cpfCnpjRaw =
+          typeof credentials?.cpfCnpj === "string" ? credentials.cpfCnpj : "";
         const cpfCnpj = normalizeCpfCnpjDigits(cpfCnpjRaw);
         if (!isValidCpfCnpjLength(cpfCnpj)) {
           return null;
         }
 
-        let user;
+        let customer;
         try {
-          user = await db.user.findUnique({
+          customer = await db.customer.findUnique({
             where: { cpfCnpj },
           });
         } catch (err) {
@@ -89,18 +94,17 @@ export const authConfig = {
           throw err;
         }
 
-        if (!user) return null;
-
-        const role: AppUserRole = user.role === "ADMIN" ? "ADMIN" : "USER";
+        if (!customer) return null;
 
         return {
-          id: user.id,
-          email: user.email ?? undefined,
-          name: user.name ?? undefined,
-          image: user.image ?? undefined,
-          role,
-          cpfCnpj: user.cpfCnpj ?? undefined,
-          adminStaffRole: null,
+          id: customer.id.toString(),
+          email: customer.email ?? undefined,
+          name: customer.fullName ?? undefined,
+          image: undefined,
+          role: "USER" as const,
+          accountKind: "portal" as const,
+          cpfCnpj: customer.cpfCnpj ?? undefined,
+          staffRole: null,
         };
       },
     }),
@@ -140,24 +144,28 @@ export const authConfig = {
         }
 
         if (!user) return null;
-        if (shouldRejectAdminLoginBeforeVerify(user)) {
+        if (
+          shouldRejectAdminLoginBeforeVerify({
+            role: user.role,
+            password: user.password,
+            active: user.active,
+          })
+        ) {
           return null;
         }
 
-        const hash = user.passwordHash;
-        if (!hash) return null;
-
-        const ok = await compare(passwordRaw, hash);
+        const ok = await compare(passwordRaw, user.password);
         if (!ok) return null;
 
         return {
           id: user.id,
           email: user.email ?? undefined,
           name: user.name ?? undefined,
-          image: user.image ?? undefined,
+          image: undefined,
           role: "ADMIN" as const,
-          cpfCnpj: user.cpfCnpj ?? undefined,
-          adminStaffRole: user.adminStaffRole ?? "SUPER_ADMIN",
+          accountKind: "admin" as const,
+          cpfCnpj: undefined,
+          staffRole: user.role,
         };
       },
     }),
@@ -168,15 +176,19 @@ export const authConfig = {
         token.id = user.id ?? "";
         const r = user.role;
         token.role = r === "ADMIN" || r === "USER" ? r : "USER";
+        token.accountKind =
+          "accountKind" in user && user.accountKind === "admin"
+            ? "admin"
+            : "portal";
         token.cpfCnpj = user.cpfCnpj ?? null;
         token.email = user.email ?? null;
-        if (r === "ADMIN") {
-          token.adminStaffRole =
-            "adminStaffRole" in user && user.adminStaffRole
-              ? user.adminStaffRole
-              : "SUPER_ADMIN";
+        if (token.accountKind === "admin") {
+          token.staffRole =
+            "staffRole" in user && user.staffRole != null
+              ? user.staffRole
+              : "EMPLOYEE";
         } else {
-          token.adminStaffRole = null;
+          token.staffRole = null;
         }
       }
       return token;
@@ -185,8 +197,9 @@ export const authConfig = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.accountKind = token.accountKind ?? "portal";
         session.user.cpfCnpj = token.cpfCnpj ?? null;
-        session.user.adminStaffRole = token.adminStaffRole ?? null;
+        session.user.staffRole = token.staffRole ?? null;
         if (typeof token.email === "string" && token.email.length > 0) {
           session.user.email = token.email;
         }

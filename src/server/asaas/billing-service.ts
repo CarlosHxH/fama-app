@@ -3,8 +3,9 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 
 import { Prisma } from "../../../generated/prisma/client";
-import type { User } from "../../../generated/prisma/client";
+import type { Customer } from "../../../generated/prisma/client";
 import { db } from "~/server/db";
+import { decimalFromCents } from "~/server/billing/money";
 
 import { asaasFetch, AsaasApiError } from "./client";
 import { resolveBillingContactEmail } from "./resolve-billing-email";
@@ -39,23 +40,22 @@ function formatDueDate(d: Date): string {
 
 export type EnsureAsaasCustomerOptions = {
   cpfCnpjOverride?: string;
-  /** Usado quando o perfil ainda não tem e-mail (ex.: login só com CPF). */
   emailOverride?: string;
 };
 
 /**
- * Garante que existe cliente Asaas ligado ao utilizador e persiste `asaasCustomerId`.
+ * Garante cliente Asaas e persiste `asaasCustomerId` no `Customer`.
  */
 export async function ensureAsaasCustomer(
-  user: User,
+  customer: Customer,
   options?: EnsureAsaasCustomerOptions,
 ): Promise<string> {
-  if (user.asaasCustomerId) {
-    return user.asaasCustomerId;
+  if (customer.asaasCustomerId) {
+    return customer.asaasCustomerId;
   }
 
   const emailRaw = resolveBillingContactEmail(
-    user.email,
+    customer.email,
     options?.emailOverride,
   );
   if (!emailRaw) {
@@ -66,7 +66,7 @@ export async function ensureAsaasCustomer(
     });
   }
 
-  const cpfCnpj = options?.cpfCnpjOverride ?? user.cpfCnpj;
+  const cpfCnpj = options?.cpfCnpjOverride ?? customer.cpfCnpj;
   if (!cpfCnpj?.trim()) {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -76,7 +76,7 @@ export async function ensureAsaasCustomer(
   }
 
   const body = {
-    name: user.name ?? emailRaw.split("@")[0] ?? "Cliente",
+    name: customer.fullName ?? emailRaw.split("@")[0] ?? "Cliente",
     email: emailRaw,
     cpfCnpj: cpfCnpj.replace(/\D/g, ""),
   };
@@ -87,14 +87,15 @@ export async function ensureAsaasCustomer(
       body: JSON.stringify(body),
     });
 
-    const persistEmail = !user.email?.trim() && emailRaw.length > 0;
+    const persistEmail = !customer.email?.trim() && emailRaw.length > 0;
+    const digitsCpf = body.cpfCnpj;
 
     try {
-      await db.user.update({
-        where: { id: user.id },
+      await db.customer.update({
+        where: { id: customer.id },
         data: {
           asaasCustomerId: created.id,
-          cpfCnpj: body.cpfCnpj,
+          cpfCnpj: digitsCpf,
           ...(persistEmail ? { email: emailRaw } : {}),
         },
       });
@@ -124,18 +125,25 @@ export async function ensureAsaasCustomer(
   }
 }
 
+function mapInitialPortalStatus(asaasStatus: string | undefined): string {
+  const s = (asaasStatus ?? "PENDING").toUpperCase();
+  if (s === "CONFIRMED" || s === "RECEIVED") return "RECEIVED";
+  if (s === "OVERDUE") return "OVERDUE";
+  return "PENDING";
+}
+
 /**
- * Cria cobrança PIX no Asaas e registo em `BillingPayment`.
+ * Cria cobrança PIX no Asaas e registo em `PortalPayment`.
  */
-export async function createPixChargeForUser(input: {
-  user: User;
+export async function createPixChargeForCustomer(input: {
+  customer: Customer;
   valueCents: number;
   description?: string;
   dueDate: Date;
   cpfCnpj?: string;
   email?: string;
 }) {
-  const { user, valueCents, description, dueDate, cpfCnpj, email } = input;
+  const { customer, valueCents, description, dueDate, cpfCnpj, email } = input;
 
   if (valueCents < 100) {
     throw new TRPCError({
@@ -144,13 +152,13 @@ export async function createPixChargeForUser(input: {
     });
   }
 
-  const customerId = await ensureAsaasCustomer(user, {
+  const asaasCustomerId = await ensureAsaasCustomer(customer, {
     cpfCnpjOverride: cpfCnpj,
     emailOverride: email,
   });
 
   const payload = {
-    customer: customerId,
+    customer: asaasCustomerId,
     billingType: "PIX",
     value: reaisFromCents(valueCents),
     dueDate: formatDueDate(dueDate),
@@ -173,31 +181,26 @@ export async function createPixChargeForUser(input: {
     throw e;
   }
 
-  const record = await db.billingPayment.create({
+  return db.portalPayment.create({
     data: {
-      userId: user.id,
+      customerId: customer.id,
+      invoiceId: null,
       asaasPaymentId: payment.id,
-      valueCents,
-      status: "PENDING",
-      description: description ?? null,
-      dueDate,
-      asaasBillingType: "PIX",
-      checkoutUrl: null,
-      boletoDigitableLine: null,
+      paymentMethod: "PIX",
+      status: mapInitialPortalStatus(payment.status),
+      invoiceUrl: payment.invoiceUrl ?? null,
+      bankSlipUrl: payment.bankSlipUrl ?? null,
       pixCopyPaste: payment.pixCopiaECola ?? null,
-      pixQrCodeBase64: payment.encodedImage ?? null,
+      value: decimalFromCents(valueCents),
     },
   });
-
-  return record;
 }
 
 /**
- * Cria cobrança Asaas (PIX, boleto ou cartão via link/fatura) e registo em `BillingPayment`.
- * Usado pelo painel admin para gerar pagamentos em nome do cliente.
+ * Cria cobrança Asaas (PIX, boleto ou cartão) e registo em `PortalPayment`.
  */
-export async function createAsaasChargeForUser(input: {
-  user: User;
+export async function createAsaasChargeForCustomer(input: {
+  customer: Customer;
   valueCents: number;
   description?: string;
   dueDate: Date;
@@ -205,8 +208,15 @@ export async function createAsaasChargeForUser(input: {
   email?: string;
   billingType: AsaasBillingType;
 }) {
-  const { user, valueCents, description, dueDate, cpfCnpj, email, billingType } =
-    input;
+  const {
+    customer,
+    valueCents,
+    description,
+    dueDate,
+    cpfCnpj,
+    email,
+    billingType,
+  } = input;
 
   if (valueCents < 100) {
     throw new TRPCError({
@@ -215,13 +225,13 @@ export async function createAsaasChargeForUser(input: {
     });
   }
 
-  const customerId = await ensureAsaasCustomer(user, {
+  const asaasCustomerId = await ensureAsaasCustomer(customer, {
     cpfCnpjOverride: cpfCnpj,
     emailOverride: email,
   });
 
   const payload: Record<string, unknown> = {
-    customer: customerId,
+    customer: asaasCustomerId,
     billingType,
     value: reaisFromCents(valueCents),
     dueDate: formatDueDate(dueDate),
@@ -244,24 +254,19 @@ export async function createAsaasChargeForUser(input: {
     throw e;
   }
 
-  const checkoutUrl =
-    payment.invoiceUrl ?? payment.bankSlipUrl ?? undefined;
+  const checkoutUrl = payment.invoiceUrl ?? payment.bankSlipUrl ?? undefined;
 
-  const record = await db.billingPayment.create({
+  return db.portalPayment.create({
     data: {
-      userId: user.id,
+      customerId: customer.id,
+      invoiceId: null,
       asaasPaymentId: payment.id,
-      valueCents,
-      status: "PENDING",
-      description: description ?? null,
-      dueDate,
-      asaasBillingType: billingType,
-      checkoutUrl: checkoutUrl ?? null,
-      boletoDigitableLine: payment.identificationField ?? null,
+      paymentMethod: billingType,
+      status: mapInitialPortalStatus(payment.status),
+      invoiceUrl: checkoutUrl ?? payment.invoiceUrl ?? null,
+      bankSlipUrl: payment.bankSlipUrl ?? null,
       pixCopyPaste: payment.pixCopiaECola ?? null,
-      pixQrCodeBase64: payment.encodedImage ?? null,
+      value: decimalFromCents(valueCents),
     },
   });
-
-  return record;
 }

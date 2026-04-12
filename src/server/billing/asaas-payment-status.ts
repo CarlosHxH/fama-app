@@ -1,23 +1,21 @@
 /**
- * Estados persistidos em `BillingPayment.status` (alinhados ao Prisma).
+ * Estados persistidos em `PortalPayment.status` (strings alinhadas ao Asaas).
  */
-export type BillingPaymentStatus =
+export type PortalPaymentStatusKey =
   | "PENDING"
   | "RECEIVED"
   | "OVERDUE"
   | "REFUNDED"
   | "CANCELLED"
+  | "CONFIRMED"
   | "UNKNOWN";
 
 /**
- * Converte o campo `status` devolvido pela API Asaas (cobrança) para o enum interno.
- *
- * @param asaasStatus - Valor textual do Asaas (ex.: RECEIVED, PENDING).
- * @returns Estado persistido em `BillingPayment.status`.
+ * Converte o `status` devolvido pelo Asaas para o valor persistido.
  */
-export function mapAsaasPaymentStatusToBilling(
+export function mapAsaasPaymentStatusToPortal(
   asaasStatus: string,
-): BillingPaymentStatus {
+): PortalPaymentStatusKey {
   const s = asaasStatus.toUpperCase();
   switch (s) {
     case "PENDING":
@@ -38,26 +36,26 @@ export function mapAsaasPaymentStatusToBilling(
 }
 
 /**
- * Decide o novo estado da cobrança de forma idempotente (webhooks repetidos).
- *
- * @param current - Estado atual na base de dados.
- * @param incoming - Estado derivado do evento Asaas.
- * @returns `null` se não deve atualizar o campo `status`.
+ * Atualização idempotente do status (webhooks repetidos).
  */
-export function resolveStatusTransition(
-  current: BillingPaymentStatus,
-  incoming: BillingPaymentStatus,
-): BillingPaymentStatus | null {
+export function resolvePortalStatusTransition(
+  current: string,
+  incoming: PortalPaymentStatusKey,
+): PortalPaymentStatusKey | null {
+  const c = current.toUpperCase();
   if (incoming === "UNKNOWN") {
     return null;
   }
-  if (current === incoming) {
+  if (c === incoming) {
     return null;
   }
-  if (current === "RECEIVED" && incoming === "PENDING") {
+  if (
+    (c === "RECEIVED" || c === "CONFIRMED") &&
+    incoming === "PENDING"
+  ) {
     return null;
   }
-  if (current === "REFUNDED" || current === "CANCELLED") {
+  if (c === "REFUNDED" || c === "CANCELLED") {
     return null;
   }
   return incoming;

@@ -29,6 +29,30 @@ const base = z.object({
   MSSQL_TRUST_SERVER_CERTIFICATE: boolEnvOptional(false),
 
   /**
+   * Timeouts Tedious (driver `mssql`): ligações lentas/VPN costumam exigir valores maiores.
+   * Predefinições evitam `Failed to cancel request in 5000ms` (cancelTimeout Tedious).
+   */
+  MSSQL_CONNECT_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1_000)
+    .max(600_000)
+    .default(60_000),
+  /** 0 = sem limite de duração por pedido SQL (comportamento Tedious). */
+  MSSQL_REQUEST_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(2_147_483_647)
+    .default(120_000),
+  MSSQL_CANCEL_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1_000)
+    .max(300_000)
+    .default(30_000),
+
+  /**
    * Intervalo de log de progresso (a cada N linhas gravadas). 0 = sem logs intermédios.
    * (Não agrupa transação — cada upsert é independente.)
    */
@@ -84,6 +108,9 @@ export function loadJobEnv(): JobEnv {
       MSSQL_PASSWORD: process.env.MSSQL_PASSWORD,
       MSSQL_ENCRYPT: process.env.MSSQL_ENCRYPT,
       MSSQL_TRUST_SERVER_CERTIFICATE: process.env.MSSQL_TRUST_SERVER_CERTIFICATE,
+      MSSQL_CONNECT_TIMEOUT_MS: process.env.MSSQL_CONNECT_TIMEOUT_MS,
+      MSSQL_REQUEST_TIMEOUT_MS: process.env.MSSQL_REQUEST_TIMEOUT_MS,
+      MSSQL_CANCEL_TIMEOUT_MS: process.env.MSSQL_CANCEL_TIMEOUT_MS,
       SQL_SYNC_BATCH_SIZE: process.env.SQL_SYNC_BATCH_SIZE,
       SQL_SYNC_MAX_RETRIES: process.env.SQL_SYNC_MAX_RETRIES,
       SQL_SYNC_RETRY_DELAY_MS: process.env.SQL_SYNC_RETRY_DELAY_MS,

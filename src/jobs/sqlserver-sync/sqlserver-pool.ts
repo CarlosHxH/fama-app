@@ -4,10 +4,27 @@ import type { JobEnv } from "./job-env";
 
 export type MssqlPool = sql.ConnectionPool;
 
+/** Opções Tedious: `cancelTimeout` por defeito é 5s e causa `Failed to cancel request in 5000ms` em redes lentas. */
+function tediousTimeoutsFromEnv(env: JobEnv) {
+  return {
+    connectTimeout: env.MSSQL_CONNECT_TIMEOUT_MS,
+    requestTimeout: env.MSSQL_REQUEST_TIMEOUT_MS,
+    cancelTimeout: env.MSSQL_CANCEL_TIMEOUT_MS,
+  };
+}
+
 export async function openMssqlPool(env: JobEnv): Promise<MssqlPool> {
+  const t = tediousTimeoutsFromEnv(env);
   const connStr = env.MSSQL_CONNECTION_STRING?.trim();
   if (connStr) {
-    const pool = new sql.ConnectionPool(connStr);
+    const parsed = sql.ConnectionPool.parseConnectionString(connStr);
+    const pool = new sql.ConnectionPool({
+      ...parsed,
+      options: {
+        ...parsed.options,
+        ...t,
+      },
+    });
     await pool.connect();
     return pool;
   }
@@ -20,6 +37,7 @@ export async function openMssqlPool(env: JobEnv): Promise<MssqlPool> {
     options: {
       encrypt: env.MSSQL_ENCRYPT,
       trustServerCertificate: env.MSSQL_TRUST_SERVER_CERTIFICATE,
+      ...t,
     },
   });
   await pool.connect();

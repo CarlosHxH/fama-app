@@ -183,7 +183,7 @@ export async function runSync(
 
     return await finish("SUCESSO", null);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = formatSyncJobFailureMessage(e);
     console.error(`[${SYNC_SQLSERVER_JOB_NAME}]`, e);
     return await finish("FALHA", msg);
   } finally {
@@ -213,6 +213,44 @@ function safeSourceKey(mapping: SyncMapping, row: Record<string, unknown>): stri
   } catch {
     return "?";
   }
+}
+
+function formatSyncJobFailureMessage(e: unknown): string {
+  let msg = e instanceof Error ? e.message : String(e);
+  const code =
+    e && typeof e === "object" && "code" in e
+      ? String((e as { code?: unknown }).code)
+      : "";
+  const original =
+    e && typeof e === "object" && "originalError" in e
+      ? (e as { originalError?: { code?: unknown; message?: unknown } })
+          .originalError
+      : undefined;
+  const originalCode =
+    original && typeof original === "object" && "code" in original
+      ? String(original.code)
+      : "";
+
+  const isTimeout =
+    code === "ETIMEOUT" ||
+    originalCode === "ETIMEOUT" ||
+    msg.includes("ETIMEOUT") ||
+    msg.includes("Failed to cancel request");
+
+  const isConnReset =
+    code === "ECONNRESET" ||
+    originalCode === "ECONNRESET" ||
+    code === "ESOCKET" ||
+    originalCode === "ESOCKET" ||
+    msg.includes("ECONNRESET") ||
+    msg.includes("ECONNREFUSED");
+
+  if (isTimeout) {
+    msg = `${msg} — Sugestão: verificar VPN/firewall, MSSQL_ENCRYPT / MSSQL_TRUST_SERVER_CERTIFICATE, e aumentar MSSQL_CONNECT_TIMEOUT_MS, MSSQL_REQUEST_TIMEOUT_MS ou MSSQL_CANCEL_TIMEOUT_MS no .env.`;
+  } else if (isConnReset) {
+    msg = `${msg} — Sugestão: o servidor ou a rede fechou a ligação TCP (firewall, proxy, VPN instável, ou TLS). Confirmar MSSQL_SERVER/porta, MSSQL_ENCRYPT e MSSQL_TRUST_SERVER_CERTIFICATE se for Azure/SSL; testar com sqlcmd ou SSMS na mesma máquina.`;
+  }
+  return msg;
 }
 
 /**

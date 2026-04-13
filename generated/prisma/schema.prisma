@@ -139,7 +139,7 @@ model Customer {
   sqlServerId    Int?    @unique @map("sql_server_id") // CodCessionario — nulo até o primeiro sync
   cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14) // apenas dígitos, sem máscara — login principal
   nome           String  @db.VarChar(160)
-  email          String? @unique @db.VarChar(120)
+  email          String? @db.VarChar(120)
   senhaHash      String? @map("senha_hash") // nulo até o primeiro acesso
   primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
   ativo          Boolean @default(true)

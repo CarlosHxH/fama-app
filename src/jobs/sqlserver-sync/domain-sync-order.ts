@@ -2,13 +2,15 @@ import type { JobEnv } from "./job-env";
 import { getSyncMappings, type SyncMapping } from "./sync-mappings";
 
 /**
- * Ordem respeitando FKs: cliente → contrato → jazigo → responsável → pagamentos →
+ * Ordem respeitando FKs: cliente → contratos (plano e cadeia `dbo.Contratos`) →
+ * vínculos contrato–jazigo (`Contratos_Jazigos`) → responsável → pagamentos →
  * endereços/telefones (replace por cliente).
  */
 const DOMAIN_SYNC_IDS: readonly string[] = [
   "cessionarios",
   "cessionarios-planos",
-  "jazigos",
+  "contratos",
+  "contratos-jazigos",
   "cessionarios-planos-responsavel",
   "boletos",
   "cessionarios-enderecos",

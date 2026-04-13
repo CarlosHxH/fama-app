@@ -6,6 +6,7 @@ import {
   mapLegacyBoletoToStatusPagamento,
   parseSqlServerDate,
 } from "./domain-mappers";
+import { resolveContratoFromPlanOrChainImpl } from "./contrato-resolve-plan-chain";
 import {
   normalizeCpfCnpjDigits,
   pickRow,
@@ -175,6 +176,78 @@ export async function upsertCustomerFromRow(
 }
 
 /**
+ * Resolve `Contrato` no Postgres a partir do legado: prioriza vínculo por plano
+ * (`CodCessionarioPlano`), depois cadeia `Contratos` (`CodContrato`).
+ */
+export async function resolveContratoFromPlanOrChain(
+  prisma: PrismaClient,
+  row: Record<string, unknown>,
+): Promise<{ id: string; customerId: string } | null> {
+  const planSqlId = toSqlServerInt(
+    pickRow(row, ["CodCessionarioPlano", "codCessionarioPlano"]),
+  );
+  const contratoSqlId = toSqlServerInt(
+    pickRow(row, ["CodContrato", "codContrato"]),
+  );
+  return resolveContratoFromPlanOrChainImpl(
+    { planSqlId, contratoSqlId },
+    (id) =>
+      prisma.contrato.findUnique({
+        where: { sqlServerId: id },
+        select: { id: true, customerId: true },
+      }),
+  );
+}
+
+/**
+ * `dbo.Contratos` + `Contratos_Cessionarios` (agregado) → `Contrato` com `sqlServerId = CodContrato`.
+ */
+export async function upsertContratoFromContratosChainRow(
+  prisma: PrismaClient,
+  row: Record<string, unknown>,
+): Promise<boolean> {
+  const codContrato = toSqlServerInt(pickRow(row, ["CodContrato", "codContrato"]));
+  const custSqlId = toSqlServerInt(
+    pickRow(row, ["CodCessionario", "codCessionario"]),
+  );
+  if (codContrato === null || custSqlId === null) return false;
+
+  const customer = await prisma.customer.findUnique({
+    where: { sqlServerId: custSqlId },
+  });
+  if (!customer) return false;
+
+  const numeroRaw = str(
+    pickRow(row, [
+      "NumContrato",
+      "numContrato",
+      "NumeroContrato",
+      "numeroContrato",
+    ]),
+    30,
+  ).trim();
+  const numeroContrato =
+    numeroRaw.length > 0 ? numeroRaw.slice(0, 30) : `CTR-${codContrato}`;
+
+  const situacao = mapSituacaoContrato(row);
+
+  await prisma.contrato.upsert({
+    where: { sqlServerId: codContrato },
+    create: {
+      customerId: customer.id,
+      numeroContrato,
+      situacao,
+      sqlServerId: codContrato,
+    },
+    update: {
+      numeroContrato,
+      situacao,
+    },
+  });
+  return true;
+}
+
+/**
  * `Cessionarios_Planos` → `Contrato` (chave `CodCessionarioPlano` como `sqlServerId`).
  */
 export async function upsertContratoFromRow(
@@ -226,33 +299,51 @@ export async function upsertContratoFromRow(
 }
 
 /**
- * `Jazigos` → modelo `Jazigo`.
+ * `Contratos_Jazigos` + `Jazigos` (+ quadra) → `Jazigo` ligado ao `Contrato`.
+ * Fallback: se não existir contrato com `sqlServerId = CodContrato`, tenta `CodCessionarioPlano`
+ * derivado da cadeia cessionário/plano (dados mistos legado novo/antigo).
  */
-export async function upsertJazigoFromRow(
+export async function upsertJazigoFromContratosJazigosRow(
   prisma: PrismaClient,
   row: Record<string, unknown>,
 ): Promise<boolean> {
   const jazigoSqlId = toSqlServerInt(pickRow(row, ["CodJazigo", "codJazigo"]));
-  const planSqlId = toSqlServerInt(
-    pickRow(row, [
-      "CodCessionarioPlano",
-      "codCessionarioPlano",
-      "CodContrato",
-      "codContrato",
-    ]),
-  );
-  if (jazigoSqlId === null || planSqlId === null) return false;
+  const contratoSqlId = toSqlServerInt(pickRow(row, ["CodContrato", "codContrato"]));
+  if (jazigoSqlId === null || contratoSqlId === null) return false;
 
-  const contrato = await prisma.contrato.findUnique({
-    where: { sqlServerId: planSqlId },
+  let contrato = await prisma.contrato.findUnique({
+    where: { sqlServerId: contratoSqlId },
   });
+  if (!contrato) {
+    const planSqlId = toSqlServerInt(
+      pickRow(row, ["CodCessionarioPlano", "codCessionarioPlano"]),
+    );
+    if (planSqlId !== null) {
+      contrato = await prisma.contrato.findUnique({
+        where: { sqlServerId: planSqlId },
+      });
+    }
+  }
   if (!contrato) return false;
 
+  const labelJazigo = str(
+    pickRow(row, ["Jazigo", "jazigo", "Codigo", "codigo", "NumeroJazigo"]),
+    20,
+  ).trim();
   const codigo =
-    str(
-      pickRow(row, ["Codigo", "codigo", "NumeroJazigo", "numeroJazigo"]),
-      20,
-    ) || `JZ-${jazigoSqlId}`;
+    labelJazigo.length > 0 ? labelJazigo : `JZ-${jazigoSqlId}`;
+
+  const nomeQuadra = str(
+    pickRow(row, ["NomeQuadra", "nomeQuadra", "Quadra", "quadra"]),
+    20,
+  ).trim();
+  const codQuadra = toSqlServerInt(pickRow(row, ["CodQuadra", "codQuadra"]));
+  const quadra =
+    nomeQuadra.length > 0
+      ? nomeQuadra
+      : codQuadra !== null
+        ? String(codQuadra)
+        : null;
 
   const gavetasRaw = toSqlServerInt(
     pickRow(row, [
@@ -271,7 +362,7 @@ export async function upsertJazigoFromRow(
     create: {
       sqlServerId: jazigoSqlId,
       codigo,
-      quadra: str(pickRow(row, ["Quadra", "quadra"]), 20) || null,
+      quadra,
       setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
       quantidadeGavetas,
       valorMensalidade,
@@ -279,10 +370,66 @@ export async function upsertJazigoFromRow(
     },
     update: {
       codigo,
-      quadra: str(pickRow(row, ["Quadra", "quadra"]), 20) || null,
+      quadra,
       setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
       quantidadeGavetas,
       valorMensalidade,
+      contratoId: contrato.id,
+    },
+  });
+  return true;
+}
+
+/**
+ * `dbo.Jazigos` isolado (sem `Contratos_Jazigos`) não tem `contratoId` no legado — ignorado no sync de domínio.
+ * Mantido para compatibilidade se a query for enriquecida no futuro.
+ */
+export async function upsertJazigoFromRow(
+  prisma: PrismaClient,
+  row: Record<string, unknown>,
+): Promise<boolean> {
+  const jazigoSqlId = toSqlServerInt(pickRow(row, ["CodJazigo", "codJazigo"]));
+  if (jazigoSqlId === null) return false;
+
+  const contratoCtx = await resolveContratoFromPlanOrChain(prisma, row);
+  if (!contratoCtx) return false;
+
+  const codigo =
+    str(
+      pickRow(row, ["Jazigo", "jazigo", "Codigo", "codigo", "NumeroJazigo"]),
+      20,
+    ).trim() || `JZ-${jazigoSqlId}`;
+
+  const gavetasRaw = toSqlServerInt(
+    pickRow(row, [
+      "QtdGavetas",
+      "qtdGavetas",
+      "NroGavetas",
+      "nroGavetas",
+      "NrGavetas",
+    ]),
+  );
+  const quantidadeGavetas = gavetasRaw !== null && gavetasRaw > 0 ? gavetasRaw : 3;
+  const valorMensalidade = monthlyFromGavetas(quantidadeGavetas);
+
+  await prisma.jazigo.upsert({
+    where: { sqlServerId: jazigoSqlId },
+    create: {
+      sqlServerId: jazigoSqlId,
+      codigo,
+      quadra: str(pickRow(row, ["NomeQuadra", "Quadra", "quadra"]), 20) || null,
+      setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
+      quantidadeGavetas,
+      valorMensalidade,
+      contratoId: contratoCtx.id,
+    },
+    update: {
+      codigo,
+      quadra: str(pickRow(row, ["NomeQuadra", "Quadra", "quadra"]), 20) || null,
+      setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
+      quantidadeGavetas,
+      valorMensalidade,
+      contratoId: contratoCtx.id,
     },
   });
   return true;
@@ -297,10 +444,8 @@ export async function upsertFinancialResponsibleFromRow(
   );
   if (planSqlId === null) return false;
 
-  const contrato = await prisma.contrato.findUnique({
-    where: { sqlServerId: planSqlId },
-  });
-  if (!contrato) return false;
+  const contratoCtx = await resolveContratoFromPlanOrChain(prisma, row);
+  if (!contratoCtx) return false;
 
   const nome =
     str(pickRow(row, ["Nome", "nome", "RazaoSocial", "razaoSocial"]), 200) ||
@@ -315,9 +460,9 @@ export async function upsertFinancialResponsibleFromRow(
     null;
 
   await prisma.responsavelFinanceiro.upsert({
-    where: { contratoId: contrato.id },
+    where: { contratoId: contratoCtx.id },
     create: {
-      contratoId: contrato.id,
+      contratoId: contratoCtx.id,
       nome,
       cpf,
       email,
@@ -350,10 +495,8 @@ export async function upsertPagamentoFromRow(
     return false;
   }
 
-  const contrato = await prisma.contrato.findUnique({
-    where: { sqlServerId: planSqlId },
-  });
-  if (!contrato) return false;
+  const contratoCtx = await resolveContratoFromPlanOrChain(prisma, row);
+  if (!contratoCtx) return false;
 
   const status = mapLegacyBoletoToStatusPagamento(
     pickRow(row, ["Situacao", "situacao", "Status"]),
@@ -370,7 +513,7 @@ export async function upsertPagamentoFromRow(
     : null;
   if (!jazigo) {
     jazigo = await prisma.jazigo.findFirst({
-      where: { contratoId: contrato.id },
+      where: { contratoId: contratoCtx.id },
       orderBy: { codigo: "asc" },
     });
   }
@@ -385,8 +528,8 @@ export async function upsertPagamentoFromRow(
     where: { sqlServerId: boletoSqlId },
     create: {
       sqlServerId: boletoSqlId,
-      customerId: contrato.customerId,
-      contratoId: contrato.id,
+      customerId: contratoCtx.customerId,
+      contratoId: contratoCtx.id,
       jazigoId: jazigo?.id ?? null,
       valorTitulo,
       dataVencimento: due,
@@ -529,6 +672,10 @@ export async function upsertDomainRowByMappingId(
       return (await upsertCustomerFromRow(prisma, row)) ? 1 : 0;
     case "cessionarios-planos":
       return (await upsertContratoFromRow(prisma, row)) ? 1 : 0;
+    case "contratos":
+      return (await upsertContratoFromContratosChainRow(prisma, row)) ? 1 : 0;
+    case "contratos-jazigos":
+      return (await upsertJazigoFromContratosJazigosRow(prisma, row)) ? 1 : 0;
     case "jazigos":
       return (await upsertJazigoFromRow(prisma, row)) ? 1 : 0;
     case "cessionarios-planos-responsavel":

@@ -62,7 +62,18 @@ export const STATIC_MAPPINGS: SyncMapping[] = [
     id: "boletos",
     sourceTable: "dbo.Boletos",
     keyColumn: "CodBoleto",
-    sourceQuery: `SELECT * FROM dbo.Boletos WITH (NOLOCK)`,
+    sourceQuery: `
+SELECT b.*,
+  (
+    SELECT TOP 1 cc.CodContrato
+    FROM dbo.Cessionarios_Planos cp WITH (NOLOCK)
+    INNER JOIN dbo.Contratos_Cessionarios cc WITH (NOLOCK)
+      ON cp.CodCessionario = cc.CodCessionario
+    WHERE cp.CodCessionarioPlano = b.CodCessionarioPlano
+    ORDER BY cc.CodContrato
+  ) AS CodContrato
+FROM dbo.Boletos b WITH (NOLOCK)
+`.trim(),
     transform: (row) => enrichLegacyIntDates(row, LEGACY_DATE_COLUMNS_BOLETOS),
   },
 
@@ -113,7 +124,18 @@ export const STATIC_MAPPINGS: SyncMapping[] = [
     id: "cessionarios-planos-responsavel",
     sourceTable: "dbo.Cessionarios_Planos_Responsavel",
     keyColumn: "CodCessionarioPlano",
-    sourceQuery: `SELECT * FROM dbo.Cessionarios_Planos_Responsavel WITH (NOLOCK)`,
+    sourceQuery: `
+SELECT r.*,
+  (
+    SELECT TOP 1 cc.CodContrato
+    FROM dbo.Cessionarios_Planos cp WITH (NOLOCK)
+    INNER JOIN dbo.Contratos_Cessionarios cc WITH (NOLOCK)
+      ON cp.CodCessionario = cc.CodCessionario
+    WHERE cp.CodCessionarioPlano = r.CodCessionarioPlano
+    ORDER BY cc.CodContrato
+  ) AS CodContrato
+FROM dbo.Cessionarios_Planos_Responsavel r WITH (NOLOCK)
+`.trim(),
   },
   {
     id: "cessionarios-planos-responsavel-fones",
@@ -121,6 +143,57 @@ export const STATIC_MAPPINGS: SyncMapping[] = [
     keyColumn: "CodFone",
     sourceQuery: `SELECT * FROM dbo.Cessionarios_Planos_Responsavel_Fones WITH (NOLOCK)`,
   },
+  /**
+   * Contrato na cadeia legada `dbo.Contratos` + cessionário titular (`Contratos_Cessionarios`).
+   * Um `CodContrato` pode ter vários cessionários; usa-se o menor `CodCessionario` como titular sintético.
+   */
+  {
+    id: "contratos",
+    sourceTable: "dbo.Contratos",
+    keyColumn: "CodContrato",
+    sourceQuery: `
+SELECT c.CodContrato, c.NumContrato, c.Valor, c.Situacao, x.CodCessionario
+FROM dbo.Contratos c WITH (NOLOCK)
+INNER JOIN (
+  SELECT CodContrato, MIN(CodCessionario) AS CodCessionario
+  FROM dbo.Contratos_Cessionarios WITH (NOLOCK)
+  GROUP BY CodContrato
+) x ON c.CodContrato = x.CodContrato
+`.trim(),
+  },
+  /**
+   * Vínculo real jazigo ↔ contrato (`Contratos_Jazigos`) + dados do jazigo e da quadra.
+   */
+  {
+    id: "contratos-jazigos",
+    sourceTable: "dbo.Contratos_Jazigos",
+    keyColumns: ["CodContrato", "CodJazigo"],
+    sourceQuery: `
+SELECT
+  cj.CodContrato,
+  cj.CodJazigo,
+  cj.Valor AS ValorVinculoContratoJazigo,
+  j.CodQuadra,
+  j.Jazigo,
+  j.Obs AS ObsJazigo,
+  q.Quadra AS NomeQuadra,
+  (
+    SELECT TOP 1 cp.CodCessionarioPlano
+    FROM dbo.Contratos_Cessionarios cc WITH (NOLOCK)
+    INNER JOIN dbo.Cessionarios_Planos cp WITH (NOLOCK)
+      ON cp.CodCessionario = cc.CodCessionario
+    WHERE cc.CodContrato = cj.CodContrato
+    ORDER BY cp.CodCessionarioPlano
+  ) AS CodCessionarioPlano
+FROM dbo.Contratos_Jazigos cj WITH (NOLOCK)
+INNER JOIN dbo.Jazigos j WITH (NOLOCK) ON cj.CodJazigo = j.CodJazigo
+LEFT JOIN dbo.Quadras q WITH (NOLOCK) ON j.CodQuadra = q.CodQuadra
+`.trim(),
+  },
+  /**
+   * Referência: jazigos sem vínculo em `Contratos_Jazigos` não entram no sync de domínio
+   * (Prisma exige `contratoId`). Mantido para extensões / demo env.
+   */
   {
     id: "jazigos",
     sourceTable: "dbo.Jazigos",

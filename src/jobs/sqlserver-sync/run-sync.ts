@@ -12,6 +12,7 @@ import { waitForTcpReachable } from "./reachability";
 import { closeMssqlPool, openMssqlPool } from "./sqlserver-pool";
 import type { SyncMapping } from "./sync-mappings";
 import { SYNC_SQLSERVER_JOB_NAME } from "./sync-constants";
+import { pickRow, toSqlServerInt } from "./row-utils";
 import { rowToSourceKeyFromSpec } from "./transform";
 
 export type RunSyncResult = {
@@ -25,8 +26,14 @@ export type RunSyncResult = {
 
 type RowErrorDetail = {
   entidade: string;
-  sqlServerId?: number | null;
   motivo: string;
+  /** Chave natural da linha (simples ou composta `a|b`). */
+  sourceKey?: string;
+  codCessionario?: number | null;
+  codCessionarioPlano?: number | null;
+  codContrato?: number | null;
+  codJazigo?: number | null;
+  codBoleto?: number | null;
 };
 
 /**
@@ -148,10 +155,12 @@ export async function runSync(
           rowErrors++;
           const key = safeSourceKey(mapping, transformed);
           const msg = err instanceof Error ? err.message : String(err);
+          const origem = originKeysFromRow(transformed);
           erroDetalhes.push({
             entidade: mapping.id,
             motivo: msg,
-            sqlServerId: null,
+            sourceKey: key,
+            ...origem,
           });
           console.error(
             `[${SYNC_SQLSERVER_JOB_NAME}] falha linha mapping=${mapping.id} key=${key}:`,
@@ -161,6 +170,16 @@ export async function runSync(
         logProgress(env, mapping.id, totalRead, totalWritten);
       }
     }
+
+    const [nContratos, nJazigos, nResp, nPagamentos] = await Promise.all([
+      prisma.contrato.count(),
+      prisma.jazigo.count(),
+      prisma.responsavelFinanceiro.count(),
+      prisma.pagamento.count(),
+    ]);
+    console.info(
+      `[${SYNC_SQLSERVER_JOB_NAME}] pós-sync contagens: contratos=${nContratos} jazigos=${nJazigos} responsaveis_financeiros=${nResp} pagamentos=${nPagamentos}`,
+    );
 
     return await finish("SUCESSO", null);
   } catch (e) {
@@ -194,4 +213,28 @@ function safeSourceKey(mapping: SyncMapping, row: Record<string, unknown>): stri
   } catch {
     return "?";
   }
+}
+
+/**
+ * Chaves de origem MSSQL mais usadas nos mapeamentos (para `erroDetalhes` e suporte).
+ */
+function originKeysFromRow(row: Record<string, unknown>): Pick<
+  RowErrorDetail,
+  | "codCessionario"
+  | "codCessionarioPlano"
+  | "codContrato"
+  | "codJazigo"
+  | "codBoleto"
+> {
+  return {
+    codCessionario: toSqlServerInt(
+      pickRow(row, ["CodCessionario", "codCessionario"]),
+    ),
+    codCessionarioPlano: toSqlServerInt(
+      pickRow(row, ["CodCessionarioPlano", "codCessionarioPlano"]),
+    ),
+    codContrato: toSqlServerInt(pickRow(row, ["CodContrato", "codContrato"])),
+    codJazigo: toSqlServerInt(pickRow(row, ["CodJazigo", "codJazigo"])),
+    codBoleto: toSqlServerInt(pickRow(row, ["CodBoleto", "codBoleto"])),
+  };
 }

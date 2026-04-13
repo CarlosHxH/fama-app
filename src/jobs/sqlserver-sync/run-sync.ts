@@ -237,18 +237,20 @@ function formatSyncJobFailureMessage(e: unknown): string {
     msg.includes("ETIMEOUT") ||
     msg.includes("Failed to cancel request");
 
+  const msgLower = msg.toLowerCase();
   const isConnReset =
     code === "ECONNRESET" ||
     originalCode === "ECONNRESET" ||
     code === "ESOCKET" ||
     originalCode === "ESOCKET" ||
     msg.includes("ECONNRESET") ||
-    msg.includes("ECONNREFUSED");
+    msg.includes("ECONNREFUSED") ||
+    msgLower.includes("socket hang up");
 
   if (isTimeout) {
     msg = `${msg} — Sugestão: verificar VPN/firewall, MSSQL_ENCRYPT / MSSQL_TRUST_SERVER_CERTIFICATE, e aumentar MSSQL_CONNECT_TIMEOUT_MS, MSSQL_REQUEST_TIMEOUT_MS ou MSSQL_CANCEL_TIMEOUT_MS no .env.`;
   } else if (isConnReset) {
-    msg = `${msg} — Sugestão: o servidor ou a rede fechou a ligação TCP (firewall, proxy, VPN instável, ou TLS). Confirmar MSSQL_SERVER/porta, MSSQL_ENCRYPT e MSSQL_TRUST_SERVER_CERTIFICATE se for Azure/SSL; testar com sqlcmd ou SSMS na mesma máquina.`;
+    msg = `${msg} — Sugestão: o servidor ou a rede fechou a ligação TCP (firewall, proxy, VPN instável, ou TLS). Confirmar MSSQL_SERVER/porta, MSSQL_ENCRYPT e MSSQL_TRUST_SERVER_CERTIFICATE se for Azure/SSL; testar com sqlcmd ou SSMS na mesma máquina. Para correr o job, prefira npm run job:sync (Node/tsx): o Bun costuma expor bugs do driver tedious (ex.: "No event socketError in state Final").`;
   }
   return msg;
 }

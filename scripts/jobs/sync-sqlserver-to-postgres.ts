@@ -1,5 +1,8 @@
 /**
  * Job de sincronização SQL Server → Postgres (tabelas de domínio + `sync_logs`).
+ *
+ * Executar com `npm run job:sync` (Node + tsx). Evitar Bun: o stack mssql/tedious
+ * pode falhar de forma inconsistente (ECONNRESET, "socket hang up", estado interno).
  */
 import "dotenv/config";
 

@@ -511,12 +511,10 @@ export async function upsertPagamentoFromRow(
   let jazigo = jazigoSqlId
     ? await prisma.jazigo.findUnique({ where: { sqlServerId: jazigoSqlId } })
     : null;
-  if (!jazigo) {
-    jazigo = await prisma.jazigo.findFirst({
-      where: { contratoId: contratoCtx.id },
-      orderBy: { codigo: "asc" },
-    });
-  }
+  jazigo ??= await prisma.jazigo.findFirst({
+    where: { contratoId: contratoCtx.id },
+    orderBy: { codigo: "asc" },
+  });
 
   const tipo = jazigo ? "MANUTENCAO" : "TAXA_SERVICO";
 

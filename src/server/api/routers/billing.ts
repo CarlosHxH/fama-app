@@ -63,8 +63,8 @@ function serializePortalPayment(row: Pagamento) {
   const raw = row.webhookData;
   let pixCopyPaste: string | null = null;
   if (raw !== null && typeof raw === "object" && !Array.isArray(raw)) {
-    const o = raw as Record<string, unknown>;
-    const v = o["pixCopiaECola"];
+    const o = raw as Record<string, unknown> & { pixCopiaECola?: unknown };
+    const v = o.pixCopiaECola;
     pixCopyPaste = typeof v === "string" ? v : null;
   }
 

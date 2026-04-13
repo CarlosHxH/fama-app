@@ -4,12 +4,9 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-const REDIRECT_DELAY_MS = 400;
+import { safeCallbackUrl } from "~/lib/safe-callback-url";
 
-function safeCallbackUrl(raw: string | null, fallback: string): string {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return fallback;
-  return raw;
-}
+const REDIRECT_DELAY_MS = 400;
 
 /**
  * Formulário de entrada administrativa (e-mail + palavra-passe).
@@ -56,11 +53,11 @@ export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: str
         }
         return;
       }
-      if (res?.url) {
+      if (res && !res.error) {
         setSuccess(true);
         setLoading(false);
         await new Promise((r) => setTimeout(r, REDIRECT_DELAY_MS));
-        window.location.href = res.url;
+        window.location.assign(callbackUrl);
         return;
       }
     } finally {

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { digitsOnly, formatCpfCnpjDisplay } from "~/lib/format-cpf-cnpj";
+import { safeCallbackUrl } from "~/lib/safe-callback-url";
 
 const DEFAULT_SUPPORT_PHONE_DISPLAY = "62 3211-1444";
 const DEFAULT_SUPPORT_WHATSAPP_LINK = "https://wa.me/5562992511416";
@@ -24,7 +25,10 @@ const REDIRECT_DELAY_MS = 400;
  */
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/cobranca";
+  const callbackUrl = safeCallbackUrl(
+    searchParams.get("callbackUrl"),
+    "/cobranca",
+  );
 
   const [cpfCnpjDisplay, setCpfCnpjDisplay] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -60,11 +64,12 @@ export function LoginForm() {
         }
         return;
       }
-      if (res?.url) {
+      if (res && !res.error) {
         setSuccess(true);
         setLoading(false);
         await new Promise((r) => setTimeout(r, REDIRECT_DELAY_MS));
-        window.location.href = res.url;
+        // Não usar res.url: sem AUTH_URL o Auth.js pode devolver http://localhost:3000/...
+        window.location.assign(callbackUrl);
         return;
       }
     } finally {

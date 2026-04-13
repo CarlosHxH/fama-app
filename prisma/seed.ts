@@ -20,8 +20,6 @@ function normalizeDigits(input: string): string {
 const SEED_ASAAS_PENDING = "seed_asaas_pay_pending_001";
 const SEED_ASAAS_RECEIVED = "seed_asaas_pay_received_001";
 
-const SEED_CUSTOMER_ID = 1n;
-
 /**
  * Dados de teste: staff `User` (admin) e `Customer` (portal) + pagamentos de exemplo.
  *
@@ -62,16 +60,16 @@ async function main() {
     where: { email: adminEmail },
     create: {
       email: adminEmail,
-      name: "Administrador (seed)",
-      password: adminPasswordHashed,
+      nome: "Administrador (seed)",
+      senha: adminPasswordHashed,
       role: "ADMIN",
-      active: true,
+      ativo: true,
     },
     update: {
-      name: "Administrador (seed)",
-      password: adminPasswordHashed,
+      nome: "Administrador (seed)",
+      senha: adminPasswordHashed,
       role: "ADMIN",
-      active: true,
+      ativo: true,
     },
   });
 
@@ -99,31 +97,29 @@ async function main() {
       ? titularEmailRaw.toLowerCase()
       : null;
 
-  await prisma.customer.upsert({
-    where: { id: SEED_CUSTOMER_ID },
+  const customer = await prisma.customer.upsert({
+    where: { cpfCnpj: titularCpf },
     create: {
-      id: SEED_CUSTOMER_ID,
-      fullName: "Titular de teste (seed)",
+      nome: "Titular de teste (seed)",
       cpfCnpj: titularCpf,
       email: titularEmail,
+      primeiroAcesso: true,
     },
     update: {
-      fullName: "Titular de teste (seed)",
-      cpfCnpj: titularCpf,
+      nome: "Titular de teste (seed)",
       ...(titularEmail ? { email: titularEmail } : {}),
     },
   });
 
-  const phoneCount = await prisma.phone.count({
-    where: { customerId: SEED_CUSTOMER_ID },
+  const phoneCount = await prisma.customerPhone.count({
+    where: { customerId: customer.id },
   });
   if (phoneCount === 0) {
-    await prisma.phone.create({
+    await prisma.customerPhone.create({
       data: {
-        customerId: SEED_CUSTOMER_ID,
-        number: "11987654321",
-        type: "CELULAR",
-        observations: "Contacto de exemplo (seed)",
+        customerId: customer.id,
+        numero: "11987654321",
+        tipo: "CELULAR",
       },
     });
     console.info("[seed] Telefone de exemplo criado para o cliente.");
@@ -131,46 +127,73 @@ async function main() {
 
   const dueSoon = new Date();
   dueSoon.setDate(dueSoon.getDate() + 7);
+  const dueUtc = new Date(
+    Date.UTC(
+      dueSoon.getUTCFullYear(),
+      dueSoon.getUTCMonth(),
+      dueSoon.getUTCDate(),
+      12,
+      0,
+      0,
+    ),
+  );
 
-  await prisma.portalPayment.upsert({
-    where: { asaasPaymentId: SEED_ASAAS_PENDING },
+  await prisma.pagamento.upsert({
+    where: { asaasId: SEED_ASAAS_PENDING },
     create: {
-      customerId: SEED_CUSTOMER_ID,
-      invoiceId: null,
-      asaasPaymentId: SEED_ASAAS_PENDING,
-      paymentMethod: "PIX",
-      status: "PENDING",
-      value: new Prisma.Decimal("150.50"),
+      customerId: customer.id,
+      asaasId: SEED_ASAAS_PENDING,
+      metodoPagamento: "PIX",
+      status: "PENDENTE",
+      tipo: "TAXA_SERVICO",
+      valorTitulo: new Prisma.Decimal("150.50"),
+      dataVencimento: dueUtc,
     },
     update: {
-      status: "PENDING",
-      value: new Prisma.Decimal("150.50"),
-      paymentMethod: "PIX",
+      status: "PENDENTE",
+      valorTitulo: new Prisma.Decimal("150.50"),
+      metodoPagamento: "PIX",
     },
   });
 
-  await prisma.portalPayment.upsert({
-    where: { asaasPaymentId: SEED_ASAAS_RECEIVED },
+  const paidDay = new Date();
+  paidDay.setUTCDate(paidDay.getUTCDate() - 2);
+  const paidUtc = new Date(
+    Date.UTC(
+      paidDay.getUTCFullYear(),
+      paidDay.getUTCMonth(),
+      paidDay.getUTCDate(),
+      12,
+      0,
+      0,
+    ),
+  );
+
+  await prisma.pagamento.upsert({
+    where: { asaasId: SEED_ASAAS_RECEIVED },
     create: {
-      customerId: SEED_CUSTOMER_ID,
-      invoiceId: null,
-      asaasPaymentId: SEED_ASAAS_RECEIVED,
-      paymentMethod: "PIX",
-      status: "RECEIVED",
-      value: new Prisma.Decimal("89.90"),
+      customerId: customer.id,
+      asaasId: SEED_ASAAS_RECEIVED,
+      metodoPagamento: "PIX",
+      status: "PAGO",
+      tipo: "TAXA_SERVICO",
+      valorTitulo: new Prisma.Decimal("89.90"),
+      dataVencimento: paidUtc,
+      dataPagamento: paidUtc,
     },
     update: {
-      status: "RECEIVED",
-      value: new Prisma.Decimal("89.90"),
-      paymentMethod: "PIX",
+      status: "PAGO",
+      valorTitulo: new Prisma.Decimal("89.90"),
+      metodoPagamento: "PIX",
+      dataPagamento: paidUtc,
     },
   });
 
   console.info(
-    `[seed] Cliente portal cod_cessionario=${SEED_CUSTOMER_ID} CPF=${titularCpf}`,
+    `[seed] Cliente portal id=${customer.id} CPF=${titularCpf}`,
   );
   console.info(
-    `[seed] Pagamentos exemplo: ${SEED_ASAAS_PENDING} (PENDING), ${SEED_ASAAS_RECEIVED} (RECEIVED)`,
+    `[seed] Pagamentos exemplo: ${SEED_ASAAS_PENDING} (PENDENTE), ${SEED_ASAAS_RECEIVED} (PAGO)`,
   );
   console.info("\n[seed] Concluído.");
   console.info(`  • /admin/login: ${adminEmail} + SEED_ADMIN_PASSWORD`);

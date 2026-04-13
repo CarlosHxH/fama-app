@@ -1,114 +1,94 @@
 # Remapeamento SQL Server → PostgreSQL (`fama-app`)
 
-Este documento descreve como os dados do legado **SQL Server** são espelhados no **PostgreSQL** da aplicação Fama.
+Este documento descreve como os dados do legado **SQL Server** são sincronizados nas **tabelas de domínio** do **PostgreSQL** da aplicação Fama.
 
 ## Objetivo
 
 - **Origem:** tabelas `dbo.*` no SQL Server (ex.: `DB_Fama`).
-- **Destino:** uma única tabela genérica **`MssqlSyncRecord`** (física: **`registros_sync_mssql`**), com o conteúdo da linha em **`payload` (JSON)**.
-- **Auditoria:** cada execução do job regista uma linha em **`SyncRun`** (física: **`execucoes_sincronizacao`**).
+- **Destino:** modelos Prisma com `@@map` em português/inglês alinhados à BD: `Customer` (`customers`), `CustomerPlan` (`customer_plans`), `Invoice` (tabela física **`fatura`**, PK `cod_boleto`), `FinancialResponsible`, `Address`, `Phone`, etc.
+- **Auditoria:** cada execução do job regista uma linha em **`SyncRun`** (tabela **`sync_runs`**, campo `job_name` típico `sync-sqlserver-to-postgres`).
 
-Não existe, nesta fase, uma tabela Postgres por tabela SQL Server: o “remapeamento” é **lógico** (identificação por `sourceTable` + `sourceKey`) e **documentado em código** em [`src/jobs/sqlserver-sync/sync-mappings.ts`](../src/jobs/sqlserver-sync/sync-mappings.ts).
+O conjunto de queries e ordem de execução está em [`src/jobs/sqlserver-sync/sync-mappings.ts`](../src/jobs/sqlserver-sync/sync-mappings.ts) e [`src/jobs/sqlserver-sync/domain-sync-order.ts`](../src/jobs/sqlserver-sync/domain-sync-order.ts). O mapeamento por linha e upserts ficam em [`src/jobs/sqlserver-sync/domain-upsert.ts`](../src/jobs/sqlserver-sync/domain-upsert.ts).
+
+**Nota:** o id do mapeamento ETL **`boletos`** refere-se apenas à **fonte** `dbo.Boletos`; os dados gravam-se na tabela Postgres **`fatura`** (model Prisma `Invoice`).
 
 ## Modelo no Postgres (Prisma)
 
-No PostgreSQL, a tabela física dos espelhos chama-se **`registros_sync_mssql`** (modelo Prisma `MssqlSyncRecord`). As execuções do job ficam em **`execucoes_sincronizacao`** (`SyncRun`). Isto segue o estilo de nomes legíveis do desenho Claude (`cessionarios`, `sync_logs`, etc.), via `@@map` no [`schema.prisma`](../prisma/schema.prisma).
+Ver [`prisma/schema.prisma`](../prisma/schema.prisma). Destaques:
 
-| Campo         | Função |
-|---------------|--------|
-| `sourceTable` | Identificador estável da origem (ex.: `dbo.Boletos`). |
-| `sourceKey`   | Chave natural da linha (uma coluna ou composta, ver abaixo). |
-| `payload`     | Objeto JSON com as colunas retornadas pelo `SELECT` (após `transform`, se existir). |
-| `syncedAt` / `updatedAt` | Metadados de sincronização. |
+| Origem MSSQL (exemplo) | Destino Prisma / t física |
+|------------------------|---------------------------|
+| `dbo.Cessionarios` | `Customer` → `customers` |
+| `dbo.Cessionarios_Planos` | `CustomerPlan` → `customer_plans` |
+| `dbo.Boletos` | `Invoice` → **`fatura`** |
+| `dbo.Cessionarios_Planos_Responsavel` | `FinancialResponsible` → `financial_responsible` |
+| `dbo.Cessionarios_Enderecos` / `Fones` | `Address` / `Phone` |
 
-Restrição: **`@@unique([sourceTable, sourceKey])`** — reexecuções fazem **upsert** (atualizam o mesmo registo).
+Colunas reais de `dbo.Cessionarios` no export de schema: nome em **`Cessionario`**, documento em **`CPF`**, contacto em **`Email`** (não assumir apenas `Nome` / `CpfCnpj`).
 
 ## Fluxo do job
 
 1. Carrega variáveis de ambiente ([`src/jobs/sqlserver-sync/job-env.ts`](../src/jobs/sqlserver-sync/job-env.ts)).
 2. Opcional: healthcheck TCP até ao SQL Server (VPN/rota).
-3. Abre pool MSSQL, percorre os mapeamentos na ordem definida.
-4. Para cada mapeamento: `SELECT` com `WITH (NOLOCK)`, uma linha → um **`upsert`** em `MssqlSyncRecord` (sem transação interativa em lote, para evitar timeout em tabelas grandes).
-5. Atualiza `SyncRun` com `SUCCESS` ou `FAILED`.
+3. Cria registo `sync_runs` em estado `RUNNING`.
+4. Abre pool MSSQL, percorre só os mapeamentos de domínio (ordem em `domain-sync-order.ts`).
+5. Por linha: `transform` (datas legadas) → upsert Prisma na tabela de domínio correspondente.
+6. Atualiza `sync_runs` com `SUCCESS`, `PARTIAL` ou `FAILED`.
 
 Entrypoint: [`scripts/jobs/sync-sqlserver-to-postgres.ts`](../scripts/jobs/sync-sqlserver-to-postgres.ts)  
-Comando típico: `npm run job:sync-sqlserver` ou `bun scripts/jobs/sync-sqlserver-to-postgres.ts`
+Comando típico: `npm run job:sync-sqlserver`
 
-**Agendamento (ex.: diário):** em ambientes Vercel, existe [`vercel.json`](../vercel.json) com cron às 06:00 UTC para [`GET /api/cron/sync-sqlserver`](../src/app/api/cron/sync-sqlserver/route.ts). Defina `CRON_SECRET` e envie `Authorization: Bearer <CRON_SECRET>`. Em outros hosts, use systemd, Windows Task Scheduler ou o mesmo endpoint com o mesmo segredo.
+**Agendamento:** [`GET /api/cron/sync-sqlserver`](../src/app/api/cron/sync-sqlserver/route.ts) com `Authorization: Bearer <CRON_SECRET>`.
 
-Variáveis: ver comentários em [`.env.example`](../.env.example) (ex.: `DATABASE_URL`, MSSQL, `SQL_SYNC_BATCH_SIZE` como intervalo de log).
+Variáveis: [`.env.example`](../.env.example) (`DATABASE_URL`, MSSQL, `SQL_SYNC_BATCH_SIZE`, etc.).
 
 ## Chave natural (`sourceKey`)
 
-- **Uma coluna:** `keyColumn` — valor convertido para string (número, bigint, string, `Date` → ISO).
-- **Várias colunas:** `keyColumns` — valores concatenados com **`|`** (ex.: `12|3`).
-
-Definição em [`src/jobs/sqlserver-sync/transform.ts`](../src/jobs/sqlserver-sync/transform.ts) (`rowToSourceKeyFromSpec`).
+Usada para logs e idempotência lógica; ver [`src/jobs/sqlserver-sync/transform.ts`](../src/jobs/sqlserver-sync/transform.ts) (`rowToSourceKeyFromSpec`). A chave é case-insensitive relativamente às colunas do resultset.
 
 ## Tabela de mapeamentos (estático)
 
-Ordem de execução = ordem no array `STATIC_MAPPINGS`. Query padrão: `SELECT * FROM <tabela> WITH (NOLOCK)` salvo indicação contrária.
+Ordem de execução no job de domínio ≠ ordem completa em `STATIC_MAPPINGS` (catálogos podem existir na lista mas não serem executados pelo ETL de domínio).
 
-| ID (`id`) | Tabela SQL Server (`sourceTable`) | Chave (`keyColumn` / `keyColumns`) | Transformação de payload |
-|-----------|-----------------------------------|------------------------------------|---------------------------|
-| `cfg-formas-pagto` | `dbo.Cfg_Formas_Pagto` | `CodForma` | — |
-| `cfg-periodicidade` | `dbo.Cfg_Periodicidade` | `CodPeriodicidade` | — |
-| `planos` | `dbo.Planos` | `CodPlano` | — |
-| `cessionarios` | `dbo.Cessionarios` | `CodCessionario` | — |
-| `cessionarios-planos` | `dbo.Cessionarios_Planos` | `CodCessionarioPlano` | Datas legadas (YYYYMMDD) → campos `*_as_isodate` |
-| `boletos` | `dbo.Boletos` | `CodBoleto` | Datas legadas (YYYYMMDD) → campos `*_as_isodate` |
-| `par-taxas` | `dbo.Par_Taxas` | `CodTaxa` | — |
-| `planos-taxas-manutencao` | `dbo.Planos_TaxasManutencao` | `CodPlano`, `CodPeriodicidade` (composta) | — |
-| `cad-bancos` | `dbo.Cad_Bancos` | `NumBanco` | — |
-| `cad-bancos-contas` | `dbo.Cad_Bancos_Contas` | `CodConta` | — |
-| `cidades` | `dbo.Cidades` | `CodCidade` | — |
-| `cessionarios-enderecos` | `dbo.Cessionarios_Enderecos` | `CodCessionario`, `TipoEndereco` (composta) | — |
-| `cessionarios-fones` | `dbo.Cessionarios_Fones` | `CodFone` | — |
-| `cessionarios-planos-responsavel` | `dbo.Cessionarios_Planos_Responsavel` | `CodCessionarioPlano` | — |
-| `cessionarios-planos-responsavel-fones` | `dbo.Cessionarios_Planos_Responsavel_Fones` | `CodFone` | — |
-| `jazigos` | `dbo.Jazigos` | `CodJazigo` | — |
+| ID (`id`) | Tabela SQL Server | Chave | Notas |
+|-----------|-------------------|-------|--------|
+| `cessionarios` | `dbo.Cessionarios` | `CodCessionario` | → `customers` |
+| `cessionarios-planos` | `dbo.Cessionarios_Planos` | `CodCessionarioPlano` | → `customer_plans`; datas YYYYMMDD → `*_as_isodate` |
+| `cessionarios-planos-responsavel` | `dbo.Cessionarios_Planos_Responsavel` | `CodCessionarioPlano` | → `financial_responsible` |
+| `boletos` | `dbo.Boletos` | `CodBoleto` | → **`fatura`** / `Invoice`; datas YYYYMMDD → `*_as_isodate` |
+| `cessionarios-enderecos` | `dbo.Cessionarios_Enderecos` | composta | → `addresses` (replace por cliente) |
+| `cessionarios-fones` | `dbo.Cessionarios_Fones` | `CodFone` | → `phones` (replace por cliente) |
+
+Outros ids em `STATIC_MAPPINGS` (`planos`, `cfg-*`, …) podem servir de referência ou futuras extensões.
 
 ### Mapeamento opcional via ambiente
 
-Se `MSSQL_SYNC_DEMO_QUERY` estiver definida, é acrescentado um mapeamento extra `env-demo` (com `MSSQL_SYNC_DEMO_SOURCE_TABLE` e `MSSQL_SYNC_DEMO_KEY_COLUMN` opcionais). Útil para testes sem alterar código.
+Se `MSSQL_SYNC_DEMO_QUERY` estiver definida, é acrescentado um mapeamento extra `env-demo`. O pipeline de domínio não o inclui por defeito.
 
 ## Datas legadas (inteiro `YYYYMMDD`)
 
-Em [`src/jobs/sqlserver-sync/legacy-dates.ts`](../src/jobs/sqlserver-sync/legacy-dates.ts):
-
-- **`dbo.Boletos`:** `DataVencimento`, `DataLiquid`, `DataCredito` — para cada valor inteiro válido, acrescenta-se no JSON `DataVencimento_as_isodate`, etc. (string `YYYY-MM-DD`). O valor original mantém-se.
-- **`dbo.Cessionarios_Planos`:** `DataInclusao`, `DataEncerramento` — idem com `*_as_isodate`.
-
-Colunas como `DiaBase` / `MesReferencia` **não** são tratadas como data completa neste passo.
+[`src/jobs/sqlserver-sync/legacy-dates.ts`](../src/jobs/sqlserver-sync/legacy-dates.ts): `dbo.Boletos` e `dbo.Cessionarios_Planos` — campos auxiliares `*_as_isodate`.
 
 ## Consultas úteis no Postgres
 
 ```sql
--- Últimos registos por tabela de origem (tabela física: registros_sync_mssql)
-SELECT "sourceTable", COUNT(*) 
-FROM "registros_sync_mssql" 
-GROUP BY "sourceTable" 
-ORDER BY 1;
+-- Últimas execuções do job
+SELECT * FROM sync_runs ORDER BY started_at DESC LIMIT 20;
 
--- Exemplo: um boleto pela chave natural
-SELECT * FROM "registros_sync_mssql"
-WHERE "sourceTable" = 'dbo.Boletos' AND "sourceKey" = '<CodBoleto>';
-
--- Últimas execuções do job (tabela física: execucoes_sincronizacao)
-SELECT * FROM "execucoes_sincronizacao" ORDER BY "startedAt" DESC LIMIT 20;
+-- Amostra de faturas (tabela física fatura)
+SELECT cod_boleto, plan_id, due_date, status, valor_titulo
+FROM fatura
+ORDER BY cod_boleto DESC
+LIMIT 20;
 ```
-
-## Extensão futura
-
-Para relatórios ou integrações (ex.: Asaas) com tipagem forte, pode evoluir para **ETL** que leia `MssqlSyncRecord.payload` e preencha tabelas Postgres dedicadas, ou novos modelos Prisma — mantendo este job como camada de **ingestão bruta** consistente.
 
 ## Ficheiros relacionados
 
 | Ficheiro | Papel |
 |----------|--------|
-| [`sync-mappings.ts`](../src/jobs/sqlserver-sync/sync-mappings.ts) | Lista de mapeamentos e queries |
-| [`transform.ts`](../src/jobs/sqlserver-sync/transform.ts) | `sourceKey` e serialização JSON |
-| [`legacy-dates.ts`](../src/jobs/sqlserver-sync/legacy-dates.ts) | Enriquecimento YYYYMMDD → ISO |
-| [`run-sync.ts`](../src/jobs/sqlserver-sync/run-sync.ts) | Loop de leitura MSSQL e upserts |
-| [`job-env.ts`](../src/jobs/sqlserver-sync/job-env.ts) | Validação de env do job |
-| [`prisma/schema.prisma`](../prisma/schema.prisma) | `MssqlSyncRecord`, `SyncRun` |
+| [`sync-mappings.ts`](../src/jobs/sqlserver-sync/sync-mappings.ts) | Queries MSSQL e ids de mapeamento |
+| [`domain-sync-order.ts`](../src/jobs/sqlserver-sync/domain-sync-order.ts) | Ordem dos mapeamentos de domínio |
+| [`domain-upsert.ts`](../src/jobs/sqlserver-sync/domain-upsert.ts) | Upserts Prisma |
+| [`run-sync.ts`](../src/jobs/sqlserver-sync/run-sync.ts) | Pool, `sync_runs`, loop |
+| [`job-env.ts`](../src/jobs/sqlserver-sync/job-env.ts) | Env do job |
+| [`prisma/schema.prisma`](../prisma/schema.prisma) | Modelos e `@@map` (`fatura`, …) |

@@ -1,16 +1,24 @@
 /**
- * Job de sincronização SQL Server → Postgres.
- *
- * Desativado: o schema Prisma atual não inclui `SyncRun` / `MssqlSyncRecord`.
- * Quando o ETL for redesenhado para `Customer` / `Invoice`, volte a ligar este script.
+ * Job de sincronização SQL Server → Postgres (tabelas de domínio + `sync_logs`).
  */
 import "dotenv/config";
 
+import { loadJobEnv } from "../../src/jobs/sqlserver-sync/job-env";
+import { createJobPrisma } from "../../src/jobs/sqlserver-sync/prisma-job";
+import { runSync } from "../../src/jobs/sqlserver-sync/run-sync";
+
 async function main() {
-  console.info(
-    "[sync-sqlserver] Job desativado — modelo de fila ETL removido do schema.",
-  );
-  process.exitCode = 0;
+  const prisma = createJobPrisma();
+  const env = loadJobEnv();
+  try {
+    const result = await runSync(prisma, env);
+    console.info("[sync-sqlserver] concluído:", result);
+    if (result.status === "FALHA") {
+      process.exitCode = 1;
+    }
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 void main();

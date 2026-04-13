@@ -7,6 +7,12 @@ import { api } from "~/trpc/react";
 
 import { cn } from "~/lib/utils";
 
+const TIPOS = [
+  { id: "CELULAR" as const, label: "Celular" },
+  { id: "FIXO" as const, label: "Fixo" },
+  { id: "WHATSAPP" as const, label: "WhatsApp" },
+];
+
 /**
  * Tabela de telefones 1:N do titular + formulário de inclusão (painel admin).
  */
@@ -15,12 +21,12 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
   const list = api.admin.listUserPhones.useQuery({ userId });
 
   const [number, setNumber] = useState("");
-  const [observations, setObservations] = useState("");
+  const [tipo, setTipo] = useState<(typeof TIPOS)[number]["id"]>("CELULAR");
 
   const createMut = api.admin.createUserPhone.useMutation({
     onSuccess: async () => {
       setNumber("");
-      setObservations("");
+      setTipo("CELULAR");
       await utils.admin.listUserPhones.invalidate({ userId });
       await utils.admin.listUsers.invalidate();
     },
@@ -41,18 +47,21 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
     },
   });
 
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editNumber, setEditNumber] = useState("");
-  const [editObs, setEditObs] = useState("");
+  const [editTipo, setEditTipo] = useState<(typeof TIPOS)[number]["id"]>(
+    "CELULAR",
+  );
 
   function startEdit(row: {
-    id: number;
-    number: string;
-    observations: string | null;
+    id: string;
+    numero: string;
+    tipo: string;
   }) {
     setEditingId(row.id);
-    setEditNumber(row.number);
-    setEditObs(row.observations ?? "");
+    setEditNumber(row.numero);
+    const t = TIPOS.find((x) => x.id === row.tipo)?.id ?? "CELULAR";
+    setEditTipo(t);
   }
 
   function cancelEdit() {
@@ -63,7 +72,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
     <div className="border-t border-jardim-border bg-jardim-cream/40 px-4 py-4 sm:px-5">
       <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-jardim-green-dark">
         <Phone className="h-3.5 w-3.5" aria-hidden />
-        Telefones e observações
+        Telefones
       </div>
 
       {list.isLoading ? (
@@ -77,7 +86,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
             <thead>
               <tr className="border-b border-jardim-border bg-jardim-cream/60 text-[10px] font-semibold uppercase tracking-wider text-jardim-text-muted">
                 <th className="px-3 py-2">Telefone</th>
-                <th className="px-3 py-2">Observações</th>
+                <th className="px-3 py-2">Tipo</th>
                 <th className="w-24 px-3 py-2 text-right">Ações</th>
               </tr>
             </thead>
@@ -105,14 +114,22 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                           />
                         </td>
                         <td className="px-3 py-2 align-top">
-                          <textarea
-                            className="w-full min-w-[12rem] resize-y rounded-lg border border-jardim-border bg-jardim-white px-2 py-1.5 text-sm"
-                            rows={2}
-                            value={editObs}
-                            onChange={(e) => setEditObs(e.target.value)}
-                            placeholder="Opcional"
-                            aria-label="Observações"
-                          />
+                          <select
+                            className="w-full rounded-lg border border-jardim-border bg-jardim-white px-2 py-1.5 text-sm"
+                            value={editTipo}
+                            onChange={(e) =>
+                              setEditTipo(
+                                e.target.value as (typeof TIPOS)[number]["id"],
+                              )
+                            }
+                            aria-label="Tipo"
+                          >
+                            {TIPOS.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.label}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="whitespace-nowrap px-3 py-2 text-right align-top">
                           <button
@@ -123,7 +140,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                               updateMut.mutate({
                                 id: row.id,
                                 number: editNumber.trim(),
-                                observations: editObs.trim() || null,
+                                tipo: editTipo,
                               })
                             }
                           >
@@ -141,16 +158,11 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                     ) : (
                       <>
                         <td className="px-3 py-2.5 font-medium tabular-nums text-jardim-text">
-                          {row.number}
+                          {row.numero}
                         </td>
-                        <td className="max-w-md px-3 py-2.5 text-jardim-text-muted">
-                          {row.observations?.trim() ? (
-                            <span className="whitespace-pre-wrap break-words">
-                              {row.observations}
-                            </span>
-                          ) : (
-                            <span className="text-jardim-text-light">—</span>
-                          )}
+                        <td className="px-3 py-2.5 text-jardim-text-muted">
+                          {TIPOS.find((t) => t.id === row.tipo)?.label ??
+                            row.tipo}
                         </td>
                         <td className="px-3 py-2 text-right">
                           <button
@@ -197,7 +209,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
           createMut.mutate({
             userId,
             number: t,
-            observations: observations.trim() || undefined,
+            tipo,
           });
         }}
       >
@@ -214,17 +226,23 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
             autoComplete="tel"
           />
         </div>
-        <div className="min-w-[12rem] flex-[2]">
+        <div className="min-w-[8rem]">
           <label className="mb-1 block text-[11px] font-medium text-jardim-text-muted">
-            Observações
+            Tipo
           </label>
-          <input
-            type="text"
-            className="w-full rounded-lg border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
-            placeholder="ex. Contacto preferencial, horário…"
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-          />
+          <select
+            className="w-full rounded-lg border border-jardim-border bg-jardim-white px-3 py-2 text-sm"
+            value={tipo}
+            onChange={(e) =>
+              setTipo(e.target.value as (typeof TIPOS)[number]["id"])
+            }
+          >
+            {TIPOS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"

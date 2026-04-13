@@ -1,3 +1,8 @@
+// =============================================================================
+// schema.prisma — Portal do Cessionário (Cemitério)
+// Banco: PostgreSQL 17+
+// =============================================================================
+
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -8,262 +13,493 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── SISTEMA DE ACESSO (ADMIN/DASHBOARD) ──────────────────────────────────────
+// =============================================================================
+// ENUMS
+// =============================================================================
 
 enum Role {
   ADMIN
-  MANAGER
-  EMPLOYEE
+  FINANCEIRO
+  ATENDENTE
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(EMPLOYEE)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
+enum TipoTelefone {
+  CELULAR
+  FIXO
+  WHATSAPP
+}
 
-  accounts Account[]
-  sessions Session[]
+enum TipoEndereco {
+  RESIDENCIAL
+  COMERCIAL
+}
+
+enum SituacaoContrato {
+  ATIVO // A — sincronizado do SQL Server
+  INATIVO // I
+  QUITADO // Q
+}
+
+enum StatusPagamento {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
+  ESTORNADO
+}
+
+enum TipoPagamento {
+  MANUTENCAO
+  AQUISICAO
+  TAXA_SERVICO
+}
+
+enum MetodoPagamento {
+  PIX
+  BOLETO
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+}
+
+enum TipoAlteracao {
+  ENDERECO
+  TELEFONE
+  EMAIL
+  DADOS_PESSOAIS
+}
+
+enum StatusAlteracao {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+enum CanalNotificacao {
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum StatusNotificacao {
+  ENVIADA
+  ENTREGUE
+  FALHA
+}
+
+enum SyncStatus {
+  PROCESSANDO
+  SUCESSO
+  FALHA
+}
+
+// =============================================================================
+// 1. USUÁRIOS DO DASHBOARD (Funcionários)
+// =============================================================================
+
+/// Funcionários com acesso ao dashboard administrativo.
+/// Autenticação própria via JWT — independente do portal do cliente.
+model User {
+  id    String  @id @default(uuid())
+  email String  @unique @db.VarChar(120)
+  nome  String  @db.VarChar(160)
+  senha String // bcrypt hash
+  role  Role    @default(ATENDENTE)
+  ativo Boolean @default(true)
+
+  changeRequests ChangeRequest[] @relation("ReviewedBy")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("users")
 }
 
 // =============================================================================
-// NEXTAUTH — Portal do cliente Acesso admin
+// 2. CLIENTES (Cessionários — sincronizados do SQL Server)
 // =============================================================================
 
-model Account {
-  id                       String  @id @default(cuid())
-  userId                   String
-  type                     String
-  provider                 String
-  providerAccountId        String
-  refresh_token            String? @db.Text
-  access_token             String? @db.Text
-  expires_at               Int?
-  token_type               String?
-  scope                    String?
-  id_token                 String? @db.Text
-  session_state            String?
-  refresh_token_expires_in Int?
-  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@map("contas_oauth")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessoes")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("tokens_verificacao")
-}
-
-// ── CLIENTE E PERFIL (Cessionarios.csv) ──────────────────────────────────────
+/// Cessionário unificado. sql_server_id = CodCessionario original.
+/// O CPF/CNPJ é o identificador de login no portal (apenas dígitos, sem máscara).
+/// Pessoa física: 11 dígitos | Pessoa jurídica: 14 dígitos.
+///
+/// Fluxo de primeiro acesso:
+///   1. Cliente informa CPF/CNPJ → sistema localiza o registro
+///   2. primeiroAcesso = true → força criação de senha
+///   3. senhaHash preenchido → primeiroAcesso = false → acesso liberado
+///
+/// Bloqueio por tentativas:
+///   Após N tentativas erradas, bloqueadoAte é preenchido.
+///   O portal rejeita login enquanto now() < bloqueadoAte.
+///
+/// Integração Asaas:
+///   asaasCustomerId é preenchido na primeira cobrança gerada pelo portal.
+///   Sem este campo, cada nova cobrança criaria um cliente duplicado no Asaas.
 model Customer {
-  id              BigInt  @id @map("cod_cessionario")
-  fullName        String  @map("full_name")
-  cpfCnpj         String? @unique @map("cpf_cnpj")
-  email           String?
-  passwordHash    String? @map("password_hash")
-  firstAccess     Boolean @default(true) @map("first_access")
+  id             String  @id @default(uuid())
+  sqlServerId    Int?    @unique @map("sql_server_id") // CodCessionario — nulo até o primeiro sync
+  cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14) // apenas dígitos, sem máscara — login principal
+  nome           String  @db.VarChar(160)
+  email          String? @unique @db.VarChar(120)
+  senhaHash      String? @map("senha_hash") // nulo até o primeiro acesso
+  primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
+  ativo          Boolean @default(true)
+
+  // Segurança de login
+  tentativasLogin Int       @default(0) @map("tentativas_login")
+  bloqueadoAte    DateTime? @map("bloqueado_ate")
+
+  // Integração Asaas
   asaasCustomerId String? @unique @map("asaas_customer_id") @db.VarChar(50)
 
-  // Auditoria e Sync
-  lastSyncAt DateTime @default(now()) @map("last_sync_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  // Controle de sync
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Relacionamentos
-  plans                       CustomerPlan[]
-  addresses                   Address[]
-  phones                      Phone[]
-  payments                    PortalPayment[]
-  changeRequests              ChangeRequest[]
-  refreshTokens               RefreshToken[]
-  financialResponsibleAsPayer FinancialResponsible[] @relation("FinancialResponsiblePayer")
+  enderecos      CustomerAddress[]
+  telefones      CustomerPhone[]
+  refreshTokens  CustomerRefreshToken[]
+  contratos      Contrato[]
+  pagamentos     Pagamento[]
+  notificacoes   Notificacao[]
+  changeRequests ChangeRequest[]
 
+  @@index([cpfCnpj])
+  @@index([email])
   @@map("customers")
 }
 
-// ── PLANOS E JAZIGOS (Conforme cobranca-jazigo.html) ─────────────────────────
-model CustomerPlan {
-  id               BigInt  @id @map("cod_cessionario_plano")
-  customerId       BigInt  @map("customer_id")
-  status           String? @db.Char(1) // A=Ativo, I=Inativo
-  hasFinancialResp Boolean @default(false) @map("has_financial_resp")
+// -----------------------------------------
+// 2a. Endereços
+// -----------------------------------------
 
-  // Informações do Jazigo (Sincronizadas ou locais)
-  sector String? @map("setor") // Ex: "Setor A"
-  quadra String?
-  lote   String?
+/// Endereços do cessionário sincronizados do SQL Server.
+/// correspondencia = true indica o endereço usado para envio de boleto físico.
+/// O Asaas exige pelo menos logradouro, cidade e UF para gerar cobranças.
+model CustomerAddress {
+  id              String       @id @default(uuid())
+  customerId      String       @map("customer_id")
+  tipo            TipoEndereco @default(RESIDENCIAL)
+  logradouro      String?      @db.VarChar(200)
+  numero          String?      @db.VarChar(10)
+  complemento     String?      @db.VarChar(100)
+  bairro          String?      @db.VarChar(100)
+  cidade          String?      @db.VarChar(120)
+  uf              String?      @db.Char(2)
+  cep             String?      @db.VarChar(10)
+  correspondencia Boolean      @default(false) // endereço principal para envio de boleto
 
-  customer             Customer              @relation(fields: [customerId], references: [id])
-  financialResponsible FinancialResponsible?
-  invoices             Invoice[]
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  @@map("customer_plans")
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_addresses")
 }
 
-// ── RESPONSÁVEL FINANCEIRO (Lógica Filho/Pagador) ────────────────────────────
-model FinancialResponsible {
-  id             BigInt @id @default(autoincrement())
-  customerPlanId BigInt @unique @map("customer_plan_id")
+// -----------------------------------------
+// 2b. Telefones
+// -----------------------------------------
 
-  name    String
-  cpfCnpj String  @map("cpf_cnpj")
-  email   String?
-  phone   String?
+/// Telefones do cessionário — pode ter múltiplos por tipo.
+model CustomerPhone {
+  id         String       @id @default(uuid())
+  customerId String       @map("customer_id")
+  tipo       TipoTelefone
+  numero     String       @db.VarChar(20)
 
-  // Relacionamento com o plano e opcionalmente com outro Customer
-  payerCustomerId BigInt?      @map("payer_customer_id")
-  plan            CustomerPlan @relation(fields: [customerPlanId], references: [id], onDelete: Cascade)
-  payer           Customer?    @relation("FinancialResponsiblePayer", fields: [payerCustomerId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  @@map("financial_responsible")
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_phones")
 }
 
-// ── FINANCEIRO (Boletos.csv + Asaas) ──────────────────────────────────────────
-model Invoice {
-  id      BigInt       @id @map("cod_boleto")
-  planId  BigInt       @map("plan_id")
-  dueDate DateTime     @map("due_date") @db.Date
-  value   Decimal      @map("valor_titulo") @db.Decimal(15, 2)
-  status  BoletoStatus @default(ABERTO)
+// -----------------------------------------
+// 2c. Refresh Tokens do Portal
+// -----------------------------------------
 
-  // --- Campos de Histórico (Vindos do SQL Server / Boletos.csv) ---
-  paymentDate   DateTime? @map("data_liquid") @db.Date // DataLiquid
-  receivedValue Decimal?  @map("valor_recebido") @db.Decimal(15, 2) // ValorRecebido
-  discount      Decimal?  @map("descontos") @db.Decimal(15, 2)
-  interest      Decimal?  @map("juros_mora") @db.Decimal(15, 2)
-  paymentMode   String?   @map("modo_baixa") @db.VarChar(50) // AUTOMÁTICA, MANUAL
-  bankId        String?   @map("num_banco") @db.VarChar(10)
-  ourNumber     String?   @map("nosso_numero") @db.VarChar(50)
-  installment   String?   @map("parcela") @db.VarChar(10)
+/// Controla sessões ativas do portal do cliente.
+/// Permite revogar acesso imediatamente em caso de troca de senha
+/// ou suspeita de acesso indevido — sem depender da expiração do JWT.
+///
+/// Job de limpeza recomendado:
+///   DELETE FROM customer_refresh_tokens
+///   WHERE expires_at < now() OR revogado = true
+model CustomerRefreshToken {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  token      String   @unique
+  expiresAt  DateTime @map("expires_at")
+  revogado   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  // Relacionamento com a Forma de Pagamento Legada (Formas_Pagto.csv)
-  paymentFormId Int? @map("cod_forma_pag")
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  // Relacionamentos
-  plan           CustomerPlan    @relation(fields: [planId], references: [id])
-  portalPayments PortalPayment[] // Pagamentos via Asaas vinculados a esta fatura
-
-  @@map("boletos")
+  @@index([customerId])
+  @@index([expiresAt]) // índice para o job de limpeza de tokens expirados
+  @@map("customer_refresh_tokens")
 }
 
-enum BoletoStatus {
-  ABERTO
-  QUITADO
-  VENCIDO
-  CANCELADO
+// =============================================================================
+// 3. CORE: CONTRATOS E JAZIGOS (sincronizados do SQL Server)
+// =============================================================================
+
+/// Contrato de concessão de jazigo. sql_server_id = CodContrato original.
+model Contrato {
+  id             String           @id @default(uuid())
+  sqlServerId    Int?             @unique @map("sql_server_id")
+  numeroContrato String           @unique @map("numero_contrato") @db.VarChar(30)
+  situacao       SituacaoContrato @default(ATIVO)
+
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  jazigos               Jazigo[]
+  pagamentos            Pagamento[] // atalho direto — evita join duplo em consultas financeiras
+  responsavelFinanceiro ResponsavelFinanceiro?
+
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("contratos")
 }
 
-model PortalPayment {
+// -----------------------------------------
+// 3a. Responsável Financeiro
+// -----------------------------------------
+
+/// Responsável financeiro do contrato quando diferente do cessionário titular.
+/// Exemplo: filho que paga a manutenção do jazigo do pai.
+///
+/// Vínculo 1:1 com Contrato — cada contrato tem no máximo um responsável financeiro.
+/// As cobranças no Asaas devem ser geradas em nome deste responsável, não do cessionário.
+model ResponsavelFinanceiro {
   id         String  @id @default(uuid())
-  invoiceId  BigInt? @map("invoice_id")
-  customerId BigInt  @map("customer_id")
+  contratoId String  @unique @map("contrato_id")
+  nome       String  @db.VarChar(160)
+  cpf        String  @db.VarChar(14)
+  email      String? @db.VarChar(120)
+  telefone   String? @db.VarChar(20)
+  motivo     String? @db.Text // justificativa do vínculo (ex: "Filho responsável pelo pagamento")
 
-  // Gateway Asaas
-  asaasPaymentId String @unique @map("asaas_payment_id")
-  paymentMethod  String @map("payment_method") // CREDIT_CARD, PIX, BOLETO
-  status         String // PENDING, RECEIVED, CONFIRMED, OVERDUE
+  contrato Contrato @relation(fields: [contratoId], references: [id], onDelete: Cascade)
 
-  // Links de Pagamento (Usados no seu HTML)
-  invoiceUrl   String? @map("invoice_url") @db.Text
-  bankSlipUrl  String? @map("bank_slip_url") @db.Text
-  pixCopyPaste String? @map("pix_copy_paste") @db.Text
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  value    Decimal  @db.Decimal(15, 2)
-  netValue Decimal? @map("net_value") @db.Decimal(15, 2)
+  @@map("responsaveis_financeiros")
+}
+
+// -----------------------------------------
+// 3b. Jazigos
+// -----------------------------------------
+
+/// Jazigo concedido. sql_server_id = CodJazigo original.
+///
+/// valorMensalidade é fixado no momento do sync com base no Decreto 4.332/2023:
+///   3 gavetas → R$ 180,00/mês | 6 gavetas → R$ 360,00/mês
+///
+/// IMPORTANTE: não altere valorMensalidade diretamente em produção após um reajuste
+/// tarifário. O snapshot histórico fica em Pagamento (gavetasNaEpoca / valorNaEpoca),
+/// que preserva o valor vigente no momento de cada emissão.
+model Jazigo {
+  id          String  @id @default(uuid())
+  sqlServerId Int?    @unique @map("sql_server_id")
+  codigo      String  @unique @db.VarChar(20)
+  quadra      String? @db.VarChar(20)
+  setor       String? @db.VarChar(20)
+
+  // Decreto 4.332/2023
+  quantidadeGavetas Int     @default(3) @map("quantidade_gavetas")
+  valorMensalidade  Decimal @map("valor_mensalidade") @db.Decimal(10, 2)
+
+  contratoId String   @map("contrato_id")
+  contrato   Contrato @relation(fields: [contratoId], references: [id])
+
+  pagamentos Pagamento[]
+
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([contratoId])
+  @@map("jazigos")
+}
+
+// =============================================================================
+// 4. FINANCEIRO
+// =============================================================================
+
+/// Pagamento de manutenção, aquisição ou taxa de serviço.
+///
+/// Regras de negócio:
+///   - jazigoId OBRIGATÓRIO para MANUTENCAO — validar na camada de serviço.
+///     Nullable para AQUISICAO e TAXA_SERVICO (jazigo pode não existir ainda).
+///   - contratoId: atalho direto — evita join Pagamento → Jazigo → Contrato.
+///   - gavetasNaEpoca / valorNaEpoca: snapshot imutável do jazigo na data de emissão.
+///     Garante rastreabilidade histórica mesmo após reajuste tarifário futuro.
+///   - metodoPagamento: preenchido após confirmação do Asaas (PIX, boleto, cartão).
+///   - webhookData: payload bruto do Asaas para auditoria e reprocessamento em falhas.
+model Pagamento {
+  id          String @id @default(uuid())
+  sqlServerId Int?   @unique @map("sql_server_id")
+
+  // Integração Asaas
+  asaasId     String? @unique @map("asaas_id") @db.VarChar(100)
+  nossoNumero String? @map("nosso_numero") @db.VarChar(50)
+  invoiceUrl  String? @map("invoice_url") @db.Text
+
+  // Valores
+  valorTitulo  Decimal  @map("valor_titulo") @db.Decimal(10, 2)
+  valorPago    Decimal? @map("valor_pago") @db.Decimal(10, 2)
+  valorLiquido Decimal? @map("valor_liquido") @db.Decimal(10, 2) // valor após taxa Asaas
+
+  // Snapshot histórico do jazigo na data de emissão
+  gavetasNaEpoca Int?     @map("gavetas_na_epoca")
+  valorNaEpoca   Decimal? @map("valor_na_epoca") @db.Decimal(10, 2)
+
+  // Datas
+  dataVencimento DateTime  @map("data_vencimento") @db.Date
+  dataPagamento  DateTime? @map("data_pagamento") @db.Date
+
+  // Classificação
+  status          StatusPagamento  @default(PENDENTE)
+  tipo            TipoPagamento    @default(MANUTENCAO)
+  metodoPagamento MetodoPagamento? @map("metodo_pagamento") // preenchido após confirmação
+
+  // Webhook Asaas
+  webhookData       Json?     @map("webhook_data") // payload bruto para auditoria
+  webhookRecebidoEm DateTime? @map("webhook_recebido_em")
+
+  // Relações
+  jazigoId String? @map("jazigo_id") // obrigatório para MANUTENCAO — validar no service
+  jazigo   Jazigo? @relation(fields: [jazigoId], references: [id])
+
+  contratoId String?   @map("contrato_id") // atalho direto
+  contrato   Contrato? @relation(fields: [contratoId], references: [id])
+
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  notificacoes Notificacao[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  invoice  Invoice? @relation(fields: [invoiceId], references: [id])
-
-  @@map("portal_payments")
+  @@index([customerId])
+  @@index([jazigoId])
+  @@index([contratoId])
+  @@index([nossoNumero])
+  @@index([status])
+  @@index([dataVencimento])
+  @@map("pagamentos")
 }
 
-// ── SOLICITAÇÕES E AUXILIARES ────────────────────────────────────────────────
+// =============================================================================
+// 5. NOTIFICAÇÕES
+// =============================================================================
+
+/// Registro de cada notificação enviada ao cliente (email, WhatsApp, SMS).
+///
+/// Viabiliza régua de cobrança automatizada:
+///   D-5  → lembrete de vencimento próximo
+///   D+0  → notificação de vencimento
+///   D+3  → aviso de pagamento em atraso
+///   D+N  → escalonamento conforme política interna
+///
+/// pagamentoId nullable: notificações nem sempre estão ligadas a um pagamento
+/// (ex.: confirmação de alteração cadastral aprovada).
+model Notificacao {
+  id          String            @id @default(uuid())
+  customerId  String            @map("customer_id")
+  pagamentoId String?           @map("pagamento_id")
+  canal       CanalNotificacao
+  status      StatusNotificacao @default(ENVIADA)
+  assunto     String?           @db.VarChar(200) // usado para email
+  mensagem    String            @db.Text
+  erroDetalhe String?           @map("erro_detalhe") @db.Text
+  enviadoEm   DateTime          @default(now()) @map("enviado_em")
+  entregueEm  DateTime?         @map("entregue_em")
+
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  pagamento Pagamento? @relation(fields: [pagamentoId], references: [id])
+
+  @@index([customerId])
+  @@index([pagamentoId])
+  @@index([status])
+  @@index([enviadoEm])
+  @@map("notificacoes")
+}
+
+// =============================================================================
+// 6. SOLICITAÇÕES DE ALTERAÇÃO DE CADASTRO
+// =============================================================================
+
+/// Solicitação feita pelo cliente no portal; revisada por um usuário admin.
+///
+/// dadoAntigo: snapshot obrigatório dos dados antes da alteração.
+///             Nunca deve ser null — sem ele a revisão perde contexto de auditoria.
+/// dadoNovo:   dados que o cliente deseja aplicar.
+///
+/// Fluxo:
+///   PENDENTE → APROVADA (admin aplica os dados + preenche notaRevisao opcional)
+///           → REJEITADA (admin explica o motivo em notaRevisao)
 model ChangeRequest {
-  id         Int           @id @default(autoincrement())
-  customerId BigInt        @map("customer_id")
-  type       ChangeType
-  oldData    Json?         @map("old_data")
-  newData    Json          @map("new_data")
-  status     RequestStatus @default(PENDING)
-  reviewedBy String?       @map("reviewed_by")
-  createdAt  DateTime      @default(now()) @map("created_at")
+  id            Int             @id @default(autoincrement())
+  customerId    String          @map("customer_id")
+  reviewedById  String?         @map("reviewed_by_id")
+  tipo          TipoAlteracao
+  status        StatusAlteracao @default(PENDENTE)
+  dadoAntigo    Json            @map("dado_antigo") // obrigatório — nunca null
+  dadoNovo      Json            @map("dado_novo")
+  justificativa String?         @db.Text
+  notaRevisao   String?         @map("nota_revisao") @db.Text
+  revisadoEm    DateTime?       @map("revisado_em")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
 
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id])
+  revisadoPor User?    @relation("ReviewedBy", fields: [reviewedById], references: [id])
 
+  @@index([customerId])
+  @@index([status])
   @@map("change_requests")
 }
 
-enum ChangeType {
-  ADDRESS
-  PHONE
-  PERSONAL
-}
+// =============================================================================
+// 7. AUDITORIA DE SINCRONIZAÇÃO (ETL SQL Server → PostgreSQL)
+// =============================================================================
 
-enum RequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
+/// Log de cada execução do job de sincronização.
+///
+/// jobName discrimina qual entidade foi sincronizada:
+///   "customers" | "contratos" | "jazigos" | "pagamentos"
+///
+/// erroDetalhes: array JSON de falhas individuais no formato:
+///   [{ "entidade": "Customer", "sqlServerId": 1234, "motivo": "CPF duplicado" }]
+///
+/// Permite reprocessar registros específicos sem re-sincronizar a entidade inteira.
+model SyncLog {
+  id                   String     @id @default(uuid())
+  jobName              String     @map("job_name") @db.VarChar(60)
+  status               SyncStatus @default(PROCESSANDO)
+  registrosNovos       Int        @default(0) @map("registros_novos")
+  registrosAtualizados Int        @default(0) @map("registros_atualizados")
+  falhas               Int        @default(0)
+  erroDetalhes         Json?      @map("erro_detalhes") // [{ entidade, sqlServerId, motivo }]
+  dataInicio           DateTime   @default(now()) @map("data_inicio")
+  dataFim              DateTime?  @map("data_fim")
 
-model Address {
-  id           Int     @id @default(autoincrement())
-  customerId   BigInt  @map("customer_id")
-  street       String
-  number       String?
-  complement   String?
-  neighborhood String?
-  city         String
-  state        String  @db.Char(2)
-  zipCode      String  @map("zip_code")
-  isMain       Boolean @default(true) @map("is_main")
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@map("addresses")
-}
-
-model Phone {
-  id           Int     @id @default(autoincrement())
-  customerId   BigInt  @map("customer_id")
-  number       String
-  type         String? // WHATSAPP, FIXO, CELULAR
-  observations String?
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([customerId], name: "idx_phone_customer")
-  @@map("phones")
-}
-
-model RefreshToken {
-  id         String   @id @default(cuid())
-  token      String   @unique
-  customerId BigInt   @map("customer_id")
-  expiresAt  DateTime @map("expires_at")
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@map("refresh_tokens")
+  @@index([jobName])
+  @@index([dataInicio])
+  @@map("sync_logs")
 }

@@ -5,29 +5,27 @@ describe("buildPaymentBucketWhere", () => {
     expect(buildPaymentBucketWhere("all")).toBeUndefined();
   });
 
-  it("pending filtra status PENDING", () => {
+  it("pending filtra status PENDENTE", () => {
     const w = buildPaymentBucketWhere("pending");
-    expect(w).toEqual({ status: "PENDING" });
+    expect(w).toEqual({ status: "PENDENTE" });
   });
 
-  it("received filtra RECEIVED ou CONFIRMED", () => {
+  it("received filtra PAGO", () => {
     expect(buildPaymentBucketWhere("received")).toEqual({
-      OR: [{ status: "RECEIVED" }, { status: "CONFIRMED" }],
+      status: "PAGO",
     });
   });
 
-  it("overdue inclui OVERDUE ou PENDING com fatura vencida", () => {
+  it("overdue inclui ATRASADO ou PENDENTE com vencimento passado", () => {
     const w = buildPaymentBucketWhere("overdue");
     expect(w).toBeDefined();
     expect(w?.OR).toHaveLength(2);
-    expect(w?.OR?.[0]).toEqual({ status: "OVERDUE" });
+    expect(w?.OR?.[0]).toEqual({ status: "ATRASADO" });
     const second = w?.OR?.[1] as
-      | { AND: [{ status: string }, { invoice: unknown }] }
+      | { AND: [{ status: string }, { dataVencimento: { lt: Date } }] }
       | undefined;
-    expect(second?.AND?.[0]).toEqual({ status: "PENDING" });
-    const invoiceFilter = second?.AND?.[1] as {
-      invoice: { is: { dueDate: { lt: Date } } };
-    };
-    expect(invoiceFilter.invoice.is.dueDate.lt).toBeInstanceOf(Date);
+    expect(second?.AND?.[0]).toEqual({ status: "PENDENTE" });
+    const due = second?.AND?.[1] as { dataVencimento: { lt: Date } };
+    expect(due.dataVencimento.lt).toBeInstanceOf(Date);
   });
 });

@@ -9,8 +9,8 @@ export const legacyRouter = createTRPCRouter({
     if (ctx.session.user.accountKind !== "portal") {
       return {
         cessionario: null,
-        cessionariosPlanos: [] as Record<string, unknown>[],
-        boletos: [] as Record<string, unknown>[],
+        contratos: [] as Record<string, unknown>[],
+        faturas: [] as Record<string, unknown>[],
       };
     }
     const cpf = ctx.session.user.cpfCnpj;

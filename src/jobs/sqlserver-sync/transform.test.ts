@@ -13,6 +13,10 @@ describe("rowToSourceKey", () => {
     expect(rowToSourceKey("id", { id: 42 })).toBe("42");
   });
 
+  it("resolve coluna com casing diferente", () => {
+    expect(rowToSourceKey("CodCessionario", { codcessionario: 7 })).toBe("7");
+  });
+
   it("extrai Date como ISO", () => {
     const d = new Date("2025-01-15T12:00:00.000Z");
     expect(rowToSourceKey("id", { id: d })).toBe(d.toISOString());

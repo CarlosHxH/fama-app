@@ -1,4 +1,4 @@
-/** Estados de cobrança no portal (Asaas / `PortalPayment.status`). */
+/** Estados de cobrança no portal (Asaas → serialização em `billing.listMine`). */
 export type BillingPaymentStatus =
   | "PENDING"
   | "RECEIVED"

@@ -40,16 +40,15 @@ export function LegacySnapshotCard() {
     );
   }
 
-  const { cessionario, cessionariosPlanos, boletos } = q.data ?? {
+  const snapshot = q.data ?? {
     cessionario: null,
-    cessionariosPlanos: [],
-    boletos: [],
+    contratos: [] as Record<string, unknown>[],
+    faturas: [] as Record<string, unknown>[],
   };
+  const { cessionario, contratos, faturas } = snapshot;
 
   const hasData =
-    cessionario !== null ||
-    cessionariosPlanos.length > 0 ||
-    boletos.length > 0;
+    cessionario !== null || contratos.length > 0 || faturas.length > 0;
 
   return (
     <div className="card" style={{ marginBottom: "1.5rem" }}>
@@ -77,11 +76,11 @@ export function LegacySnapshotCard() {
               <strong>{cessionario ? "encontrado" : "não encontrado"}</strong>
             </li>
             <li>
-              Planos / vínculos:{" "}
-              <strong>{cessionariosPlanos.length}</strong> registo(s)
+              Contratos / jazigos (sync):{" "}
+              <strong>{contratos.length}</strong> registo(s)
             </li>
             <li>
-              Boletos (legado): <strong>{boletos.length}</strong> registo(s)
+              Faturas (legado): <strong>{faturas.length}</strong> registo(s)
             </li>
           </ul>
         )}

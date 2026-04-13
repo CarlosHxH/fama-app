@@ -1,13 +1,25 @@
 import { type Prisma } from "../../../generated/prisma/client";
 
+function getRowValueCaseInsensitive(
+  row: Record<string, unknown>,
+  col: string,
+): unknown {
+  if (Object.prototype.hasOwnProperty.call(row, col)) return row[col];
+  const target = col.toLowerCase();
+  for (const k of Object.keys(row)) {
+    if (k.toLowerCase() === target) return row[k];
+  }
+  return undefined;
+}
+
 /**
- * Extrai a chave natural da linha SQL Server para `MssqlSyncRecord.sourceKey`.
+ * Extrai a chave natural da linha SQL Server (idempotência / logs).
  */
 export function rowToSourceKey(
   keyColumn: string,
   row: Record<string, unknown>,
 ): string {
-  const v = row[keyColumn];
+  const v = getRowValueCaseInsensitive(row, keyColumn);
   if (v === undefined || v === null) {
     throw new Error(
       `Coluna de chave em falta ou nula: "${keyColumn}" em ${JSON.stringify(row)}`,

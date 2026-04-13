@@ -1,30 +1,34 @@
 import {
-  mapAsaasPaymentStatusToPortal,
-  resolvePortalStatusTransition,
+  mapAsaasToStatusPagamento,
+  resolvePagamentoStatusTransition,
 } from "./asaas-payment-status";
 
-describe("mapAsaasPaymentStatusToPortal", () => {
-  it("mapeia CONFIRMED para RECEIVED", () => {
-    expect(mapAsaasPaymentStatusToPortal("CONFIRMED")).toBe("RECEIVED");
+describe("mapAsaasToStatusPagamento", () => {
+  it("mapeia CONFIRMED para PAGO", () => {
+    expect(mapAsaasToStatusPagamento("CONFIRMED")).toBe("PAGO");
   });
 
   it("mapeia estados cancelados", () => {
-    expect(mapAsaasPaymentStatusToPortal("DELETED")).toBe("CANCELLED");
+    expect(mapAsaasToStatusPagamento("DELETED")).toBe("CANCELADO");
   });
 });
 
-describe("resolvePortalStatusTransition", () => {
+describe("resolvePagamentoStatusTransition", () => {
   it("não altera quando o estado é igual", () => {
-    expect(resolvePortalStatusTransition("PENDING", "PENDING")).toBeNull();
+    expect(
+      resolvePagamentoStatusTransition("PENDENTE", "PENDENTE"),
+    ).toBeNull();
   });
 
-  it("não regredir de RECEIVED para PENDING", () => {
-    expect(resolvePortalStatusTransition("RECEIVED", "PENDING")).toBeNull();
+  it("não regredir de PAGO para PENDENTE", () => {
+    expect(
+      resolvePagamentoStatusTransition("PAGO", "PENDENTE"),
+    ).toBeNull();
   });
 
-  it("avança de PENDING para RECEIVED", () => {
-    expect(resolvePortalStatusTransition("PENDING", "RECEIVED")).toBe(
-      "RECEIVED",
-    );
+  it("avança de PENDENTE para PAGO", () => {
+    expect(
+      resolvePagamentoStatusTransition("PENDENTE", "PAGO"),
+    ).toBe("PAGO");
   });
 });

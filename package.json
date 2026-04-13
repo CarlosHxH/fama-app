@@ -22,7 +22,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx prisma/seed.ts",
-    "job:sync-sqlserver": "tsx scripts/jobs/sync-sqlserver-to-postgres.ts",
+    "job:sync": "tsx scripts/jobs/sync-sqlserver-to-postgres.ts",
     "test": "jest",
     "test:watch": "jest --watch"
   },

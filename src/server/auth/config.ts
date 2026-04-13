@@ -97,9 +97,9 @@ export const authConfig = {
         if (!customer) return null;
 
         return {
-          id: customer.id.toString(),
+          id: customer.id,
           email: customer.email ?? undefined,
-          name: customer.fullName ?? undefined,
+          name: customer.nome ?? undefined,
           image: undefined,
           role: "USER" as const,
           accountKind: "portal" as const,
@@ -147,20 +147,20 @@ export const authConfig = {
         if (
           shouldRejectAdminLoginBeforeVerify({
             role: user.role,
-            password: user.password,
-            active: user.active,
+            password: user.senha,
+            active: user.ativo,
           })
         ) {
           return null;
         }
 
-        const ok = await compare(passwordRaw, user.password);
+        const ok = await compare(passwordRaw, user.senha);
         if (!ok) return null;
 
         return {
           id: user.id,
           email: user.email ?? undefined,
-          name: user.name ?? undefined,
+          name: user.nome ?? undefined,
           image: undefined,
           role: "ADMIN" as const,
           accountKind: "admin" as const,
@@ -186,7 +186,7 @@ export const authConfig = {
           token.staffRole =
             "staffRole" in user && user.staffRole != null
               ? user.staffRole
-              : "EMPLOYEE";
+              : "ATENDENTE";
         } else {
           token.staffRole = null;
         }

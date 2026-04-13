@@ -8,6 +8,7 @@ import {
   type PaymentBucket,
 } from "~/server/billing/payment-bucket";
 import { centsFromDecimal } from "~/server/billing/money";
+import { SYNC_SQLSERVER_JOB_NAME } from "~/jobs/sqlserver-sync/sync-constants";
 import { db } from "~/server/db";
 import {
   adminFinanceProcedure,
@@ -18,22 +19,21 @@ import {
 
 const phoneFields = z.object({
   number: z.string().trim().min(8).max(32),
-  type: z.string().max(32).optional(),
-  observations: z.string().max(2000).optional(),
+  tipo: z.enum(["CELULAR", "FIXO", "WHATSAPP"]).optional(),
 });
 
-function parseCustomerId(raw: string): bigint {
-  try {
-    return BigInt(raw);
-  } catch {
+function parseCustomerId(raw: string): string {
+  const parsed = z.string().uuid().safeParse(raw);
+  if (!parsed.success) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: "Identificador de cliente inválido.",
     });
   }
+  return parsed.data;
 }
 
-async function requireCustomer(customerId: bigint) {
+async function requireCustomer(customerId: string) {
   const customer = await db.customer.findUnique({ where: { id: customerId } });
   if (!customer) {
     throw new TRPCError({
@@ -61,6 +61,17 @@ function endOfUtcDay(d: Date): Date {
   return x;
 }
 
+function ensureDueDateIsFuture(dueDate: Date): void {
+  const due = startOfUtcDay(dueDate).getTime();
+  const today = startOfUtcDay(new Date()).getTime();
+  if (due <= today) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "A data de vencimento deve ser futura.",
+    });
+  }
+}
+
 const paymentBucketSchema = z.enum([
   "all",
   "overdue",
@@ -68,6 +79,12 @@ const paymentBucketSchema = z.enum([
   "pending_current",
   "received",
 ]) satisfies z.ZodType<PaymentBucket>;
+const dueWindowSchema = z.enum([
+  "all",
+  "today",
+  "next_7_days",
+  "overdue_30_plus",
+]);
 
 /**
  * Painel administrativo: listagens e agregados para gráficos.
@@ -80,7 +97,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(40),
-        cursor: z.string().optional(),
+        cursor: z.string().uuid().optional(),
         search: z.string().max(200).optional(),
       }),
     )
@@ -94,7 +111,7 @@ export const adminRouter = createTRPCRouter({
               OR: [
                 { email: { contains: search, mode: "insensitive" as const } },
                 {
-                  fullName: { contains: search, mode: "insensitive" as const },
+                  nome: { contains: search, mode: "insensitive" as const },
                 },
                 ...(digits.length >= 3
                   ? [{ cpfCnpj: { contains: digits } }]
@@ -107,16 +124,16 @@ export const adminRouter = createTRPCRouter({
       const items = await db.customer.findMany({
         where,
         take: input.limit + 1,
-        cursor: input.cursor ? { id: BigInt(input.cursor) } : undefined,
-        orderBy: { id: "desc" },
+        cursor: input.cursor ? { id: input.cursor } : undefined,
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
-          fullName: true,
+          nome: true,
           email: true,
           cpfCnpj: true,
           asaasCustomerId: true,
           _count: {
-            select: { payments: true, phones: true },
+            select: { pagamentos: true, telefones: true },
           },
         },
       });
@@ -124,32 +141,71 @@ export const adminRouter = createTRPCRouter({
       let nextCursor: string | undefined;
       if (items.length > input.limit) {
         const next = items.pop();
-        nextCursor = next?.id.toString();
+        nextCursor = next?.id;
       }
 
       const mapped = items.map((u) => ({
-        id: u.id.toString(),
-        name: u.fullName,
+        id: u.id,
+        name: u.nome,
         email: u.email,
         cpfCnpj: u.cpfCnpj,
         asaasCustomerId: u.asaasCustomerId,
         _count: {
-          billingPayments: u._count.payments,
-          phones: u._count.phones,
+          billingPayments: u._count.pagamentos,
+          phones: u._count.telefones,
         },
       }));
 
       return { items: mapped, nextCursor };
     }),
 
+  paymentContextForUser: adminFinanceProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const customerId = parseCustomerId(input.userId);
+      await requireCustomer(customerId);
+      const contratos = await db.contrato.findMany({
+        where: { customerId },
+        orderBy: { numeroContrato: "asc" },
+        select: {
+          id: true,
+          numeroContrato: true,
+          situacao: true,
+          responsavelFinanceiro: {
+            select: {
+              nome: true,
+              cpf: true,
+              email: true,
+              telefone: true,
+            },
+          },
+          jazigos: {
+            select: {
+              id: true,
+              codigo: true,
+              quadra: true,
+              setor: true,
+              quantidadeGavetas: true,
+              valorMensalidade: true,
+            },
+            orderBy: { codigo: "asc" },
+          },
+        },
+      });
+      return { contratos };
+    }),
+
   createPaymentForUser: adminFinanceProcedure
     .input(
       z.object({
-        userId: z.string(),
+        userId: z.string().uuid(),
         valueCents: z.number().int().min(100).max(1_000_000_000),
         description: z.string().max(500).optional(),
         dueDate: z.coerce.date(),
         billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
+        tipoPagamento: z.enum(["MANUTENCAO", "TAXA_SERVICO", "AQUISICAO"]),
+        contratoId: z.string().uuid().optional(),
+        jazigoId: z.string().uuid().optional(),
         email: z.string().email().max(320).optional(),
         cpfCnpj: z.string().max(22).optional(),
       }),
@@ -157,6 +213,38 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
       const customer = await requireCustomer(customerId);
+      ensureDueDateIsFuture(input.dueDate);
+
+      const contrato =
+        input.contratoId && input.contratoId.length > 0
+          ? await db.contrato.findFirst({
+              where: { id: input.contratoId, customerId: customer.id },
+              include: { responsavelFinanceiro: true },
+            })
+          : null;
+      if (input.contratoId && !contrato) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Contrato inválido para o cliente selecionado.",
+        });
+      }
+
+      const jazigo =
+        input.jazigoId && input.jazigoId.length > 0
+          ? await db.jazigo.findFirst({
+              where: {
+                id: input.jazigoId,
+                ...(contrato ? { contratoId: contrato.id } : {}),
+              },
+              select: { id: true, contratoId: true },
+            })
+          : null;
+      if (input.jazigoId && !jazigo) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Jazigo inválido para o contrato selecionado.",
+        });
+      }
 
       return createAsaasChargeForCustomer({
         customer,
@@ -166,17 +254,27 @@ export const adminRouter = createTRPCRouter({
         cpfCnpj: input.cpfCnpj,
         email: input.email,
         billingType: input.billingType,
+        tipoPagamento: input.tipoPagamento,
+        contratoId: contrato?.id,
+        jazigoId: jazigo?.id,
+        responsavelFinanceiro: contrato?.responsavelFinanceiro
+          ? {
+              nome: contrato.responsavelFinanceiro.nome,
+              cpf: contrato.responsavelFinanceiro.cpf,
+              email: contrato.responsavelFinanceiro.email,
+            }
+          : null,
       });
     }),
 
   listUserPhones: adminProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
       await requireCustomer(customerId);
-      return db.phone.findMany({
+      return db.customerPhone.findMany({
         where: { customerId },
-        orderBy: { id: "desc" },
+        orderBy: { createdAt: "desc" },
       });
     }),
 
@@ -184,22 +282,18 @@ export const adminRouter = createTRPCRouter({
     .input(
       z
         .object({
-          userId: z.string(),
+          userId: z.string().uuid(),
         })
         .merge(phoneFields),
     )
     .mutation(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
       await requireCustomer(customerId);
-      const obsTrim = input.observations?.trim();
-      const typeTrim = input.type?.trim();
-      return db.phone.create({
+      return db.customerPhone.create({
         data: {
           customerId,
-          number: input.number,
-          type: typeTrim && typeTrim.length > 0 ? typeTrim : null,
-          observations:
-            obsTrim !== undefined && obsTrim.length > 0 ? obsTrim : null,
+          numero: input.number,
+          tipo: input.tipo ?? "CELULAR",
         },
       });
     }),
@@ -207,14 +301,13 @@ export const adminRouter = createTRPCRouter({
   updateUserPhone: adminOperationalProcedure
     .input(
       z.object({
-        id: z.number().int(),
+        id: z.string().uuid(),
         number: z.string().trim().min(8).max(32).optional(),
-        type: z.string().max(32).nullable().optional(),
-        observations: z.string().max(2000).nullable().optional(),
+        tipo: z.enum(["CELULAR", "FIXO", "WHATSAPP"]).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const row = await db.phone.findUnique({
+      const row = await db.customerPhone.findUnique({
         where: { id: input.id },
       });
       if (!row) {
@@ -224,36 +317,24 @@ export const adminRouter = createTRPCRouter({
         });
       }
       const data: {
-        number?: string;
-        type?: string | null;
-        observations?: string | null;
+        numero?: string;
+        tipo?: "CELULAR" | "FIXO" | "WHATSAPP";
       } = {};
-      if (input.number !== undefined) data.number = input.number;
-      if (input.type !== undefined) {
-        data.type =
-          input.type === null || input.type.trim() === ""
-            ? null
-            : input.type.trim();
-      }
-      if (input.observations !== undefined) {
-        data.observations =
-          input.observations === null || input.observations.trim() === ""
-            ? null
-            : input.observations.trim();
-      }
+      if (input.number !== undefined) data.numero = input.number;
+      if (input.tipo !== undefined) data.tipo = input.tipo;
       if (Object.keys(data).length === 0) {
         return row;
       }
-      return db.phone.update({
+      return db.customerPhone.update({
         where: { id: input.id },
         data,
       });
     }),
 
   deleteUserPhone: adminOperationalProcedure
-    .input(z.object({ id: z.number().int() }))
+    .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input }) => {
-      const row = await db.phone.findUnique({
+      const row = await db.customerPhone.findUnique({
         where: { id: input.id },
       });
       if (!row) {
@@ -262,7 +343,7 @@ export const adminRouter = createTRPCRouter({
           message: "Telefone não encontrado.",
         });
       }
-      await db.phone.delete({ where: { id: input.id } });
+      await db.customerPhone.delete({ where: { id: input.id } });
       return { ok: true as const };
     }),
 
@@ -270,8 +351,9 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
-        cursor: z.string().optional(),
+        cursor: z.string().uuid().optional(),
         bucket: paymentBucketSchema.optional().default("all"),
+        dueWindow: dueWindowSchema.optional().default("all"),
         dueFrom: z.coerce.date().optional(),
         dueTo: z.coerce.date().optional(),
         search: z.string().max(200).optional(),
@@ -281,32 +363,45 @@ export const adminRouter = createTRPCRouter({
       const search = input.search?.trim();
       const digits = search?.replace(/\D/g, "") ?? "";
 
-      const and: Prisma.PortalPaymentWhereInput[] = [];
+      const and: Prisma.PagamentoWhereInput[] = [];
       const bucketW = buildPaymentBucketWhere(input.bucket);
       if (bucketW) and.push(bucketW);
+      const today = startOfUtcDay(new Date());
+      const plus7 = startOfUtcDay(new Date(today));
+      plus7.setUTCDate(plus7.getUTCDate() + 7);
 
       if (input.dueFrom || input.dueTo) {
         and.push({
-          invoice: {
-            is: {
-              dueDate: {
-                ...(input.dueFrom ? { gte: startOfUtcDay(input.dueFrom) } : {}),
-                ...(input.dueTo ? { lte: endOfUtcDay(input.dueTo) } : {}),
-              },
-            },
+          dataVencimento: {
+            ...(input.dueFrom ? { gte: startOfUtcDay(input.dueFrom) } : {}),
+            ...(input.dueTo ? { lte: endOfUtcDay(input.dueTo) } : {}),
           },
+        });
+      }
+      if (input.dueWindow === "today") {
+        and.push({ dataVencimento: { gte: today, lte: endOfUtcDay(today) } });
+      } else if (input.dueWindow === "next_7_days") {
+        and.push({ dataVencimento: { gte: today, lte: endOfUtcDay(plus7) } });
+      } else if (input.dueWindow === "overdue_30_plus") {
+        const old = startOfUtcDay(new Date(today));
+        old.setUTCDate(old.getUTCDate() - 30);
+        and.push({
+          AND: [
+            { dataVencimento: { lte: old } },
+            { OR: [{ status: "PENDENTE" }, { status: "ATRASADO" }] },
+          ],
         });
       }
 
       if (search && search.length > 0) {
         and.push({
           OR: [
-            { asaasPaymentId: { contains: search, mode: "insensitive" } },
+            { asaasId: { contains: search, mode: "insensitive" } },
             {
               customer: {
                 OR: [
                   {
-                    fullName: { contains: search, mode: "insensitive" },
+                    nome: { contains: search, mode: "insensitive" },
                   },
                   { email: { contains: search, mode: "insensitive" } },
                   ...(digits.length >= 3
@@ -319,17 +414,17 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      const where: Prisma.PortalPaymentWhereInput =
+      const where: Prisma.PagamentoWhereInput =
         and.length > 0 ? { AND: and } : {};
 
-      const items = await db.portalPayment.findMany({
+      const items = await db.pagamento.findMany({
         where,
         take: input.limit + 1,
         cursor: input.cursor ? { id: input.cursor } : undefined,
         orderBy: { createdAt: "desc" },
         include: {
           customer: {
-            select: { email: true, fullName: true, cpfCnpj: true },
+            select: { email: true, nome: true, cpfCnpj: true },
           },
         },
       });
@@ -342,10 +437,11 @@ export const adminRouter = createTRPCRouter({
 
       const serialized = items.map(({ customer: c, ...rest }) => ({
         ...rest,
-        valueCents: centsFromDecimal(rest.value),
+        valueCents: centsFromDecimal(rest.valorTitulo),
+        paymentMethod: rest.metodoPagamento,
         user: {
           email: c.email,
-          name: c.fullName,
+          name: c.nome,
           cpfCnpj: c.cpfCnpj,
         },
       }));
@@ -368,38 +464,95 @@ export const adminRouter = createTRPCRouter({
       overdueCount,
       pendingOpenCount,
       receivedCountAll,
+      dueTodayCount,
+      dueNext7Count,
+      overdue30Count,
+      overdue30Amount,
+      lastSyncRuns,
     ] = await Promise.all([
-      db.portalPayment.groupBy({
+      db.pagamento.groupBy({
         by: ["status"],
-        _sum: { value: true },
+        _sum: { valorTitulo: true },
         _count: true,
       }),
-      db.portalPayment.findMany({
+      db.pagamento.findMany({
         where: {
-          OR: [{ status: "RECEIVED" }, { status: "CONFIRMED" }],
+          status: "PAGO",
           updatedAt: { gte: since },
         },
-        select: { updatedAt: true, value: true },
+        select: { updatedAt: true, valorTitulo: true },
       }),
-      db.portalPayment.aggregate({
-        _sum: { value: true },
-        where: { OR: [{ status: "RECEIVED" }, { status: "CONFIRMED" }] },
+      db.pagamento.aggregate({
+        _sum: { valorTitulo: true },
+        where: { status: "PAGO" },
       }),
-      db.portalPayment.aggregate({
-        _sum: { value: true },
-        where: { status: "PENDING" },
+      db.pagamento.aggregate({
+        _sum: { valorTitulo: true },
+        where: { status: "PENDENTE" },
       }),
-      db.portalPayment.count({ where: overdueWhere }),
-      db.portalPayment.count({ where: pendingCurrentWhere }),
-      db.portalPayment.count({
-        where: { OR: [{ status: "RECEIVED" }, { status: "CONFIRMED" }] },
+      db.pagamento.count({ where: overdueWhere }),
+      db.pagamento.count({ where: pendingCurrentWhere }),
+      db.pagamento.count({
+        where: { status: "PAGO" },
+      }),
+      db.pagamento.count({
+        where: {
+          dataVencimento: { gte: startOfUtcDay(new Date()), lte: endOfUtcDay(new Date()) },
+          status: "PENDENTE",
+        },
+      }),
+      db.pagamento.count({
+        where: {
+          dataVencimento: {
+            gte: startOfUtcDay(new Date()),
+            lte: endOfUtcDay(
+              new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            ),
+          },
+          status: "PENDENTE",
+        },
+      }),
+      db.pagamento.count({
+        where: {
+          dataVencimento: {
+            lte: startOfUtcDay(
+              new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            ),
+          },
+          OR: [{ status: "PENDENTE" }, { status: "ATRASADO" }],
+        },
+      }),
+      db.pagamento.aggregate({
+        _sum: { valorTitulo: true },
+        where: {
+          dataVencimento: {
+            lte: startOfUtcDay(
+              new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            ),
+          },
+          OR: [{ status: "PENDENTE" }, { status: "ATRASADO" }],
+        },
+      }),
+      db.syncLog.findMany({
+        where: { jobName: SYNC_SQLSERVER_JOB_NAME },
+        orderBy: { dataInicio: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          dataInicio: true,
+          dataFim: true,
+          status: true,
+          registrosNovos: true,
+          registrosAtualizados: true,
+          falhas: true,
+        },
       }),
     ]);
 
     const revenueByDay = new Map<string, number>();
     for (const row of receivedRows) {
       const key = formatDayKey(startOfUtcDay(row.updatedAt));
-      const cents = centsFromDecimal(row.value);
+      const cents = centsFromDecimal(row.valorTitulo);
       revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + cents);
     }
 
@@ -410,28 +563,42 @@ export const adminRouter = createTRPCRouter({
     return {
       byStatus: groupStatus.map((g) => ({
         status: g.status,
-        totalCents: g._sum.value ? centsFromDecimal(g._sum.value) : 0,
+        totalCents: g._sum.valorTitulo
+          ? centsFromDecimal(g._sum.valorTitulo)
+          : 0,
         count: g._count,
       })),
       chartRevenue,
-      totalReceivedCents: totals._sum.value
-        ? centsFromDecimal(totals._sum.value)
+      totalReceivedCents: totals._sum.valorTitulo
+        ? centsFromDecimal(totals._sum.valorTitulo)
         : 0,
-      pendingCents: pendingSum._sum.value
-        ? centsFromDecimal(pendingSum._sum.value)
+      pendingCents: pendingSum._sum.valorTitulo
+        ? centsFromDecimal(pendingSum._sum.valorTitulo)
         : 0,
       receivedCountLast30Days: receivedRows.length,
       overdueCount,
       pendingOpenCount,
       receivedCountAll,
-      lastSyncRuns: [] as {
-        id: string;
-        startedAt: Date;
-        finishedAt: Date | null;
-        status: string;
-        rowsRead: number;
-        rowsWritten: number;
-      }[],
+      dueTodayCount,
+      dueNext7Count,
+      overdue30Count,
+      overdue30AmountCents: overdue30Amount._sum.valorTitulo
+        ? centsFromDecimal(overdue30Amount._sum.valorTitulo)
+        : 0,
+      lastSyncRuns: lastSyncRuns.map((r) => ({
+        id: r.id,
+        startedAt: r.dataInicio,
+        finishedAt: r.dataFim,
+        status:
+          r.status === "SUCESSO"
+            ? "SUCCESS"
+            : r.status === "FALHA"
+              ? "FAILED"
+              : "RUNNING",
+        rowsRead:
+          r.registrosNovos + r.registrosAtualizados + r.falhas,
+        rowsWritten: r.registrosNovos + r.registrosAtualizados,
+      })),
     };
   }),
 });

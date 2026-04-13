@@ -45,6 +45,11 @@ const CHART_COLORS = [
 ];
 
 const STATUS_LABEL: Record<string, string> = {
+  PENDENTE: "Em aberto",
+  PAGO: "Recebido",
+  ATRASADO: "Vencido",
+  CANCELADO: "Cancelado",
+  ESTORNADO: "Estornado",
   PENDING: "Em aberto",
   RECEIVED: "Recebido",
   CONFIRMED: "Confirmado",
@@ -56,11 +61,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 function statusBadgeClass(status: string) {
   switch (status) {
+    case "PAGO":
     case "RECEIVED":
     case "CONFIRMED":
       return "bg-jardim-green-mid/12 text-jardim-green-dark ring-jardim-green-mid/25";
+    case "PENDENTE":
     case "PENDING":
       return "bg-jardim-cream-dark text-jardim-green-mid ring-jardim-border";
+    case "ATRASADO":
     case "OVERDUE":
       return "bg-red-50 text-red-800 ring-red-200";
     default:
@@ -123,16 +131,19 @@ type PaymentBucket =
   | "pending"
   | "pending_current"
   | "received";
+type DueWindow = "all" | "today" | "next_7_days" | "overdue_30_plus";
 
 export function AdminDashboard() {
   const stats = api.admin.dashboardStats.useQuery();
   const [paymentBucket, setPaymentBucket] = useState<PaymentBucket>("all");
+  const [dueWindow, setDueWindow] = useState<DueWindow>("all");
   const [paymentSearch, setPaymentSearch] = useState("");
   const deferredSearch = useDeferredValue(paymentSearch.trim());
 
   const payments = api.admin.listPayments.useQuery({
     limit: 30,
     bucket: paymentBucket,
+    dueWindow,
     search: deferredSearch.length > 0 ? deferredSearch : undefined,
   });
 
@@ -210,6 +221,27 @@ export function AdminDashboard() {
             sub="Todos os pagamentos recebidos"
             icon={<Receipt className="h-5 w-5" strokeWidth={2} />}
           />
+          <KpiCard
+            loading={loadingStats}
+            label="Vencem hoje"
+            value={String(stats.data?.dueTodayCount ?? 0)}
+            sub="Pendentes com vencimento hoje"
+            icon={<Clock className="h-5 w-5" strokeWidth={2} />}
+          />
+          <KpiCard
+            loading={loadingStats}
+            label="Próximos 7 dias"
+            value={String(stats.data?.dueNext7Count ?? 0)}
+            sub="Pendentes com vencimento próximo"
+            icon={<Clock className="h-5 w-5" strokeWidth={2} />}
+          />
+          {/* <KpiCard
+            loading={loadingStats}
+            label="Atraso > 30 dias"
+            value={String(stats.data?.overdue30Count ?? 0)}
+            sub={brl.format((stats.data?.overdue30AmountCents ?? 0) / 100)}
+            icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
+          /> */}
         </section>
 
         {stats.data?.lastSyncRuns && stats.data.lastSyncRuns.length > 0 ? (
@@ -450,6 +482,21 @@ export function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted">
+                  Janela de vencimento
+                </label>
+                <select
+                  className="mt-1 w-full rounded-xl border border-jardim-border bg-jardim-white px-3 py-2 text-sm text-jardim-text focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25 sm:max-w-xs"
+                  value={dueWindow}
+                  onChange={(e) => setDueWindow(e.target.value as DueWindow)}
+                >
+                  <option value="all">Todas</option>
+                  <option value="today">Vence hoje</option>
+                  <option value="next_7_days">Próximos 7 dias</option>
+                  <option value="overdue_30_plus">Atrasados &gt; 30 dias</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted">
                   Pesquisar cliente
                 </label>
                 <input
@@ -504,7 +551,7 @@ export function AdminDashboard() {
                       </td>
                       <td className="max-w-[200px] truncate px-5 py-3.5 font-medium text-jardim-text sm:max-w-xs sm:px-6">
                         <span className="block truncate">
-                          {p.user.name ?? p.user.email ?? p.customerId?.toString?.() ?? "—"}
+                          {p.user.name ?? p.user.email ?? p.customerId ?? "—"}
                         </span>
                         {p.user.cpfCnpj ? (
                           <span className="block truncate text-[11px] text-jardim-text-muted">

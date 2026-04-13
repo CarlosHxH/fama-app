@@ -9,6 +9,7 @@ import { api } from "~/trpc/react";
 import { cn } from "~/lib/utils";
 
 type BillingType = "PIX" | "BOLETO" | "CREDIT_CARD";
+type TipoPagamento = "MANUTENCAO" | "TAXA_SERVICO" | "AQUISICAO";
 
 const METHODS: { id: BillingType; label: string; hint: string }[] = [
   {
@@ -50,8 +51,8 @@ function canEmitCharges(session: {
   ) {
     return false;
   }
-  const s = session.user.staffRole ?? "EMPLOYEE";
-  return s === "ADMIN" || s === "MANAGER";
+  const s = session.user.staffRole ?? "ATENDENTE";
+  return s === "ADMIN" || s === "FINANCEIRO";
 }
 
 export function PagamentosClient() {
@@ -61,6 +62,9 @@ export function PagamentosClient() {
   const [search, setSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [billingType, setBillingType] = useState<BillingType>("PIX");
+  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>("MANUTENCAO");
+  const [contratoId, setContratoId] = useState<string>("");
+  const [jazigoId, setJazigoId] = useState<string>("");
   const [valueReais, setValueReais] = useState("50,00");
   const [dueDate, setDueDate] = useState(() => {
     const d = new Date();
@@ -79,18 +83,30 @@ export function PagamentosClient() {
   const selected = useMemo(() => {
     return usersQuery.data?.items.find((u) => u.id === selectedUserId) ?? null;
   }, [usersQuery.data?.items, selectedUserId]);
+  const paymentContextQuery = api.admin.paymentContextForUser.useQuery(
+    { userId: selectedUserId ?? "" },
+    { enabled: Boolean(selectedUserId) },
+  );
+  const contratos = paymentContextQuery.data?.contratos ?? [];
+  const contratoSelecionado = contratos.find((c) => c.id === contratoId) ?? null;
+  const jazigos = contratoSelecionado?.jazigos ?? [];
+  const responsavel = contratoSelecionado?.responsavelFinanceiro ?? null;
 
   const create = api.admin.createPaymentForUser.useMutation();
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedUserId) return;
+    if (tipoPagamento === "MANUTENCAO" && !jazigoId) return;
     const cents = parseReaisToCents(valueReais);
     create.mutate({
       userId: selectedUserId,
       valueCents: cents,
       dueDate: new Date(dueDate + "T12:00:00"),
       billingType,
+      tipoPagamento,
+      contratoId: contratoId || undefined,
+      jazigoId: tipoPagamento === "MANUTENCAO" ? jazigoId || undefined : undefined,
       description: description.trim() || undefined,
       email: emailOverride.trim() || undefined,
       cpfCnpj: cpfOverride.replace(/\D/g, "") || undefined,
@@ -112,7 +128,7 @@ export function PagamentosClient() {
       <div className="mx-auto max-w-lg px-4 py-12 text-center">
         <p className="text-sm text-jardim-text-muted">
           A sua função no painel não inclui emitir cobranças. Contacte um
-          administrador se precisar do papel ADMIN ou MANAGER.
+          administrador se precisar do papel ADMIN ou FINANCEIRO.
         </p>
       </div>
     );
@@ -191,6 +207,93 @@ export function PagamentosClient() {
             </p>
           ) : null}
         </div>
+
+        <fieldset>
+          <legend className="text-xs font-semibold uppercase tracking-wide text-jardim-text-muted">
+            Tipo de pagamento
+          </legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {[
+              { id: "MANUTENCAO" as const, label: "Manutenção" },
+              { id: "TAXA_SERVICO" as const, label: "Taxa de serviço" },
+              { id: "AQUISICAO" as const, label: "Aquisição" },
+            ].map((t) => (
+              <label
+                key={t.id}
+                className={cn(
+                  "flex cursor-pointer flex-col rounded-xl border p-3 transition-colors",
+                  tipoPagamento === t.id
+                    ? "border-jardim-green-mid bg-jardim-cream ring-1 ring-jardim-green-mid/30"
+                    : "border-jardim-border hover:bg-jardim-cream/50",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="tipoPagamento"
+                  className="sr-only"
+                  checked={tipoPagamento === t.id}
+                  onChange={() => setTipoPagamento(t.id)}
+                />
+                <span className="text-sm font-semibold text-jardim-green-dark">
+                  {t.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-jardim-text-muted">
+              Contrato
+            </label>
+            <select
+              className="mt-1.5 w-full rounded-xl border border-jardim-border px-3 py-2.5 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
+              value={contratoId}
+              onChange={(e) => {
+                setContratoId(e.target.value);
+                setJazigoId("");
+              }}
+              disabled={!selectedUserId || paymentContextQuery.isLoading}
+            >
+              <option value="">Sem contrato específico</option>
+              {contratos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.numeroContrato} ({c.situacao})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-jardim-text-muted">
+              Jazigo {tipoPagamento === "MANUTENCAO" ? "(obrigatório)" : "(opcional)"}
+            </label>
+            <select
+              className="mt-1.5 w-full rounded-xl border border-jardim-border px-3 py-2.5 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
+              value={jazigoId}
+              onChange={(e) => setJazigoId(e.target.value)}
+              disabled={!contratoId}
+              required={tipoPagamento === "MANUTENCAO"}
+            >
+              <option value="">Selecionar jazigo</option>
+              {jazigos.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.codigo} · {j.quantidadeGavetas} gavetas
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {contratoSelecionado ? (
+          <div className="rounded-xl border border-jardim-border bg-jardim-cream/40 px-3 py-2 text-xs text-jardim-text-muted">
+            Cobrança em nome de:{" "}
+            <strong className="text-jardim-green-dark">
+              {responsavel?.nome ?? selected?.name ?? "Titular"}
+            </strong>
+            {responsavel?.cpf ? ` · CPF ${responsavel.cpf}` : ""}
+          </div>
+        ) : null}
 
         <fieldset>
           <legend className="text-xs font-semibold uppercase tracking-wide text-jardim-text-muted">
@@ -300,11 +403,10 @@ export function PagamentosClient() {
           <div className="rounded-xl border border-jardim-green-mid/30 bg-jardim-cream px-4 py-3 text-sm text-jardim-green-dark">
             <p className="font-semibold">Cobrança criada</p>
             <p className="mt-1 text-xs text-jardim-text-muted">
-              ID Asaas: {successPayment.asaasPaymentId}
+              ID Asaas: {successPayment.asaasId}
             </p>
             {(() => {
-              const payUrl =
-                successPayment.invoiceUrl ?? successPayment.bankSlipUrl;
+              const payUrl = successPayment.invoiceUrl;
               return payUrl ? (
                 <Link
                   href={payUrl}
@@ -316,7 +418,7 @@ export function PagamentosClient() {
                 </Link>
               ) : null;
             })()}
-            {successPayment.pixCopyPaste ? (
+            {successPayment.metodoPagamento === "PIX" ? (
               <p className="mt-2 break-all font-mono text-xs">
                 PIX copia-e-cola disponível no registo (portal).
               </p>
@@ -326,7 +428,11 @@ export function PagamentosClient() {
 
         <button
           type="submit"
-          disabled={!selectedUserId || create.isPending}
+          disabled={
+            !selectedUserId ||
+            create.isPending ||
+            (tipoPagamento === "MANUTENCAO" && !jazigoId)
+          }
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-jardim-green-dark py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jardim-green-mid disabled:opacity-50"
         >
           {create.isPending ? (

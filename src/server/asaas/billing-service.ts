@@ -6,6 +6,8 @@ import { Prisma } from "../../../generated/prisma/client";
 import type { Customer } from "../../../generated/prisma/client";
 import { db } from "~/server/db";
 import { decimalFromCents } from "~/server/billing/money";
+import { mapAsaasToStatusPagamento } from "~/server/billing/asaas-payment-status";
+import { assertPagamentoManutencaoTemJazigo } from "~/server/billing/validate-pagamento";
 
 import { asaasFetch, AsaasApiError } from "./client";
 import { resolveBillingContactEmail } from "./resolve-billing-email";
@@ -38,9 +40,24 @@ function formatDueDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+function utcNoonDate(d: Date): Date {
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0),
+  );
+}
+
+function metodoFromBillingType(
+  billingType: AsaasBillingType,
+): "PIX" | "BOLETO" | "CARTAO_CREDITO" {
+  if (billingType === "BOLETO") return "BOLETO";
+  if (billingType === "CREDIT_CARD") return "CARTAO_CREDITO";
+  return "PIX";
+}
+
 export type EnsureAsaasCustomerOptions = {
   cpfCnpjOverride?: string;
   emailOverride?: string;
+  nameOverride?: string;
 };
 
 /**
@@ -76,7 +93,7 @@ export async function ensureAsaasCustomer(
   }
 
   const body = {
-    name: customer.fullName ?? emailRaw.split("@")[0] ?? "Cliente",
+    name: options?.nameOverride ?? customer.nome ?? emailRaw.split("@")[0] ?? "Cliente",
     email: emailRaw,
     cpfCnpj: cpfCnpj.replace(/\D/g, ""),
   };
@@ -125,15 +142,8 @@ export async function ensureAsaasCustomer(
   }
 }
 
-function mapInitialPortalStatus(asaasStatus: string | undefined): string {
-  const s = (asaasStatus ?? "PENDING").toUpperCase();
-  if (s === "CONFIRMED" || s === "RECEIVED") return "RECEIVED";
-  if (s === "OVERDUE") return "OVERDUE";
-  return "PENDING";
-}
-
 /**
- * Cria cobrança PIX no Asaas e registo em `PortalPayment`.
+ * Cria cobrança PIX no Asaas e registo em `Pagamento`.
  */
 export async function createPixChargeForCustomer(input: {
   customer: Customer;
@@ -181,23 +191,24 @@ export async function createPixChargeForCustomer(input: {
     throw e;
   }
 
-  return db.portalPayment.create({
+  return db.pagamento.create({
     data: {
       customerId: customer.id,
-      invoiceId: null,
-      asaasPaymentId: payment.id,
-      paymentMethod: "PIX",
-      status: mapInitialPortalStatus(payment.status),
-      invoiceUrl: payment.invoiceUrl ?? null,
-      bankSlipUrl: payment.bankSlipUrl ?? null,
-      pixCopyPaste: payment.pixCopiaECola ?? null,
-      value: decimalFromCents(valueCents),
+      valorTitulo: decimalFromCents(valueCents),
+      dataVencimento: utcNoonDate(dueDate),
+      tipo: "TAXA_SERVICO",
+      status: mapAsaasToStatusPagamento(payment.status),
+      asaasId: payment.id,
+      invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
+      metodoPagamento: "PIX",
+      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookRecebidoEm: new Date(),
     },
   });
 }
 
 /**
- * Cria cobrança Asaas (PIX, boleto ou cartão) e registo em `PortalPayment`.
+ * Cria cobrança Asaas (PIX, boleto ou cartão) e registo em `Pagamento`.
  */
 export async function createAsaasChargeForCustomer(input: {
   customer: Customer;
@@ -207,6 +218,14 @@ export async function createAsaasChargeForCustomer(input: {
   cpfCnpj?: string;
   email?: string;
   billingType: AsaasBillingType;
+  tipoPagamento: "MANUTENCAO" | "TAXA_SERVICO" | "AQUISICAO";
+  contratoId?: string;
+  jazigoId?: string;
+  responsavelFinanceiro?: {
+    nome: string;
+    cpf: string;
+    email?: string | null;
+  } | null;
 }) {
   const {
     customer,
@@ -216,6 +235,10 @@ export async function createAsaasChargeForCustomer(input: {
     cpfCnpj,
     email,
     billingType,
+    tipoPagamento,
+    contratoId,
+    jazigoId,
+    responsavelFinanceiro,
   } = input;
 
   if (valueCents < 100) {
@@ -225,9 +248,19 @@ export async function createAsaasChargeForCustomer(input: {
     });
   }
 
+  assertPagamentoManutencaoTemJazigo({
+    tipo: tipoPagamento,
+    jazigoId,
+  });
+
+  const payerEmail = responsavelFinanceiro?.email ?? email;
+  const payerCpf = responsavelFinanceiro?.cpf ?? cpfCnpj;
+  const payerName = responsavelFinanceiro?.nome;
+
   const asaasCustomerId = await ensureAsaasCustomer(customer, {
-    cpfCnpjOverride: cpfCnpj,
-    emailOverride: email,
+    cpfCnpjOverride: payerCpf,
+    emailOverride: payerEmail,
+    nameOverride: payerName,
   });
 
   const payload: Record<string, unknown> = {
@@ -256,17 +289,29 @@ export async function createAsaasChargeForCustomer(input: {
 
   const checkoutUrl = payment.invoiceUrl ?? payment.bankSlipUrl ?? undefined;
 
-  return db.portalPayment.create({
+  const jazigo = jazigoId
+    ? await db.jazigo.findUnique({
+        where: { id: jazigoId },
+        select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
+      })
+    : null;
+
+  return db.pagamento.create({
     data: {
       customerId: customer.id,
-      invoiceId: null,
-      asaasPaymentId: payment.id,
-      paymentMethod: billingType,
-      status: mapInitialPortalStatus(payment.status),
+      valorTitulo: decimalFromCents(valueCents),
+      dataVencimento: utcNoonDate(dueDate),
+      tipo: tipoPagamento,
+      status: mapAsaasToStatusPagamento(payment.status),
+      asaasId: payment.id,
       invoiceUrl: checkoutUrl ?? payment.invoiceUrl ?? null,
-      bankSlipUrl: payment.bankSlipUrl ?? null,
-      pixCopyPaste: payment.pixCopiaECola ?? null,
-      value: decimalFromCents(valueCents),
+      metodoPagamento: metodoFromBillingType(billingType),
+      contratoId: contratoId ?? null,
+      jazigoId: jazigo?.id ?? jazigoId ?? null,
+      gavetasNaEpoca: jazigo?.quantidadeGavetas ?? null,
+      valorNaEpoca: jazigo?.valorMensalidade ?? null,
+      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookRecebidoEm: new Date(),
     },
   });
 }

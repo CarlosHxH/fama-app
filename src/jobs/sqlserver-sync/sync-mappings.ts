@@ -7,14 +7,10 @@ import {
 import type { KeySpec } from "./transform";
 
 /**
- * Mapeamentos SQL Server → `MssqlSyncRecord` (payload JSON por linha).
+ * Mapeamentos SQL Server → linhas de domínio Prisma (`Customer`, `Contrato`, `Jazigo`, `Pagamento`, …).
  *
- * **Cobrança (Fase 1–2):** núcleo `Boletos` ↔ `Cessionarios_Planos` ↔ `Cessionarios` + catálogos
- * e satélites (ver schema exportado `schema_20260409_004629.json`).
- *
- * **Armazenamento:** mantém-se **apenas** `MssqlSyncRecord` + `SyncRun`; não são criados
- * modelos Prisma espelhados por tabela legada nesta fase. Para relatórios tipados ou
- * integração Asaas, pode-se acrescentar depois ETL para tabelas Postgres dedicadas.
+ * O job `runSync` executa apenas o subconjunto definido em `domain-sync-order.ts`; as restantes
+ * entradas servem de referência ou para extensões futuras.
  */
 export type SyncMapping = KeySpec & {
   id: string;
@@ -62,6 +58,7 @@ export const STATIC_MAPPINGS: SyncMapping[] = [
       enrichLegacyIntDates(row, LEGACY_DATE_COLUMNS_CESSIONARIOS_PLANOS),
   },
   {
+    /** Origem MSSQL; no Postgres os registos vão para `pagamentos`. */
     id: "boletos",
     sourceTable: "dbo.Boletos",
     keyColumn: "CodBoleto",

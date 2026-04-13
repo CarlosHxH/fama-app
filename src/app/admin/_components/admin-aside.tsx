@@ -37,8 +37,8 @@ function canEmitCharges(session: {
   ) {
     return false;
   }
-  const s = session.user.staffRole ?? "EMPLOYEE";
-  return s === "ADMIN" || s === "MANAGER";
+  const s = session.user.staffRole ?? "ATENDENTE";
+  return s === "ADMIN" || s === "FINANCEIRO";
 }
 
 export function AdminAside() {

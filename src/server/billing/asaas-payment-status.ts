@@ -1,61 +1,42 @@
-/**
- * Estados persistidos em `PortalPayment.status` (strings alinhadas ao Asaas).
- */
-export type PortalPaymentStatusKey =
-  | "PENDING"
-  | "RECEIVED"
-  | "OVERDUE"
-  | "REFUNDED"
-  | "CANCELLED"
-  | "CONFIRMED"
-  | "UNKNOWN";
+import type { StatusPagamento } from "../../../generated/prisma/client";
 
 /**
- * Converte o `status` devolvido pelo Asaas para o valor persistido.
+ * Converte o `status` devolvido pelo Asaas para `StatusPagamento` persistido.
  */
-export function mapAsaasPaymentStatusToPortal(
-  asaasStatus: string,
-): PortalPaymentStatusKey {
+export function mapAsaasToStatusPagamento(asaasStatus: string): StatusPagamento {
   const s = asaasStatus.toUpperCase();
   switch (s) {
     case "PENDING":
-      return "PENDING";
+      return "PENDENTE";
     case "RECEIVED":
     case "CONFIRMED":
-      return "RECEIVED";
+      return "PAGO";
     case "OVERDUE":
-      return "OVERDUE";
+      return "ATRASADO";
     case "REFUNDED":
-      return "REFUNDED";
+      return "ESTORNADO";
     case "DELETED":
     case "CANCELLED":
-      return "CANCELLED";
+      return "CANCELADO";
     default:
-      return "UNKNOWN";
+      return "PENDENTE";
   }
 }
 
 /**
  * Atualização idempotente do status (webhooks repetidos).
  */
-export function resolvePortalStatusTransition(
-  current: string,
-  incoming: PortalPaymentStatusKey,
-): PortalPaymentStatusKey | null {
-  const c = current.toUpperCase();
-  if (incoming === "UNKNOWN") {
+export function resolvePagamentoStatusTransition(
+  current: StatusPagamento,
+  incoming: StatusPagamento,
+): StatusPagamento | null {
+  if (incoming === current) {
     return null;
   }
-  if (c === incoming) {
+  if (current === "PAGO" && incoming === "PENDENTE") {
     return null;
   }
-  if (
-    (c === "RECEIVED" || c === "CONFIRMED") &&
-    incoming === "PENDING"
-  ) {
-    return null;
-  }
-  if (c === "REFUNDED" || c === "CANCELLED") {
+  if (current === "CANCELADO" || current === "ESTORNADO") {
     return null;
   }
   return incoming;

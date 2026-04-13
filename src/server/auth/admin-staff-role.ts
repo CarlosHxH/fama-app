@@ -10,15 +10,15 @@ export function resolveStaffRole(
   staffRole: Role | null | undefined,
 ): Role | null {
   if (accountKind !== "admin") return null;
-  return staffRole ?? "EMPLOYEE";
+  return staffRole ?? "ATENDENTE";
 }
 
 /** Quem pode emitir cobranças Asaas (painel). */
 export function canIssueCharges(staffRole: Role | null): boolean {
-  return staffRole === "ADMIN" || staffRole === "MANAGER";
+  return staffRole === "ADMIN" || staffRole === "FINANCEIRO";
 }
 
 /** Quem pode alterar contactos de clientes. */
 export function canEditCustomerContacts(staffRole: Role | null): boolean {
-  return staffRole === "ADMIN" || staffRole === "MANAGER";
+  return staffRole === "ADMIN" || staffRole === "FINANCEIRO";
 }

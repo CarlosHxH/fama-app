@@ -159,7 +159,7 @@ function staffRole(ctx: {
   );
 }
 
-/** ADMIN ou MANAGER — emitir cobranças Asaas. */
+/** ADMIN ou FINANCEIRO — emitir cobranças Asaas. */
 export const adminFinanceProcedure = adminProcedure.use(({ ctx, next }) => {
   const r = staffRole(ctx);
   if (!canIssueCharges(r)) {
@@ -171,7 +171,7 @@ export const adminFinanceProcedure = adminProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-/** ADMIN ou MANAGER — dados de contacto de titulares. */
+/** ADMIN ou FINANCEIRO — dados de contacto de titulares. */
 export const adminOperationalProcedure = adminProcedure.use(({ ctx, next }) => {
   const r = staffRole(ctx);
   if (!canEditCustomerContacts(r)) {

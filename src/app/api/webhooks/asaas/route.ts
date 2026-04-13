@@ -4,8 +4,8 @@ import { z } from "zod";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import {
-  mapAsaasPaymentStatusToPortal,
-  resolvePortalStatusTransition,
+  mapAsaasToStatusPagamento,
+  resolvePagamentoStatusTransition,
 } from "~/server/billing/asaas-payment-status";
 
 const webhookBodySchema = z.object({
@@ -21,7 +21,7 @@ const webhookBodySchema = z.object({
 });
 
 /**
- * Webhook Asaas: atualiza `PortalPayment` de forma idempotente.
+ * Webhook Asaas: atualiza `Pagamento` de forma idempotente.
  * Configure o mesmo token em `ASAAS_WEBHOOK_TOKEN` e no painel Asaas (header `asaas-access-token`).
  */
 export async function POST(request: Request) {
@@ -46,23 +46,23 @@ export async function POST(request: Request) {
     }
 
     const { payment } = parsed.data;
-    const row = await db.portalPayment.findUnique({
-      where: { asaasPaymentId: payment.id },
+    const row = await db.pagamento.findUnique({
+      where: { asaasId: payment.id },
     });
 
     if (!row) {
       return NextResponse.json({ ok: true });
     }
 
-    const mapped = mapAsaasPaymentStatusToPortal(payment.status);
-    const current = row.status.toUpperCase() as typeof mapped;
-    const transition = resolvePortalStatusTransition(current, mapped);
+    const mapped = mapAsaasToStatusPagamento(payment.status);
+    const transition = resolvePagamentoStatusTransition(row.status, mapped);
     const nextStatus = transition ?? row.status;
 
-    await db.portalPayment.update({
+    await db.pagamento.update({
       where: { id: row.id },
       data: {
         status: nextStatus,
+        webhookRecebidoEm: new Date(),
       },
     });
 

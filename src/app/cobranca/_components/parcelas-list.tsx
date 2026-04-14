@@ -333,7 +333,7 @@ export function ParcelasList(props: ParcelasListProps) {
           Nova cobrança: escolha o meio (PIX, boleto ou cartão) na coluna{" "}
           <strong>Resumo do pagamento</strong> à direita antes de gerar.
         </p>
-        <form onSubmit={onCreateSubmit}>
+        {/* <form onSubmit={onCreateSubmit}>
           <div
             style={{
               display: "grid",
@@ -470,7 +470,7 @@ export function ParcelasList(props: ParcelasListProps) {
           >
             {createPending ? "A gerar…" : "Gerar cobrança"}
           </button>
-        </form>
+        </form> */}
       </div>
     </div>
   );

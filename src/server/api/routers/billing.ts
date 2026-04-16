@@ -1,14 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { MetodoPagamento, Pagamento } from "../../../../generated/prisma/client";
 import { db } from "~/server/db";
 import {
   createAsaasChargeForCustomer,
   createPixChargeForCustomer,
 } from "~/server/asaas/billing-service";
-import { centsFromDecimal } from "~/server/billing/money";
-import type { BillingPaymentStatus } from "~/lib/billing-status";
+import { serializePortalPayment } from "~/server/billing/serialize-portal-payment";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 const createChargeInput = z.object({
@@ -29,57 +27,6 @@ function requirePortalSession(
       message: "Cobrança disponível apenas para sessão de cliente (portal).",
     });
   }
-}
-
-function mapMetodoToUi(
-  m: MetodoPagamento | null,
-): "PIX" | "BOLETO" | "CREDIT_CARD" | null {
-  if (!m) return null;
-  if (m === "PIX") return "PIX";
-  if (m === "BOLETO") return "BOLETO";
-  return "CREDIT_CARD";
-}
-
-function mapStatusToBillingUi(
-  status: Pagamento["status"],
-): BillingPaymentStatus {
-  switch (status) {
-    case "PENDENTE":
-      return "PENDING";
-    case "PAGO":
-      return "RECEIVED";
-    case "ATRASADO":
-      return "OVERDUE";
-    case "CANCELADO":
-      return "CANCELLED";
-    case "ESTORNADO":
-      return "REFUNDED";
-    default:
-      return "UNKNOWN";
-  }
-}
-
-function serializePortalPayment(row: Pagamento) {
-  const raw = row.webhookData;
-  let pixCopyPaste: string | null = null;
-  if (raw !== null && typeof raw === "object" && !Array.isArray(raw)) {
-    const o = raw as Record<string, unknown> & { pixCopiaECola?: unknown };
-    const v = o.pixCopiaECola;
-    pixCopyPaste = typeof v === "string" ? v : null;
-  }
-
-  return {
-    ...row,
-    status: mapStatusToBillingUi(row.status),
-    valueCents: centsFromDecimal(row.valorTitulo),
-    /** Compat UI antiga (lista de parcelas). */
-    asaasBillingType: mapMetodoToUi(row.metodoPagamento),
-    description: null as string | null,
-    checkoutUrl: row.invoiceUrl ?? null,
-    boletoDigitableLine: null as string | null,
-    pixQrCodeBase64: null as string | null,
-    pixCopyPaste,
-  };
 }
 
 /**

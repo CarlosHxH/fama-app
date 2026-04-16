@@ -52,7 +52,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
+          url: getTrpcUrl(),
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
@@ -74,8 +74,25 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   );
 }
 
+function getConfiguredBasePath() {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  if (!basePath) return "";
+  return basePath.startsWith("/") ? basePath : `/${basePath}`;
+}
+
+function joinPath(base: string, path: string) {
+  return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+}
+
 function getBaseUrl() {
   if (typeof window !== "undefined") return window.location.origin;
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
+function getTrpcUrl() {
+  const base = getBaseUrl();
+  const basePath = getConfiguredBasePath();
+  return joinPath(`${base}${basePath}`, "/api/trpc");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { useDeferredValue, useState } from "react";
 import {
   Bar,
@@ -244,23 +245,31 @@ export function AdminDashboard() {
           /> */}
         </section>
 
-        {stats.data?.lastSyncRuns && stats.data.lastSyncRuns.length > 0 ? (
+        {/*stats.data?.lastSyncRuns && stats.data.lastSyncRuns.length > 0 ? (
           <section
             className="rounded-2xl border border-jardim-border bg-jardim-white p-5 shadow-sm sm:p-6"
             aria-labelledby="sync-runs-title"
           >
-            <div className="mb-3 flex items-center gap-2">
-              <RefreshCw
-                className="h-4 w-4 text-jardim-green-mid"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <h2
-                id="sync-runs-title"
-                className="text-sm font-semibold text-jardim-green-dark"
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <RefreshCw
+                  className="h-4 w-4 text-jardim-green-mid"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <h2
+                  id="sync-runs-title"
+                  className="text-sm font-semibold text-jardim-green-dark"
+                >
+                  Últimas sincronizações (SQL Server → Postgres)
+                </h2>
+              </div>
+              <Link
+                href="/admin/sincronizacoes"
+                className="text-xs font-medium text-jardim-green-mid underline-offset-2 hover:underline"
               >
-                Últimas sincronizações (SQL Server → Postgres)
-              </h2>
+                Ver histórico completo
+              </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-left text-xs">
@@ -305,7 +314,7 @@ export function AdminDashboard() {
               </table>
             </div>
           </section>
-        ) : null}
+        ) : null*/}
 
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           <section

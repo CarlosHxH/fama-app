@@ -1,10 +1,16 @@
+import { Prisma } from "../../../generated/prisma/client";
 import type { BillingPaymentStatus } from "~/lib/billing-status";
 import { centsFromDecimal } from "~/server/billing/money";
 
+// cspell:ignore Titulo
+
 type PagamentoLike = {
-  valorTitulo: unknown;
-  status: "PENDENTE" | "PAGO" | "ATRASADO" | "CANCELADO" | "ESTORNADO" | string;
-  metodoPagamento: "PIX" | "BOLETO" | "CARTAO_CREDITO" | null;
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  valorTitulo: Prisma.Decimal;
+  status: string;
+  metodoPagamento: string | null;
   invoiceUrl: string | null;
   webhookData: unknown;
   [key: string]: unknown;
@@ -22,6 +28,7 @@ function mapMetodoToUi(
   if (!m) return null;
   if (m === "PIX") return "PIX";
   if (m === "BOLETO") return "BOLETO";
+  if (m === "CARTAO_DEBITO") return "CREDIT_CARD";
   return "CREDIT_CARD";
 }
 

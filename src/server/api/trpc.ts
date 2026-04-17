@@ -15,6 +15,7 @@ import { auth } from "~/server/auth";
 import {
   canEditCustomerContacts,
   canIssueCharges,
+  canManageStaffUsers,
   resolveStaffRole,
 } from "~/server/auth/admin-staff-role";
 import { db } from "~/server/db";
@@ -178,6 +179,19 @@ export const adminOperationalProcedure = adminProcedure.use(({ ctx, next }) => {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "A sua função não permite alterar contactos de clientes.",
+    });
+  }
+  return next({ ctx });
+});
+
+/** Apenas ADMIN — criar/editar contas de funcionários (`User`). */
+export const adminManageStaffProcedure = adminProcedure.use(({ ctx, next }) => {
+  const r = staffRole(ctx);
+  if (!canManageStaffUsers(r)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Apenas administradores podem gerir contas de funcionários.",
     });
   }
   return next({ ctx });

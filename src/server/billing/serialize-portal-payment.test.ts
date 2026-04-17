@@ -2,6 +2,7 @@ import {
   readPaymentMeta,
   serializePortalPayment,
 } from "./serialize-portal-payment";
+import { Prisma } from "../../../generated/prisma/client";
 
 function makePagamento(
   overrides: Record<string, unknown> = {},
@@ -12,7 +13,7 @@ function makePagamento(
     asaasId: "asaas_1",
     nossoNumero: null,
     invoiceUrl: "https://checkout.example/pay",
-    valorTitulo: "25.50",
+    valorTitulo: new Prisma.Decimal("25.50"),
     valorPago: null,
     valorLiquido: null,
     gavetasNaEpoca: null,

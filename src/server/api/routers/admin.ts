@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import type { Prisma } from "../../../../generated/prisma/client";
+import { hash } from "bcrypt-ts";
+import type { Prisma, Role } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
 import { createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
@@ -9,9 +10,16 @@ import {
 } from "~/server/billing/payment-bucket";
 import { centsFromDecimal } from "~/server/billing/money";
 import { SYNC_SQLSERVER_JOB_NAME } from "~/jobs/sqlserver-sync/sync-constants";
+import {
+  canEditCustomerContacts,
+  canIssueCharges,
+  canManageStaffUsers,
+  resolveStaffRole,
+} from "~/server/auth/admin-staff-role";
 import { db } from "~/server/db";
 import {
   adminFinanceProcedure,
+  adminManageStaffProcedure,
   adminOperationalProcedure,
   adminProcedure,
   createTRPCRouter,
@@ -21,6 +29,26 @@ const phoneFields = z.object({
   number: z.string().trim().min(8).max(32),
   tipo: z.enum(["CELULAR", "FIXO", "WHATSAPP"]).optional(),
 });
+
+/**
+ * Garante que não se remove o último administrador ativo do sistema.
+ */
+async function assertAtLeastOneOtherActiveAdmin(excludeUserId: string) {
+  const n = await db.user.count({
+    where: {
+      role: "ADMIN",
+      ativo: true,
+      id: { not: excludeUserId },
+    },
+  });
+  if (n === 0) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Tem de existir pelo menos outro administrador ativo. Promova outro utilizador ou crie uma conta de administrador antes de aplicar esta alteração.",
+    });
+  }
+}
 
 function parseCustomerId(raw: string): string {
   const parsed = z.string().uuid().safeParse(raw);
@@ -601,4 +629,260 @@ export const adminRouter = createTRPCRouter({
       })),
     };
   }),
+
+  /**
+   * Lista funcionários (`User`) com acesso ao painel administrativo.
+   * Não expõe o hash de senha. Requer sessão admin (`adminProcedure`).
+   */
+  listStaff: adminProcedure
+    .input(
+      z.object({
+        search: z.string().max(200).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const search = input.search?.trim();
+      const where: Prisma.UserWhereInput =
+        search && search.length > 0
+          ? {
+              OR: [
+                { email: { contains: search, mode: "insensitive" } },
+                { nome: { contains: search, mode: "insensitive" } },
+              ],
+            }
+          : {};
+
+      const items = await db.user.findMany({
+        where,
+        orderBy: { nome: "asc" },
+        select: {
+          id: true,
+          email: true,
+          nome: true,
+          role: true,
+          ativo: true,
+          createdAt: true,
+        },
+      });
+
+      return { items };
+    }),
+
+  /**
+   * Permissões do utilizador atual no painel (para UI e controlo de funcionalidades).
+   */
+  getCapabilities: adminProcedure.query(({ ctx }) => {
+    const r = resolveStaffRole(
+      ctx.session.user.accountKind as "portal" | "admin",
+      ctx.session.user.staffRole ?? undefined,
+    );
+    return {
+      staffRole: r,
+      canManageStaff: canManageStaffUsers(r),
+      canIssueCharges: canIssueCharges(r),
+      canEditCustomerContacts: canEditCustomerContacts(r),
+    };
+  }),
+
+  /**
+   * Atualiza nome, e-mail, perfil ou estado de um funcionário. Apenas ADMIN.
+   */
+  updateStaff: adminManageStaffProcedure
+    .input(
+      z
+        .object({
+          id: z.string().uuid(),
+          nome: z.string().min(1).max(160).optional(),
+          email: z.string().email().max(120).optional(),
+          role: z.enum(["ADMIN", "FINANCEIRO", "ATENDENTE"]).optional(),
+          ativo: z.boolean().optional(),
+        })
+        .refine(
+          (d) =>
+            d.nome !== undefined ||
+            d.email !== undefined ||
+            d.role !== undefined ||
+            d.ativo !== undefined,
+          { message: "Indique pelo menos um campo a alterar." },
+        ),
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...patch } = input;
+      const current = await db.user.findUnique({ where: { id } });
+      if (!current) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Funcionário não encontrado.",
+        });
+      }
+
+      const nextRole = (patch.role ?? current.role) as Role;
+      const nextAtivo = patch.ativo ?? current.ativo;
+      const emailNorm = patch.email?.trim().toLowerCase();
+
+      if (emailNorm && emailNorm !== current.email) {
+        const taken = await db.user.findUnique({
+          where: { email: emailNorm },
+        });
+        if (taken) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Já existe uma conta com este e-mail.",
+          });
+        }
+      }
+
+      if (current.role === "ADMIN" && current.ativo) {
+        if (nextRole !== "ADMIN" || !nextAtivo) {
+          await assertAtLeastOneOtherActiveAdmin(current.id);
+        }
+      }
+
+      const updated = await db.user.update({
+        where: { id },
+        data: {
+          ...(patch.nome !== undefined ? { nome: patch.nome } : {}),
+          ...(emailNorm !== undefined ? { email: emailNorm } : {}),
+          ...(patch.role !== undefined ? { role: patch.role } : {}),
+          ...(patch.ativo !== undefined ? { ativo: patch.ativo } : {}),
+        },
+        select: {
+          id: true,
+          email: true,
+          nome: true,
+          role: true,
+          ativo: true,
+          createdAt: true,
+        },
+      });
+
+      return updated;
+    }),
+
+  /**
+   * Cria uma conta de funcionário. Apenas ADMIN.
+   */
+  createStaff: adminManageStaffProcedure
+    .input(
+      z.object({
+        email: z.string().email().max(120),
+        nome: z.string().min(1).max(160),
+        senha: z.string().min(8).max(128),
+        role: z.enum(["ADMIN", "FINANCEIRO", "ATENDENTE"]),
+        ativo: z.boolean().optional().default(true),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const emailNorm = input.email.trim().toLowerCase();
+      const exists = await db.user.findUnique({
+        where: { email: emailNorm },
+      });
+      if (exists) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Já existe uma conta com este e-mail.",
+        });
+      }
+      const senhaHash = await hash(input.senha, 12);
+      const created = await db.user.create({
+        data: {
+          email: emailNorm,
+          nome: input.nome.trim(),
+          senha: senhaHash,
+          role: input.role,
+          ativo: input.ativo,
+        },
+        select: {
+          id: true,
+          email: true,
+          nome: true,
+          role: true,
+          ativo: true,
+          createdAt: true,
+        },
+      });
+      return created;
+    }),
+
+  /**
+   * Redefine a palavra-passe de um funcionário. Apenas ADMIN.
+   */
+  updateStaffPassword: adminManageStaffProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        novaSenha: z.string().min(8).max(128),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const row = await db.user.findUnique({ where: { id: input.id } });
+      if (!row) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Funcionário não encontrado.",
+        });
+      }
+      const senhaHash = await hash(input.novaSenha, 12);
+      await db.user.update({
+        where: { id: input.id },
+        data: { senha: senhaHash },
+      });
+      return { ok: true as const };
+    }),
+
+  /**
+   * Histórico paginado de execuções em `SyncLog` (ex.: SQL Server → Postgres).
+   * Por defeito filtra pelo job `sync-sqlserver-to-postgres`; use `allJobs: true` para ver todos os jobs.
+   */
+  listSyncLogs: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        /** Página baseada em zero (usa `skip` no Prisma, ordenação por `dataInicio` desc). */
+        page: z.number().min(0).default(0),
+        allJobs: z.boolean().optional().default(false),
+        jobName: z.string().max(80).optional(),
+        status: z.enum(["PROCESSANDO", "SUCESSO", "FALHA"]).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const where: Prisma.SyncLogWhereInput = {
+        ...(!input.allJobs
+          ? {
+              jobName: input.jobName ?? SYNC_SQLSERVER_JOB_NAME,
+            }
+          : input.jobName
+            ? { jobName: input.jobName }
+            : {}),
+        ...(input.status ? { status: input.status } : {}),
+      };
+
+      const skip = input.page * input.limit;
+      const take = input.limit + 1;
+      const rows = await db.syncLog.findMany({
+        where,
+        orderBy: { dataInicio: "desc" },
+        skip,
+        take,
+        select: {
+          id: true,
+          jobName: true,
+          status: true,
+          registrosNovos: true,
+          registrosAtualizados: true,
+          falhas: true,
+          erroDetalhes: true,
+          dataInicio: true,
+          dataFim: true,
+        },
+      });
+
+      const hasMore = rows.length > input.limit;
+      const items = hasMore ? rows.slice(0, input.limit) : rows;
+
+      return {
+        items,
+        nextPage: hasMore ? input.page + 1 : undefined,
+      };
+    }),
 });

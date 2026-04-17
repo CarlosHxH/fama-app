@@ -22,3 +22,8 @@ export function canIssueCharges(staffRole: Role | null): boolean {
 export function canEditCustomerContacts(staffRole: Role | null): boolean {
   return staffRole === "ADMIN" || staffRole === "FINANCEIRO";
 }
+
+/** Criar, editar ou desativar contas de funcionários (`User`). Apenas ADMIN. */
+export function canManageStaffUsers(staffRole: Role | null): boolean {
+  return staffRole === "ADMIN";
+}

@@ -8,14 +8,23 @@ import {
   CreditCard,
   LayoutDashboard,
   Receipt,
+  RefreshCw,
+  UserCog,
   Users,
 } from "lucide-react";
 
 import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
 
 const NAV_BASE = [
   { href: "/admin", label: "Visão geral", icon: LayoutDashboard },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/funcionarios", label: "Funcionários", icon: UserCog },
+  {
+    href: "/admin/sincronizacoes",
+    label: "Sincronizações",
+    icon: RefreshCw,
+  },
 ] as const;
 
 const NAV_FINANCE = {
@@ -44,13 +53,17 @@ function canEmitCharges(session: {
 export function AdminAside() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const finance = canEmitCharges({ user: session?.user });
+  const caps = api.admin.getCapabilities.useQuery();
+  const finance =
+    caps.data?.canIssueCharges ?? canEmitCharges({ user: session?.user });
 
   const NAV = finance
     ? ([
         NAV_BASE[0],
         NAV_FINANCE,
         NAV_BASE[1],
+        NAV_BASE[2],
+        NAV_BASE[3],
       ] as const)
     : [...NAV_BASE];
 

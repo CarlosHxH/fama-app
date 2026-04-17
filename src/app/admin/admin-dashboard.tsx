@@ -22,9 +22,10 @@ import {
   BarChart3,
   CheckCircle2,
   Clock,
+  ExternalLink,
   PieChartIcon,
   Receipt,
-  RefreshCw,
+  Users,
 } from "lucide-react";
 
 import { api } from "~/trpc/react";
@@ -536,7 +537,7 @@ export function AdminDashboard() {
                 </p>
               </div>
             ) : (
-              <table className="w-full min-w-[600px] text-left text-sm">
+              <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-jardim-border bg-jardim-cream/80 text-[11px] font-semibold uppercase tracking-wider text-jardim-text-muted">
                     <th className="px-5 py-3 sm:px-6">Data</th>
@@ -544,6 +545,7 @@ export function AdminDashboard() {
                     <th className="px-5 py-3 sm:px-6">Meio</th>
                     <th className="px-5 py-3 sm:px-6">Valor</th>
                     <th className="px-5 py-3 sm:px-6">Estado</th>
+                    <th className="px-5 py-3 text-right sm:px-6">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-jardim-border">
@@ -583,6 +585,36 @@ export function AdminDashboard() {
                         >
                           {STATUS_LABEL[p.status] ?? p.status}
                         </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right sm:px-6">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          {p.invoiceUrl ? (
+                            <a
+                              href={p.invoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                            >
+                              <ExternalLink
+                                className="h-3.5 w-3.5 shrink-0"
+                                aria-hidden
+                              />
+                              Fatura
+                            </a>
+                          ) : null}
+                          <Link
+                            href={`/admin/clientes?search=${encodeURIComponent(
+                              p.user.email
+                                ?? p.user.name
+                                ?? p.user.cpfCnpj
+                                ?? "",
+                            )}`}
+                            className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                          >
+                            <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Cliente
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

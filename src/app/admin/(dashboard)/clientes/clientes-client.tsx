@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, User } from "lucide-react";
 
 import { ClientePhonesPanel } from "./_components/cliente-phones-panel";
@@ -8,9 +9,16 @@ import { api } from "~/trpc/react";
 
 /**
  * Listagem de titulares (clientes) com pesquisa.
+ * Aceita `?search=` na URL (ex.: link a partir do dashboard de cobranças).
  */
 export function ClientesClient() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const q = searchParams.get("search")?.trim();
+    if (q) setSearch(q);
+  }, [searchParams]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const query = api.admin.listUsers.useQuery({

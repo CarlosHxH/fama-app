@@ -9,6 +9,8 @@
   --color-jardim-green-dark: #1a3a2a;
   --color-jardim-green-mid: #2d5a3d;
   --color-jardim-green-light: #3d7a52;
+  /** Alias útil para botões (`bg-jardim-green`); igual ao verde escuro da marca. */
+  --color-jardim-green: #1a3a2a;
   --color-jardim-cream: #f5f2ed;
   --color-jardim-cream-dark: #ede9e0;
   --color-jardim-white: #ffffff;

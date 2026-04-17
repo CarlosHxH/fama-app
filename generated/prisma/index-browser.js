@@ -219,6 +219,7 @@ exports.Prisma.JazigoScalarFieldEnum = {
   quantidadeGavetas: 'quantidadeGavetas',
   valorMensalidade: 'valorMensalidade',
   contratoId: 'contratoId',
+  responsavelFinanceiroCustomerId: 'responsavelFinanceiroCustomerId',
   syncedAt: 'syncedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

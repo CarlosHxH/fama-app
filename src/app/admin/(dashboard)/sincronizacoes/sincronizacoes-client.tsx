@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Play,
+  RefreshCw,
+} from "lucide-react";
 
 import {
   syncLogStatusBadgeClass,
   syncLogStatusLabel,
 } from "~/lib/sync-log-ui";
+import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 type SyncRow = {
@@ -25,8 +32,23 @@ type SyncRow = {
  * Histórico de execuções do job de sincronização (SQL Server → Postgres).
  */
 export function SincronizacoesClient() {
+  const utils = api.useUtils();
   const [page, setPage] = useState(0);
   const [merged, setMerged] = useState<SyncRow[]>([]);
+
+  const syncStatus = api.admin.sqlServerSyncStatus.useQuery(undefined, {
+    refetchInterval: (q) =>
+      q.state.data?.isRunning === true ? 3_000 : false,
+  });
+
+  const triggerSync = api.admin.triggerSqlServerSync.useMutation({
+    onSuccess: async () => {
+      setPage(0);
+      setMerged([]);
+      await utils.admin.listSyncLogs.invalidate();
+      await utils.admin.sqlServerSyncStatus.invalidate();
+    },
+  });
 
   const query = api.admin.listSyncLogs.useQuery({
     limit: 50,
@@ -54,34 +76,68 @@ export function SincronizacoesClient() {
   const showLoading = query.isLoading && page === 0;
   const showTableLoadingMore = query.isFetching && page > 0;
 
+  const syncBusy =
+    syncStatus.data?.isRunning === true || triggerSync.isPending;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-jardim-green-dark sm:text-xl">
-          Sincronizações
-        </h1>
-        <p className="mt-1 text-sm text-jardim-text-muted">
-          Histórico de execuções do job SQL Server → Postgres (tabela{" "}
-          <code className="rounded bg-jardim-cream px-1 text-xs">sync_logs</code>
-          ).
-        </p>
-        <div className="mt-4 rounded-xl border border-jardim-border bg-jardim-cream/60 p-4 text-xs leading-relaxed text-jardim-text-muted">
-          <p>
-            <strong className="text-jardim-text">Como corre:</strong> o processo
-            pesado pode ser executado localmente com{" "}
-            <code className="rounded bg-jardim-white px-1 font-mono">
-              npm run job:sync
-            </code>{" "}
-            ou agendado via cron em{" "}
-            <code className="rounded bg-jardim-white px-1 font-mono">
-              /api/cron/sync-sqlserver
-            </code>{" "}
-            (configure o segredo e variáveis MSSQL no ambiente).
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg font-semibold text-jardim-green-dark sm:text-xl">
+            Sincronizações
+          </h1>
+          <p className="mt-1 text-sm text-jardim-text-muted">
+            Histórico de execuções do job SQL Server → Postgres (tabela{" "}
+            <code className="rounded bg-jardim-cream px-1 text-xs">sync_logs</code>
+            ).
           </p>
-          <p className="mt-2">
-            Esta página apenas mostra o histórico; não dispara sincronização.
-          </p>
+          {syncStatus.data?.isRunning ? (
+            <p className="mt-2 inline-flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 ring-1 ring-amber-200">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              Sincronização em execução no servidor…
+            </p>
+          ) : null}
         </div>
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          <button
+            type="button"
+            disabled={syncBusy}
+            onClick={() => triggerSync.mutate()}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-sm transition",
+              "bg-jardim-green-dark hover:bg-jardim-green-mid disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          >
+            {triggerSync.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Play className="h-4 w-4" aria-hidden />
+            )}
+            Disparar sincronização
+          </button>
+          {triggerSync.error ? (
+            <p className="max-w-xs text-right text-xs text-red-800" role="alert">
+              {triggerSync.error.message}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-jardim-border bg-jardim-cream/60 p-4 text-xs leading-relaxed text-jardim-text-muted">
+        <p>
+          <strong className="text-jardim-text">Como corre:</strong> o mesmo
+          processo que{" "}
+          <code className="rounded bg-jardim-white px-1 font-mono">
+            npm run job:sync
+          </code>{" "}
+          <span className="text-jardim-text">(botão acima)</span>,{" "}
+          <code className="rounded bg-jardim-white px-1 font-mono">
+            /api/cron/sync-sqlserver
+          </code>{" "}
+          ou agendamento externo. Requer variáveis MSSQL no ambiente. O botão fica
+          indisponível enquanto existir um registo em <em>Em execução</em> no
+          histórico.
+        </p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-jardim-border bg-jardim-white shadow-sm">

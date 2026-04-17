@@ -9,6 +9,12 @@ import {
   type PaymentBucket,
 } from "~/server/billing/payment-bucket";
 import { centsFromDecimal } from "~/server/billing/money";
+import {
+  resolveResponsavelFinanceiroPayloadForAsaas,
+  responsavelCobrancaComFonte,
+} from "~/server/billing/resolve-payer-for-charge";
+import { loadJobEnv } from "~/jobs/sqlserver-sync/job-env";
+import { runSync } from "~/jobs/sqlserver-sync/run-sync";
 import { SYNC_SQLSERVER_JOB_NAME } from "~/jobs/sqlserver-sync/sync-constants";
 import {
   canEditCustomerContacts,
@@ -190,6 +196,183 @@ export const adminRouter = createTRPCRouter({
     }),
 
   /**
+   * Jazigos sincronizados (quadra/setor/código) com contrato e titular para o painel.
+   */
+  listJazigos: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().uuid().optional(),
+        search: z.string().max(200).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const search = input.search?.trim();
+      const digits = search?.replace(/\D/g, "") ?? "";
+
+      const where: Prisma.JazigoWhereInput =
+        search && search.length > 0
+          ? {
+              OR: [
+                { codigo: { contains: search, mode: "insensitive" } },
+                {
+                  quadra: { contains: search, mode: "insensitive" },
+                },
+                {
+                  setor: { contains: search, mode: "insensitive" },
+                },
+                {
+                  contrato: {
+                    OR: [
+                      {
+                        numeroContrato: {
+                          contains: search,
+                          mode: "insensitive",
+                        },
+                      },
+                      {
+                        customer: {
+                          nome: {
+                            contains: search,
+                            mode: "insensitive",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  responsavelFinanceiroCustomer: {
+                    nome: { contains: search, mode: "insensitive" },
+                  },
+                },
+                ...(digits.length >= 3
+                  ? [
+                      {
+                        responsavelFinanceiroCustomer: {
+                          cpfCnpj: { contains: digits },
+                        },
+                      } as const,
+                    ]
+                  : []),
+              ],
+            }
+          : {};
+
+      const items = await db.jazigo.findMany({
+        where,
+        take: input.limit + 1,
+        cursor: input.cursor ? { id: input.cursor } : undefined,
+        orderBy: [{ codigo: "asc" }],
+        include: {
+          contrato: {
+            select: {
+              id: true,
+              numeroContrato: true,
+              customer: {
+                select: { id: true, nome: true },
+              },
+              responsavelFinanceiro: { select: { nome: true } },
+            },
+          },
+          responsavelFinanceiroCustomer: {
+            select: { id: true, nome: true, cpfCnpj: true },
+          },
+          _count: { select: { pagamentos: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      const serialized = items.map((j) => {
+        const legacy = j.contrato.responsavelFinanceiro;
+        const payer = j.responsavelFinanceiroCustomer;
+        let responsavelLabel: string;
+        let responsavelFonte: "customer" | "contrato" | "titular";
+        if (payer) {
+          responsavelLabel = payer.nome;
+          responsavelFonte = "customer";
+        } else if (legacy) {
+          responsavelLabel = `${legacy.nome} (contrato)`;
+          responsavelFonte = "contrato";
+        } else {
+          responsavelLabel = j.contrato.customer.nome;
+          responsavelFonte = "titular";
+        }
+        return {
+          id: j.id,
+          sqlServerId: j.sqlServerId,
+          codigo: j.codigo,
+          quadra: j.quadra,
+          setor: j.setor,
+          quantidadeGavetas: j.quantidadeGavetas,
+          valorMensalidadeCents: centsFromDecimal(j.valorMensalidade),
+          contratoId: j.contrato.id,
+          numeroContrato: j.contrato.numeroContrato,
+          customerId: j.contrato.customer.id,
+          titularNome: j.contrato.customer.nome,
+          pagamentosCount: j._count.pagamentos,
+          responsavelFinanceiroCustomer: payer
+            ? { id: payer.id, nome: payer.nome, cpfCnpj: payer.cpfCnpj }
+            : null,
+          responsavelLabel,
+          responsavelFonte,
+        };
+      });
+
+      return { items: serialized, nextCursor };
+    }),
+
+  /**
+   * Define o pagador (outro `Customer`) para um jazigo, ou remove (`null`) para voltar ao fallback contrato/titular.
+   */
+  setJazigoResponsavelFinanceiro: adminFinanceProcedure
+    .input(
+      z.object({
+        jazigoId: z.string().uuid(),
+        responsavelCustomerId: z.string().uuid().nullable(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const row = await db.jazigo.findUnique({ where: { id: input.jazigoId } });
+      if (!row) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Jazigo não encontrado.",
+        });
+      }
+      if (input.responsavelCustomerId) {
+        const payer = await db.customer.findUnique({
+          where: { id: input.responsavelCustomerId },
+        });
+        if (!payer) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cliente (pagador) não encontrado.",
+          });
+        }
+      }
+      return db.jazigo.update({
+        where: { id: input.jazigoId },
+        data: {
+          responsavelFinanceiroCustomerId: input.responsavelCustomerId,
+        },
+        select: {
+          id: true,
+          codigo: true,
+          responsavelFinanceiroCustomerId: true,
+          responsavelFinanceiroCustomer: {
+            select: { id: true, nome: true, cpfCnpj: true },
+          },
+        },
+      });
+    }),
+
+  /**
    * Ficha do titular (sem `senhaHash`) + contagens e últimas cobranças.
    */
   getCustomerById: adminProcedure
@@ -307,7 +490,12 @@ export const adminRouter = createTRPCRouter({
     .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
-      await requireCustomer(customerId);
+      const titular = await requireCustomer(customerId);
+      const titularSlice = {
+        nome: titular.nome,
+        cpfCnpj: titular.cpfCnpj,
+        email: titular.email,
+      };
       const contratos = await db.contrato.findMany({
         where: { customerId },
         orderBy: { numeroContrato: "asc" },
@@ -331,12 +519,53 @@ export const adminRouter = createTRPCRouter({
               setor: true,
               quantidadeGavetas: true,
               valorMensalidade: true,
+              responsavelFinanceiroCustomer: {
+                select: {
+                  id: true,
+                  nome: true,
+                  cpfCnpj: true,
+                  email: true,
+                },
+              },
             },
             orderBy: { codigo: "asc" },
           },
         },
       });
-      return { contratos };
+      const mapped = contratos.map((c) => {
+        const legacy = c.responsavelFinanceiro
+          ? {
+              nome: c.responsavelFinanceiro.nome,
+              cpf: c.responsavelFinanceiro.cpf,
+              email: c.responsavelFinanceiro.email,
+            }
+          : null;
+        return {
+          id: c.id,
+          numeroContrato: c.numeroContrato,
+          situacao: c.situacao,
+          responsavelFinanceiro: c.responsavelFinanceiro,
+          responsavelCobranca: responsavelCobrancaComFonte(null, legacy, titularSlice),
+          jazigos: c.jazigos.map((j) => ({
+            id: j.id,
+            codigo: j.codigo,
+            quadra: j.quadra,
+            setor: j.setor,
+            quantidadeGavetas: j.quantidadeGavetas,
+            valorMensalidade: j.valorMensalidade,
+            responsavelFinanceiroCustomer: j.responsavelFinanceiroCustomer,
+            responsavelCobranca: responsavelCobrancaComFonte(
+              j.responsavelFinanceiroCustomer,
+              legacy,
+              titularSlice,
+            ),
+          })),
+        };
+      });
+      return {
+        titular: titularSlice,
+        contratos: mapped,
+      };
     }),
 
   createPaymentForUser: adminFinanceProcedure
@@ -378,9 +607,20 @@ export const adminRouter = createTRPCRouter({
           ? await db.jazigo.findFirst({
               where: {
                 id: input.jazigoId,
+                contrato: { customerId: customer.id },
                 ...(contrato ? { contratoId: contrato.id } : {}),
               },
-              select: { id: true, contratoId: true },
+              include: {
+                responsavelFinanceiroCustomer: {
+                  select: {
+                    id: true,
+                    nome: true,
+                    cpfCnpj: true,
+                    email: true,
+                  },
+                },
+                contrato: { include: { responsavelFinanceiro: true } },
+              },
             })
           : null;
       if (input.jazigoId && !jazigo) {
@@ -389,6 +629,23 @@ export const adminRouter = createTRPCRouter({
           message: "Jazigo inválido para o contrato selecionado.",
         });
       }
+
+      const legacyResp =
+        jazigo?.contrato.responsavelFinanceiro ??
+        contrato?.responsavelFinanceiro ??
+        null;
+      const legacySlice = legacyResp
+        ? {
+            nome: legacyResp.nome,
+            cpf: legacyResp.cpf,
+            email: legacyResp.email,
+          }
+        : null;
+
+      const responsavelFinanceiro = resolveResponsavelFinanceiroPayloadForAsaas(
+        jazigo?.responsavelFinanceiroCustomer ?? null,
+        legacySlice,
+      );
 
       return createAsaasChargeForCustomer({
         customer,
@@ -399,15 +656,9 @@ export const adminRouter = createTRPCRouter({
         email: input.email,
         billingType: input.billingType,
         tipoPagamento: input.tipoPagamento,
-        contratoId: contrato?.id,
+        contratoId: contrato?.id ?? jazigo?.contratoId,
         jazigoId: jazigo?.id,
-        responsavelFinanceiro: contrato?.responsavelFinanceiro
-          ? {
-              nome: contrato.responsavelFinanceiro.nome,
-              cpf: contrato.responsavelFinanceiro.cpf,
-              email: contrato.responsavelFinanceiro.email,
-            }
-          : null,
+        responsavelFinanceiro,
       });
     }),
 
@@ -501,6 +752,10 @@ export const adminRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  /**
+   * Lista pagamentos para tabelas admin (dashboard e histórico), com filtros e cursor.
+   * Suporta `useInfiniteQuery` no cliente (`cursor` = último `id` da página anterior).
+   */
   listPayments: adminProcedure
     .input(
       z.object({
@@ -1011,4 +1266,40 @@ export const adminRouter = createTRPCRouter({
         nextPage: hasMore ? input.page + 1 : undefined,
       };
     }),
+
+  /**
+   * Indica se o job SQL Server → Postgres está com execução em curso (`PROCESSANDO`).
+   */
+  sqlServerSyncStatus: adminProcedure.query(async () => {
+    const n = await db.syncLog.count({
+      where: {
+        jobName: SYNC_SQLSERVER_JOB_NAME,
+        status: "PROCESSANDO",
+      },
+    });
+    return { isRunning: n > 0 };
+  }),
+
+  /**
+   * Executa o mesmo ETL que `npm run job:sync` / GET `/api/cron/sync-sqlserver`.
+   * Falha com CONFLICT se já existir um `sync_logs` em `PROCESSANDO` para este job.
+   */
+  triggerSqlServerSync: adminProcedure.mutation(async () => {
+    const running = await db.syncLog.count({
+      where: {
+        jobName: SYNC_SQLSERVER_JOB_NAME,
+        status: "PROCESSANDO",
+      },
+    });
+    if (running > 0) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Já existe uma sincronização em execução.",
+      });
+    }
+
+    const env = loadJobEnv();
+    const result = await runSync(db, env);
+    return { ok: true as const, ...result };
+  }),
 });

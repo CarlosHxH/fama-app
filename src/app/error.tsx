@@ -21,8 +21,8 @@ export default function ErrorPage({
 
   return (
     <main className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 py-16 text-center text-white">
-      <div className="max-w-md rounded-2xl border border-white/10 bg-[#1e4229]/90 p-8">
-        <h1 className="font-serif text-xl font-bold text-[#f5f2e8]">
+      <div className="max-w-md rounded-2xl border border-white/10 bg-[#f5f2e8] p-8">
+        <h1 className="font-serif text-xl font-bold text-[#1e4229]/90">
           Ocorreu um erro
         </h1>
         <p className="mt-3 text-sm text-white/75">
@@ -49,13 +49,6 @@ export default function ErrorPage({
             Início
           </Link>
         </div>
-        {isDev ? (
-          <p className="mt-6 text-xs text-white/50">
-            Se o erro repetir após alterações, execute{" "}
-            <code className="rounded bg-black/30 px-1">npm run dev:clean</code>{" "}
-            e volte a iniciar o servidor.
-          </p>
-        ) : null}
       </div>
     </main>
   );

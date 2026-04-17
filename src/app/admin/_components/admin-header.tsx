@@ -4,22 +4,39 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { ExternalLink, LogOut, PanelLeft } from "lucide-react";
 
+import { AsideTrigger, useAside } from "~/components/ui/aside";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 const linkBtn =
   "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jardim-green-mid/40 focus-visible:ring-offset-2 focus-visible:ring-offset-jardim-white";
+
+function MobileNavTrigger() {
+  const { open } = useAside();
+  return (
+    <div className="md:hidden">
+      <AsideTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 shadow-sm ring-1 ring-jardim-green-mid/30"
+          aria-expanded={open}
+          aria-controls="admin-nav-aside"
+          aria-label="Abrir ou fechar menu de navegação"
+        >
+          <PanelLeft className="h-4 w-4" aria-hidden />
+        </Button>
+      </AsideTrigger>
+    </div>
+  );
+}
 
 export function AdminHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-jardim-border bg-jardim-white/95 shadow-sm backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-full items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-jardim-green-mid/30"
-            aria-hidden
-          >
-            <PanelLeft className="h-4 w-4" />
-          </div>
+          <MobileNavTrigger />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-jardim-green-dark sm:text-base">
               Painel administrativo

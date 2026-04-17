@@ -4,21 +4,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 import {
   CreditCard,
+  History,
   LayoutDashboard,
+  MapPin,
   Receipt,
   RefreshCw,
   UserCog,
   Users,
 } from "lucide-react";
 
+import { useAside } from "~/components/ui/aside";
+
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 const NAV_BASE = [
   { href: "/admin", label: "Visão geral", icon: LayoutDashboard },
+  {
+    href: "/admin/pagamentos/historico",
+    label: "Histórico de pagamentos",
+    icon: History,
+  },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/jazigos", label: "Jazigos", icon: MapPin },
   { href: "/admin/funcionarios", label: "Funcionários", icon: UserCog },
   {
     href: "/admin/sincronizacoes",
@@ -52,10 +63,15 @@ function canEmitCharges(session: {
 
 export function AdminAside() {
   const pathname = usePathname();
+  const { open, setOpen } = useAside();
   const { data: session } = useSession();
   const caps = api.admin.getCapabilities.useQuery();
   const finance =
     caps.data?.canIssueCharges ?? canEmitCharges({ user: session?.user });
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname, setOpen]);
 
   const NAV = finance
     ? ([
@@ -64,11 +80,22 @@ export function AdminAside() {
         NAV_BASE[1],
         NAV_BASE[2],
         NAV_BASE[3],
+        NAV_BASE[4],
+        NAV_BASE[5],
       ] as const)
     : [...NAV_BASE];
 
   return (
-    <aside className="flex h-auto w-full min-h-0 shrink-0 flex-col border-b border-jardim-border bg-jardim-white md:h-full md:w-56 md:overflow-y-auto md:border-b-0 md:border-r lg:w-60">
+    <>
+      <aside
+        id="admin-nav-aside"
+        className={cn(
+          "flex min-h-0 shrink-0 flex-col border-jardim-border bg-jardim-white md:h-full md:w-56 md:overflow-y-auto md:border-b-0 md:border-r lg:w-60",
+          open
+            ? "fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] max-w-full overflow-y-auto border-b shadow-xl md:static md:z-auto md:w-56 md:max-w-none md:border-r md:shadow-none lg:w-60"
+            : "hidden h-auto w-full border-b md:flex",
+        )}
+      >
       <div className="border-b border-jardim-border bg-white px-3 py-3 md:px-4 md:py-4">
         <Link
           href="/admin"
@@ -86,14 +113,16 @@ export function AdminAside() {
         </Link>
       </div>
       <nav
-        className="flex gap-1 overflow-x-auto px-2 py-2 md:min-h-0 md:flex-1 md:flex-col md:gap-0.5 md:overflow-y-auto md:px-2 md:py-3"
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2 md:px-2 md:py-3"
         aria-label="Secções do painel"
       >
         {NAV.map(({ href, label, icon: Icon }) => {
           const active =
             href === "/admin"
               ? pathname === "/admin"
-              : pathname === href || pathname.startsWith(`${href}/`);
+              : href === "/admin/pagamentos"
+                ? pathname === "/admin/pagamentos"
+                : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
@@ -118,5 +147,14 @@ export function AdminAside() {
         </p>
       </div>
     </aside>
+      {open ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-jardim-green-dark/25 backdrop-blur-[1px] md:hidden"
+          aria-label="Fechar menu de navegação"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }

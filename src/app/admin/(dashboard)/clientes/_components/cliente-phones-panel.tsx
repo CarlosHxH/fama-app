@@ -186,7 +186,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                       <div className="flex flex-wrap gap-2 pt-1">
                         <button
                           type="button"
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-jardim-green px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-jardim-green-dark px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-jardim-green-mid disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                           disabled={updateMut.isPending || !editValid}
                           onClick={() => {
                             const curObs = row.observacoes ?? "";
@@ -361,7 +361,7 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
                             <div className="flex flex-col items-end gap-1.5 sm:flex-row sm:justify-end">
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1 rounded-lg bg-jardim-green px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex items-center gap-1 rounded-lg bg-jardim-green-dark px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-jardim-green-mid disabled:cursor-not-allowed disabled:opacity-50"
                                 disabled={updateMut.isPending || !editValid}
                                 onClick={() => {
                                   const curObs = row.observacoes ?? "";
@@ -470,12 +470,37 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
         }}
         aria-labelledby="phones-add-heading"
       >
-        <h3
-          id="phones-add-heading"
-          className="text-xs font-semibold uppercase tracking-wider text-jardim-green-dark"
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3
+            id="phones-add-heading"
+            className="text-xs font-semibold uppercase tracking-wider text-jardim-green-dark"
+          >
+            Novo contacto
+          </h3>
+          <button
+            type="submit"
+            disabled={createMut.isPending || !canSubmitNew}
+            aria-describedby="phones-add-help"
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-white shadow-sm ring-1 ring-jardim-green-mid/30 transition",
+              "bg-jardim-green-dark hover:bg-jardim-green-mid disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          >
+            {createMut.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Plus className="h-4 w-4" aria-hidden />
+            )}
+            Adicionar
+          </button>
+        </div>
+        <p
+          id="phones-add-help"
+          className="text-[11px] leading-relaxed text-jardim-text-light"
         >
-          Novo contacto
-        </h3>
+          Os dados são guardados ao clicar em Adicionar. Pode editar ou remover
+          contactos na lista acima.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-1">
             <label
@@ -545,27 +570,6 @@ export function ClientePhonesPanel({ userId }: { userId: string }) {
               {observacoes.length}/{OBS_MAX}
             </p>
           </div>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <p className="text-[11px] text-jardim-text-light sm:max-w-md">
-            Os dados são guardados ao clicar em Adicionar. Pode editar ou remover
-            contactos na lista acima.
-          </p>
-          <button
-            type="submit"
-            disabled={createMut.isPending || !canSubmitNew}
-            className={cn(
-              "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-white transition sm:w-auto",
-              "bg-jardim-green hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50",
-            )}
-          >
-            {createMut.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            ) : (
-              <Plus className="h-4 w-4" aria-hidden />
-            )}
-            Adicionar contacto
-          </button>
         </div>
       </form>
       {createMut.error ? (

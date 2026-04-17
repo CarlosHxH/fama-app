@@ -134,6 +134,12 @@ model User {
 /// Integração Asaas:
 ///   asaasCustomerId é preenchido na primeira cobrança gerada pelo portal.
 ///   Sem este campo, cada nova cobrança criaria um cliente duplicado no Asaas.
+///
+/// Responsável financeiro por jazigo (cobrança):
+///   Quem paga a manutenção de um jazigo pode ser outro registo em `customers` (FK opcional em
+///   `Jazigos.responsavel_financeiro_customer_id`). Um mesmo `Customer` pode ser titular de uns
+///   contratos e pagador noutros jazigos — dados sempre centralizados nesta tabela (CPF único,
+///   índices existentes, um JOIN por linha na listagem).
 model Customer {
   id             String    @id @default(uuid())
   sqlServerId    Int?      @unique @map("sql_server_id") // CodCessionario — nulo até o primeiro sync
@@ -164,6 +170,9 @@ model Customer {
   notificacoes  Notificacao[]
   changeRequests ChangeRequest[]
 
+  /// Jazigos em que este `Customer` é o pagador designado (independente de ser titular do contrato).
+  jazigosOndeResponsavelFinanceiro Jazigo[] @relation("JazigoResponsavelFinanceiro")
+
   @@index([cpfCnpj])
   @@index([email])
   @@map("customers")
@@ -178,6 +187,7 @@ model Customer {
 /// O Asaas exige pelo menos logradouro, cidade e UF para gerar cobranças.
 model CustomerAddress {
   id              String       @id @default(uuid())
+  sqlServerId     Int?         @unique @map("sql_server_id")
   customerId      String       @map("customer_id")
   tipo            TipoEndereco @default(RESIDENCIAL)
   logradouro      String?      @db.VarChar(200)
@@ -206,6 +216,7 @@ model CustomerAddress {
 /// Telefones do cessionário — pode ter múltiplos por tipo.
 model CustomerPhone {
   id         String       @id @default(uuid())
+  sqlServerId Int?         @unique @map("sql_server_id")
   customerId String       @map("customer_id")
   tipo       TipoTelefone
   numero     String       @db.VarChar(20)
@@ -327,6 +338,11 @@ model Jazigo {
   contratoId String   @map("contrato_id")
   contrato   Contrato @relation(fields: [contratoId], references: [id])
 
+  /// Opcional: outro registo em `customers` que paga a manutenção deste jazigo (Asaas).
+  /// Precedência: este vínculo > `ResponsavelFinanceiro` do contrato (sync legado) > titular do contrato.
+  responsavelFinanceiroCustomerId String?   @map("responsavel_financeiro_customer_id")
+  responsavelFinanceiroCustomer   Customer? @relation("JazigoResponsavelFinanceiro", fields: [responsavelFinanceiroCustomerId], references: [id], onDelete: SetNull)
+
   pagamentos Pagamento[]
 
   syncedAt  DateTime @default(now()) @map("synced_at")
@@ -334,6 +350,7 @@ model Jazigo {
   updatedAt DateTime @updatedAt      @map("updated_at")
 
   @@index([contratoId])
+  @@index([responsavelFinanceiroCustomerId])
   @@map("jazigos")
 }
 

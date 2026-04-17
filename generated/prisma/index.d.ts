@@ -37,6 +37,12 @@ export type User = $Result.DefaultSelection<Prisma.$UserPayload>
  * Integração Asaas:
  * asaasCustomerId é preenchido na primeira cobrança gerada pelo portal.
  * Sem este campo, cada nova cobrança criaria um cliente duplicado no Asaas.
+ * 
+ * Responsável financeiro por jazigo (cobrança):
+ * Quem paga a manutenção de um jazigo pode ser outro registo em `customers` (FK opcional em
+ * `Jazigos.responsavel_financeiro_customer_id`). Um mesmo `Customer` pode ser titular de uns
+ * contratos e pagador noutros jazigos — dados sempre centralizados nesta tabela (CPF único,
+ * índices existentes, um JOIN por linha na listagem).
  */
 export type Customer = $Result.DefaultSelection<Prisma.$CustomerPayload>
 /**
@@ -2133,6 +2139,7 @@ export namespace Prisma {
     pagamentos: number
     notificacoes: number
     changeRequests: number
+    jazigosOndeResponsavelFinanceiro: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2143,6 +2150,7 @@ export namespace Prisma {
     pagamentos?: boolean | CustomerCountOutputTypeCountPagamentosArgs
     notificacoes?: boolean | CustomerCountOutputTypeCountNotificacoesArgs
     changeRequests?: boolean | CustomerCountOutputTypeCountChangeRequestsArgs
+    jazigosOndeResponsavelFinanceiro?: boolean | CustomerCountOutputTypeCountJazigosOndeResponsavelFinanceiroArgs
   }
 
   // Custom InputTypes
@@ -2203,6 +2211,13 @@ export namespace Prisma {
    */
   export type CustomerCountOutputTypeCountChangeRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ChangeRequestWhereInput
+  }
+
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountJazigosOndeResponsavelFinanceiroArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JazigoWhereInput
   }
 
 
@@ -3702,6 +3717,7 @@ export namespace Prisma {
     pagamentos?: boolean | Customer$pagamentosArgs<ExtArgs>
     notificacoes?: boolean | Customer$notificacoesArgs<ExtArgs>
     changeRequests?: boolean | Customer$changeRequestsArgs<ExtArgs>
+    jazigosOndeResponsavelFinanceiro?: boolean | Customer$jazigosOndeResponsavelFinanceiroArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -3765,6 +3781,7 @@ export namespace Prisma {
     pagamentos?: boolean | Customer$pagamentosArgs<ExtArgs>
     notificacoes?: boolean | Customer$notificacoesArgs<ExtArgs>
     changeRequests?: boolean | Customer$changeRequestsArgs<ExtArgs>
+    jazigosOndeResponsavelFinanceiro?: boolean | Customer$jazigosOndeResponsavelFinanceiroArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CustomerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3780,6 +3797,10 @@ export namespace Prisma {
       pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
       notificacoes: Prisma.$NotificacaoPayload<ExtArgs>[]
       changeRequests: Prisma.$ChangeRequestPayload<ExtArgs>[]
+      /**
+       * Jazigos em que este `Customer` é o pagador designado (independente de ser titular do contrato).
+       */
+      jazigosOndeResponsavelFinanceiro: Prisma.$JazigoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4197,6 +4218,7 @@ export namespace Prisma {
     pagamentos<T extends Customer$pagamentosArgs<ExtArgs> = {}>(args?: Subset<T, Customer$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     notificacoes<T extends Customer$notificacoesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$notificacoesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     changeRequests<T extends Customer$changeRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$changeRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChangeRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    jazigosOndeResponsavelFinanceiro<T extends Customer$jazigosOndeResponsavelFinanceiroArgs<ExtArgs> = {}>(args?: Subset<T, Customer$jazigosOndeResponsavelFinanceiroArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JazigoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4793,6 +4815,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ChangeRequestScalarFieldEnum | ChangeRequestScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.jazigosOndeResponsavelFinanceiro
+   */
+  export type Customer$jazigosOndeResponsavelFinanceiroArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Jazigo
+     */
+    select?: JazigoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Jazigo
+     */
+    omit?: JazigoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JazigoInclude<ExtArgs> | null
+    where?: JazigoWhereInput
+    orderBy?: JazigoOrderByWithRelationInput | JazigoOrderByWithRelationInput[]
+    cursor?: JazigoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: JazigoScalarFieldEnum | JazigoScalarFieldEnum[]
   }
 
   /**
@@ -10528,6 +10574,7 @@ export namespace Prisma {
     quantidadeGavetas: number | null
     valorMensalidade: Decimal | null
     contratoId: string | null
+    responsavelFinanceiroCustomerId: string | null
     syncedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -10542,6 +10589,7 @@ export namespace Prisma {
     quantidadeGavetas: number | null
     valorMensalidade: Decimal | null
     contratoId: string | null
+    responsavelFinanceiroCustomerId: string | null
     syncedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -10556,6 +10604,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: number
     contratoId: number
+    responsavelFinanceiroCustomerId: number
     syncedAt: number
     createdAt: number
     updatedAt: number
@@ -10584,6 +10633,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     contratoId?: true
+    responsavelFinanceiroCustomerId?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -10598,6 +10648,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     contratoId?: true
+    responsavelFinanceiroCustomerId?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -10612,6 +10663,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     contratoId?: true
+    responsavelFinanceiroCustomerId?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -10713,6 +10765,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: Decimal
     contratoId: string
+    responsavelFinanceiroCustomerId: string | null
     syncedAt: Date
     createdAt: Date
     updatedAt: Date
@@ -10746,10 +10799,12 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     contratoId?: boolean
+    responsavelFinanceiroCustomerId?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
     pagamentos?: boolean | Jazigo$pagamentosArgs<ExtArgs>
     _count?: boolean | JazigoCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["jazigo"]>
@@ -10763,10 +10818,12 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     contratoId?: boolean
+    responsavelFinanceiroCustomerId?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
   }, ExtArgs["result"]["jazigo"]>
 
   export type JazigoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10778,10 +10835,12 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     contratoId?: boolean
+    responsavelFinanceiroCustomerId?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
   }, ExtArgs["result"]["jazigo"]>
 
   export type JazigoSelectScalar = {
@@ -10793,28 +10852,33 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     contratoId?: boolean
+    responsavelFinanceiroCustomerId?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type JazigoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sqlServerId" | "codigo" | "quadra" | "setor" | "quantidadeGavetas" | "valorMensalidade" | "contratoId" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["jazigo"]>
+  export type JazigoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sqlServerId" | "codigo" | "quadra" | "setor" | "quantidadeGavetas" | "valorMensalidade" | "contratoId" | "responsavelFinanceiroCustomerId" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["jazigo"]>
   export type JazigoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
     pagamentos?: boolean | Jazigo$pagamentosArgs<ExtArgs>
     _count?: boolean | JazigoCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type JazigoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
   }
   export type JazigoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contrato?: boolean | ContratoDefaultArgs<ExtArgs>
+    responsavelFinanceiroCustomer?: boolean | Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>
   }
 
   export type $JazigoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Jazigo"
     objects: {
       contrato: Prisma.$ContratoPayload<ExtArgs>
+      responsavelFinanceiroCustomer: Prisma.$CustomerPayload<ExtArgs> | null
       pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -10826,6 +10890,11 @@ export namespace Prisma {
       quantidadeGavetas: number
       valorMensalidade: Prisma.Decimal
       contratoId: string
+      /**
+       * Opcional: outro registo em `customers` que paga a manutenção deste jazigo (Asaas).
+       * Precedência: este vínculo > `ResponsavelFinanceiro` do contrato (sync legado) > titular do contrato.
+       */
+      responsavelFinanceiroCustomerId: string | null
       syncedAt: Date
       createdAt: Date
       updatedAt: Date
@@ -11224,6 +11293,7 @@ export namespace Prisma {
   export interface Prisma__JazigoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     contrato<T extends ContratoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ContratoDefaultArgs<ExtArgs>>): Prisma__ContratoClient<$Result.GetResult<Prisma.$ContratoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    responsavelFinanceiroCustomer<T extends Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs> = {}>(args?: Subset<T, Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     pagamentos<T extends Jazigo$pagamentosArgs<ExtArgs> = {}>(args?: Subset<T, Jazigo$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -11262,6 +11332,7 @@ export namespace Prisma {
     readonly quantidadeGavetas: FieldRef<"Jazigo", 'Int'>
     readonly valorMensalidade: FieldRef<"Jazigo", 'Decimal'>
     readonly contratoId: FieldRef<"Jazigo", 'String'>
+    readonly responsavelFinanceiroCustomerId: FieldRef<"Jazigo", 'String'>
     readonly syncedAt: FieldRef<"Jazigo", 'DateTime'>
     readonly createdAt: FieldRef<"Jazigo", 'DateTime'>
     readonly updatedAt: FieldRef<"Jazigo", 'DateTime'>
@@ -11658,6 +11729,25 @@ export namespace Prisma {
      * Limit how many Jazigos to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Jazigo.responsavelFinanceiroCustomer
+   */
+  export type Jazigo$responsavelFinanceiroCustomerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Customer
+     */
+    select?: CustomerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Customer
+     */
+    omit?: CustomerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerInclude<ExtArgs> | null
+    where?: CustomerWhereInput
   }
 
   /**
@@ -16686,6 +16776,7 @@ export namespace Prisma {
     quantidadeGavetas: 'quantidadeGavetas',
     valorMensalidade: 'valorMensalidade',
     contratoId: 'contratoId',
+    responsavelFinanceiroCustomerId: 'responsavelFinanceiroCustomerId',
     syncedAt: 'syncedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -17181,6 +17272,7 @@ export namespace Prisma {
     pagamentos?: PagamentoListRelationFilter
     notificacoes?: NotificacaoListRelationFilter
     changeRequests?: ChangeRequestListRelationFilter
+    jazigosOndeResponsavelFinanceiro?: JazigoListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -17205,6 +17297,7 @@ export namespace Prisma {
     pagamentos?: PagamentoOrderByRelationAggregateInput
     notificacoes?: NotificacaoOrderByRelationAggregateInput
     changeRequests?: ChangeRequestOrderByRelationAggregateInput
+    jazigosOndeResponsavelFinanceiro?: JazigoOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -17232,6 +17325,7 @@ export namespace Prisma {
     pagamentos?: PagamentoListRelationFilter
     notificacoes?: NotificacaoListRelationFilter
     changeRequests?: ChangeRequestListRelationFilter
+    jazigosOndeResponsavelFinanceiro?: JazigoListRelationFilter
   }, "id" | "sqlServerId" | "cpfCnpj" | "asaasCustomerId">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -17679,10 +17773,12 @@ export namespace Prisma {
     quantidadeGavetas?: IntFilter<"Jazigo"> | number
     valorMensalidade?: DecimalFilter<"Jazigo"> | Decimal | DecimalJsLike | number | string
     contratoId?: StringFilter<"Jazigo"> | string
+    responsavelFinanceiroCustomerId?: StringNullableFilter<"Jazigo"> | string | null
     syncedAt?: DateTimeFilter<"Jazigo"> | Date | string
     createdAt?: DateTimeFilter<"Jazigo"> | Date | string
     updatedAt?: DateTimeFilter<"Jazigo"> | Date | string
     contrato?: XOR<ContratoScalarRelationFilter, ContratoWhereInput>
+    responsavelFinanceiroCustomer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     pagamentos?: PagamentoListRelationFilter
   }
 
@@ -17695,10 +17791,12 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     contratoId?: SortOrder
+    responsavelFinanceiroCustomerId?: SortOrderInput | SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     contrato?: ContratoOrderByWithRelationInput
+    responsavelFinanceiroCustomer?: CustomerOrderByWithRelationInput
     pagamentos?: PagamentoOrderByRelationAggregateInput
   }
 
@@ -17714,10 +17812,12 @@ export namespace Prisma {
     quantidadeGavetas?: IntFilter<"Jazigo"> | number
     valorMensalidade?: DecimalFilter<"Jazigo"> | Decimal | DecimalJsLike | number | string
     contratoId?: StringFilter<"Jazigo"> | string
+    responsavelFinanceiroCustomerId?: StringNullableFilter<"Jazigo"> | string | null
     syncedAt?: DateTimeFilter<"Jazigo"> | Date | string
     createdAt?: DateTimeFilter<"Jazigo"> | Date | string
     updatedAt?: DateTimeFilter<"Jazigo"> | Date | string
     contrato?: XOR<ContratoScalarRelationFilter, ContratoWhereInput>
+    responsavelFinanceiroCustomer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     pagamentos?: PagamentoListRelationFilter
   }, "id" | "sqlServerId" | "codigo">
 
@@ -17730,6 +17830,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     contratoId?: SortOrder
+    responsavelFinanceiroCustomerId?: SortOrderInput | SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17752,6 +17853,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntWithAggregatesFilter<"Jazigo"> | number
     valorMensalidade?: DecimalWithAggregatesFilter<"Jazigo"> | Decimal | DecimalJsLike | number | string
     contratoId?: StringWithAggregatesFilter<"Jazigo"> | string
+    responsavelFinanceiroCustomerId?: StringNullableWithAggregatesFilter<"Jazigo"> | string | null
     syncedAt?: DateTimeWithAggregatesFilter<"Jazigo"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"Jazigo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Jazigo"> | Date | string
@@ -18263,6 +18365,7 @@ export namespace Prisma {
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -18287,6 +18390,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUpdateInput = {
@@ -18311,6 +18415,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -18335,6 +18440,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerCreateManyInput = {
@@ -18834,6 +18940,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     contrato: ContratoCreateNestedOneWithoutJazigosInput
+    responsavelFinanceiroCustomer?: CustomerCreateNestedOneWithoutJazigosOndeResponsavelFinanceiroInput
     pagamentos?: PagamentoCreateNestedManyWithoutJazigoInput
   }
 
@@ -18846,6 +18953,7 @@ export namespace Prisma {
     quantidadeGavetas?: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
+    responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18864,6 +18972,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contrato?: ContratoUpdateOneRequiredWithoutJazigosNestedInput
+    responsavelFinanceiroCustomer?: CustomerUpdateOneWithoutJazigosOndeResponsavelFinanceiroNestedInput
     pagamentos?: PagamentoUpdateManyWithoutJazigoNestedInput
   }
 
@@ -18876,6 +18985,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     contratoId?: StringFieldUpdateOperationsInput | string
+    responsavelFinanceiroCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18891,6 +19001,7 @@ export namespace Prisma {
     quantidadeGavetas?: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
+    responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18918,6 +19029,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     contratoId?: StringFieldUpdateOperationsInput | string
+    responsavelFinanceiroCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19587,6 +19699,12 @@ export namespace Prisma {
     none?: NotificacaoWhereInput
   }
 
+  export type JazigoListRelationFilter = {
+    every?: JazigoWhereInput
+    some?: JazigoWhereInput
+    none?: JazigoWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -19613,6 +19731,10 @@ export namespace Prisma {
   }
 
   export type NotificacaoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type JazigoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -19898,19 +20020,9 @@ export namespace Prisma {
     not?: NestedEnumSituacaoContratoFilter<$PrismaModel> | $Enums.SituacaoContrato
   }
 
-  export type JazigoListRelationFilter = {
-    every?: JazigoWhereInput
-    some?: JazigoWhereInput
-    none?: JazigoWhereInput
-  }
-
   export type ResponsavelFinanceiroNullableScalarRelationFilter = {
     is?: ResponsavelFinanceiroWhereInput | null
     isNot?: ResponsavelFinanceiroWhereInput | null
-  }
-
-  export type JazigoOrderByRelationAggregateInput = {
-    _count?: SortOrder
   }
 
   export type ContratoCountOrderByAggregateInput = {
@@ -20019,6 +20131,11 @@ export namespace Prisma {
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
   }
 
+  export type CustomerNullableScalarRelationFilter = {
+    is?: CustomerWhereInput | null
+    isNot?: CustomerWhereInput | null
+  }
+
   export type JazigoCountOrderByAggregateInput = {
     id?: SortOrder
     sqlServerId?: SortOrder
@@ -20028,6 +20145,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     contratoId?: SortOrder
+    responsavelFinanceiroCustomerId?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20048,6 +20166,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     contratoId?: SortOrder
+    responsavelFinanceiroCustomerId?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20062,6 +20181,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     contratoId?: SortOrder
+    responsavelFinanceiroCustomerId?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20702,6 +20822,13 @@ export namespace Prisma {
     connect?: ChangeRequestWhereUniqueInput | ChangeRequestWhereUniqueInput[]
   }
 
+  export type JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput = {
+    create?: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput> | JazigoCreateWithoutResponsavelFinanceiroCustomerInput[] | JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput[]
+    connectOrCreate?: JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput | JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput[]
+    createMany?: JazigoCreateManyResponsavelFinanceiroCustomerInputEnvelope
+    connect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+  }
+
   export type CustomerAddressUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<CustomerAddressCreateWithoutCustomerInput, CustomerAddressUncheckedCreateWithoutCustomerInput> | CustomerAddressCreateWithoutCustomerInput[] | CustomerAddressUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: CustomerAddressCreateOrConnectWithoutCustomerInput | CustomerAddressCreateOrConnectWithoutCustomerInput[]
@@ -20749,6 +20876,13 @@ export namespace Prisma {
     connectOrCreate?: ChangeRequestCreateOrConnectWithoutCustomerInput | ChangeRequestCreateOrConnectWithoutCustomerInput[]
     createMany?: ChangeRequestCreateManyCustomerInputEnvelope
     connect?: ChangeRequestWhereUniqueInput | ChangeRequestWhereUniqueInput[]
+  }
+
+  export type JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput = {
+    create?: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput> | JazigoCreateWithoutResponsavelFinanceiroCustomerInput[] | JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput[]
+    connectOrCreate?: JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput | JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput[]
+    createMany?: JazigoCreateManyResponsavelFinanceiroCustomerInputEnvelope
+    connect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -20873,6 +21007,20 @@ export namespace Prisma {
     deleteMany?: ChangeRequestScalarWhereInput | ChangeRequestScalarWhereInput[]
   }
 
+  export type JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput = {
+    create?: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput> | JazigoCreateWithoutResponsavelFinanceiroCustomerInput[] | JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput[]
+    connectOrCreate?: JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput | JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput[]
+    upsert?: JazigoUpsertWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput | JazigoUpsertWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput[]
+    createMany?: JazigoCreateManyResponsavelFinanceiroCustomerInputEnvelope
+    set?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    disconnect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    delete?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    connect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    update?: JazigoUpdateWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput | JazigoUpdateWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput[]
+    updateMany?: JazigoUpdateManyWithWhereWithoutResponsavelFinanceiroCustomerInput | JazigoUpdateManyWithWhereWithoutResponsavelFinanceiroCustomerInput[]
+    deleteMany?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
+  }
+
   export type CustomerAddressUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<CustomerAddressCreateWithoutCustomerInput, CustomerAddressUncheckedCreateWithoutCustomerInput> | CustomerAddressCreateWithoutCustomerInput[] | CustomerAddressUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: CustomerAddressCreateOrConnectWithoutCustomerInput | CustomerAddressCreateOrConnectWithoutCustomerInput[]
@@ -20969,6 +21117,20 @@ export namespace Prisma {
     update?: ChangeRequestUpdateWithWhereUniqueWithoutCustomerInput | ChangeRequestUpdateWithWhereUniqueWithoutCustomerInput[]
     updateMany?: ChangeRequestUpdateManyWithWhereWithoutCustomerInput | ChangeRequestUpdateManyWithWhereWithoutCustomerInput[]
     deleteMany?: ChangeRequestScalarWhereInput | ChangeRequestScalarWhereInput[]
+  }
+
+  export type JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput = {
+    create?: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput> | JazigoCreateWithoutResponsavelFinanceiroCustomerInput[] | JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput[]
+    connectOrCreate?: JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput | JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput[]
+    upsert?: JazigoUpsertWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput | JazigoUpsertWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput[]
+    createMany?: JazigoCreateManyResponsavelFinanceiroCustomerInputEnvelope
+    set?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    disconnect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    delete?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    connect?: JazigoWhereUniqueInput | JazigoWhereUniqueInput[]
+    update?: JazigoUpdateWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput | JazigoUpdateWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput[]
+    updateMany?: JazigoUpdateManyWithWhereWithoutResponsavelFinanceiroCustomerInput | JazigoUpdateManyWithWhereWithoutResponsavelFinanceiroCustomerInput[]
+    deleteMany?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
   }
 
   export type CustomerCreateNestedOneWithoutEnderecosInput = {
@@ -21175,6 +21337,12 @@ export namespace Prisma {
     connect?: ContratoWhereUniqueInput
   }
 
+  export type CustomerCreateNestedOneWithoutJazigosOndeResponsavelFinanceiroInput = {
+    create?: XOR<CustomerCreateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedCreateWithoutJazigosOndeResponsavelFinanceiroInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutJazigosOndeResponsavelFinanceiroInput
+    connect?: CustomerWhereUniqueInput
+  }
+
   export type PagamentoCreateNestedManyWithoutJazigoInput = {
     create?: XOR<PagamentoCreateWithoutJazigoInput, PagamentoUncheckedCreateWithoutJazigoInput> | PagamentoCreateWithoutJazigoInput[] | PagamentoUncheckedCreateWithoutJazigoInput[]
     connectOrCreate?: PagamentoCreateOrConnectWithoutJazigoInput | PagamentoCreateOrConnectWithoutJazigoInput[]
@@ -21203,6 +21371,16 @@ export namespace Prisma {
     upsert?: ContratoUpsertWithoutJazigosInput
     connect?: ContratoWhereUniqueInput
     update?: XOR<XOR<ContratoUpdateToOneWithWhereWithoutJazigosInput, ContratoUpdateWithoutJazigosInput>, ContratoUncheckedUpdateWithoutJazigosInput>
+  }
+
+  export type CustomerUpdateOneWithoutJazigosOndeResponsavelFinanceiroNestedInput = {
+    create?: XOR<CustomerCreateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedCreateWithoutJazigosOndeResponsavelFinanceiroInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutJazigosOndeResponsavelFinanceiroInput
+    upsert?: CustomerUpsertWithoutJazigosOndeResponsavelFinanceiroInput
+    disconnect?: CustomerWhereInput | boolean
+    delete?: CustomerWhereInput | boolean
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUpdateWithoutJazigosOndeResponsavelFinanceiroInput>, CustomerUncheckedUpdateWithoutJazigosOndeResponsavelFinanceiroInput>
   }
 
   export type PagamentoUpdateManyWithoutJazigoNestedInput = {
@@ -22262,6 +22440,46 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type JazigoCreateWithoutResponsavelFinanceiroCustomerInput = {
+    id?: string
+    sqlServerId?: number | null
+    codigo: string
+    quadra?: string | null
+    setor?: string | null
+    quantidadeGavetas?: number
+    valorMensalidade: Decimal | DecimalJsLike | number | string
+    syncedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contrato: ContratoCreateNestedOneWithoutJazigosInput
+    pagamentos?: PagamentoCreateNestedManyWithoutJazigoInput
+  }
+
+  export type JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput = {
+    id?: string
+    sqlServerId?: number | null
+    codigo: string
+    quadra?: string | null
+    setor?: string | null
+    quantidadeGavetas?: number
+    valorMensalidade: Decimal | DecimalJsLike | number | string
+    contratoId: string
+    syncedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutJazigoInput
+  }
+
+  export type JazigoCreateOrConnectWithoutResponsavelFinanceiroCustomerInput = {
+    where: JazigoWhereUniqueInput
+    create: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput>
+  }
+
+  export type JazigoCreateManyResponsavelFinanceiroCustomerInputEnvelope = {
+    data: JazigoCreateManyResponsavelFinanceiroCustomerInput | JazigoCreateManyResponsavelFinanceiroCustomerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CustomerAddressUpsertWithWhereUniqueWithoutCustomerInput = {
     where: CustomerAddressWhereUniqueInput
     update: XOR<CustomerAddressUpdateWithoutCustomerInput, CustomerAddressUncheckedUpdateWithoutCustomerInput>
@@ -22478,6 +22696,40 @@ export namespace Prisma {
     data: XOR<ChangeRequestUpdateManyMutationInput, ChangeRequestUncheckedUpdateManyWithoutCustomerInput>
   }
 
+  export type JazigoUpsertWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput = {
+    where: JazigoWhereUniqueInput
+    update: XOR<JazigoUpdateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedUpdateWithoutResponsavelFinanceiroCustomerInput>
+    create: XOR<JazigoCreateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedCreateWithoutResponsavelFinanceiroCustomerInput>
+  }
+
+  export type JazigoUpdateWithWhereUniqueWithoutResponsavelFinanceiroCustomerInput = {
+    where: JazigoWhereUniqueInput
+    data: XOR<JazigoUpdateWithoutResponsavelFinanceiroCustomerInput, JazigoUncheckedUpdateWithoutResponsavelFinanceiroCustomerInput>
+  }
+
+  export type JazigoUpdateManyWithWhereWithoutResponsavelFinanceiroCustomerInput = {
+    where: JazigoScalarWhereInput
+    data: XOR<JazigoUpdateManyMutationInput, JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerInput>
+  }
+
+  export type JazigoScalarWhereInput = {
+    AND?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
+    OR?: JazigoScalarWhereInput[]
+    NOT?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
+    id?: StringFilter<"Jazigo"> | string
+    sqlServerId?: IntNullableFilter<"Jazigo"> | number | null
+    codigo?: StringFilter<"Jazigo"> | string
+    quadra?: StringNullableFilter<"Jazigo"> | string | null
+    setor?: StringNullableFilter<"Jazigo"> | string | null
+    quantidadeGavetas?: IntFilter<"Jazigo"> | number
+    valorMensalidade?: DecimalFilter<"Jazigo"> | Decimal | DecimalJsLike | number | string
+    contratoId?: StringFilter<"Jazigo"> | string
+    responsavelFinanceiroCustomerId?: StringNullableFilter<"Jazigo"> | string | null
+    syncedAt?: DateTimeFilter<"Jazigo"> | Date | string
+    createdAt?: DateTimeFilter<"Jazigo"> | Date | string
+    updatedAt?: DateTimeFilter<"Jazigo"> | Date | string
+  }
+
   export type CustomerCreateWithoutEnderecosInput = {
     id?: string
     sqlServerId?: number | null
@@ -22499,6 +22751,7 @@ export namespace Prisma {
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutEnderecosInput = {
@@ -22522,6 +22775,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutEnderecosInput = {
@@ -22561,6 +22815,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutEnderecosInput = {
@@ -22584,6 +22839,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerCreateWithoutTelefonesInput = {
@@ -22607,6 +22863,7 @@ export namespace Prisma {
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutTelefonesInput = {
@@ -22630,6 +22887,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutTelefonesInput = {
@@ -22669,6 +22927,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutTelefonesInput = {
@@ -22692,6 +22951,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerCreateWithoutRefreshTokensInput = {
@@ -22715,6 +22975,7 @@ export namespace Prisma {
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutRefreshTokensInput = {
@@ -22738,6 +22999,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutRefreshTokensInput = {
@@ -22777,6 +23039,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutRefreshTokensInput = {
@@ -22800,6 +23063,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerCreateWithoutContratosInput = {
@@ -22823,6 +23087,7 @@ export namespace Prisma {
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutContratosInput = {
@@ -22846,6 +23111,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutContratosInput = {
@@ -22864,6 +23130,7 @@ export namespace Prisma {
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
+    responsavelFinanceiroCustomer?: CustomerCreateNestedOneWithoutJazigosOndeResponsavelFinanceiroInput
     pagamentos?: PagamentoCreateNestedManyWithoutJazigoInput
   }
 
@@ -22875,6 +23142,7 @@ export namespace Prisma {
     setor?: string | null
     quantidadeGavetas?: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
+    responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23012,6 +23280,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutContratosInput = {
@@ -23035,6 +23304,7 @@ export namespace Prisma {
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type JazigoUpsertWithWhereUniqueWithoutContratoInput = {
@@ -23051,23 +23321,6 @@ export namespace Prisma {
   export type JazigoUpdateManyWithWhereWithoutContratoInput = {
     where: JazigoScalarWhereInput
     data: XOR<JazigoUpdateManyMutationInput, JazigoUncheckedUpdateManyWithoutContratoInput>
-  }
-
-  export type JazigoScalarWhereInput = {
-    AND?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
-    OR?: JazigoScalarWhereInput[]
-    NOT?: JazigoScalarWhereInput | JazigoScalarWhereInput[]
-    id?: StringFilter<"Jazigo"> | string
-    sqlServerId?: IntNullableFilter<"Jazigo"> | number | null
-    codigo?: StringFilter<"Jazigo"> | string
-    quadra?: StringNullableFilter<"Jazigo"> | string | null
-    setor?: StringNullableFilter<"Jazigo"> | string | null
-    quantidadeGavetas?: IntFilter<"Jazigo"> | number
-    valorMensalidade?: DecimalFilter<"Jazigo"> | Decimal | DecimalJsLike | number | string
-    contratoId?: StringFilter<"Jazigo"> | string
-    syncedAt?: DateTimeFilter<"Jazigo"> | Date | string
-    createdAt?: DateTimeFilter<"Jazigo"> | Date | string
-    updatedAt?: DateTimeFilter<"Jazigo"> | Date | string
   }
 
   export type PagamentoUpsertWithWhereUniqueWithoutContratoInput = {
@@ -23220,6 +23473,59 @@ export namespace Prisma {
     create: XOR<ContratoCreateWithoutJazigosInput, ContratoUncheckedCreateWithoutJazigosInput>
   }
 
+  export type CustomerCreateWithoutJazigosOndeResponsavelFinanceiroInput = {
+    id?: string
+    sqlServerId?: number | null
+    cpfCnpj: string
+    nome: string
+    email?: string | null
+    senhaHash?: string | null
+    primeiroAcesso?: boolean
+    ativo?: boolean
+    tentativasLogin?: number
+    bloqueadoAte?: Date | string | null
+    asaasCustomerId?: string | null
+    syncedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    enderecos?: CustomerAddressCreateNestedManyWithoutCustomerInput
+    telefones?: CustomerPhoneCreateNestedManyWithoutCustomerInput
+    refreshTokens?: CustomerRefreshTokenCreateNestedManyWithoutCustomerInput
+    contratos?: ContratoCreateNestedManyWithoutCustomerInput
+    pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
+    changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutJazigosOndeResponsavelFinanceiroInput = {
+    id?: string
+    sqlServerId?: number | null
+    cpfCnpj: string
+    nome: string
+    email?: string | null
+    senhaHash?: string | null
+    primeiroAcesso?: boolean
+    ativo?: boolean
+    tentativasLogin?: number
+    bloqueadoAte?: Date | string | null
+    asaasCustomerId?: string | null
+    syncedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    enderecos?: CustomerAddressUncheckedCreateNestedManyWithoutCustomerInput
+    telefones?: CustomerPhoneUncheckedCreateNestedManyWithoutCustomerInput
+    refreshTokens?: CustomerRefreshTokenUncheckedCreateNestedManyWithoutCustomerInput
+    contratos?: ContratoUncheckedCreateNestedManyWithoutCustomerInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
+    changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutJazigosOndeResponsavelFinanceiroInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedCreateWithoutJazigosOndeResponsavelFinanceiroInput>
+  }
+
   export type PagamentoCreateWithoutJazigoInput = {
     id?: string
     sqlServerId?: number | null
@@ -23317,6 +23623,65 @@ export namespace Prisma {
     responsavelFinanceiro?: ResponsavelFinanceiroUncheckedUpdateOneWithoutContratoNestedInput
   }
 
+  export type CustomerUpsertWithoutJazigosOndeResponsavelFinanceiroInput = {
+    update: XOR<CustomerUpdateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedUpdateWithoutJazigosOndeResponsavelFinanceiroInput>
+    create: XOR<CustomerCreateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedCreateWithoutJazigosOndeResponsavelFinanceiroInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutJazigosOndeResponsavelFinanceiroInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutJazigosOndeResponsavelFinanceiroInput, CustomerUncheckedUpdateWithoutJazigosOndeResponsavelFinanceiroInput>
+  }
+
+  export type CustomerUpdateWithoutJazigosOndeResponsavelFinanceiroInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sqlServerId?: NullableIntFieldUpdateOperationsInput | number | null
+    cpfCnpj?: StringFieldUpdateOperationsInput | string
+    nome?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    senhaHash?: NullableStringFieldUpdateOperationsInput | string | null
+    primeiroAcesso?: BoolFieldUpdateOperationsInput | boolean
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    tentativasLogin?: IntFieldUpdateOperationsInput | number
+    bloqueadoAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    enderecos?: CustomerAddressUpdateManyWithoutCustomerNestedInput
+    telefones?: CustomerPhoneUpdateManyWithoutCustomerNestedInput
+    refreshTokens?: CustomerRefreshTokenUpdateManyWithoutCustomerNestedInput
+    contratos?: ContratoUpdateManyWithoutCustomerNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
+    changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutJazigosOndeResponsavelFinanceiroInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sqlServerId?: NullableIntFieldUpdateOperationsInput | number | null
+    cpfCnpj?: StringFieldUpdateOperationsInput | string
+    nome?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    senhaHash?: NullableStringFieldUpdateOperationsInput | string | null
+    primeiroAcesso?: BoolFieldUpdateOperationsInput | boolean
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    tentativasLogin?: IntFieldUpdateOperationsInput | number
+    bloqueadoAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    enderecos?: CustomerAddressUncheckedUpdateManyWithoutCustomerNestedInput
+    telefones?: CustomerPhoneUncheckedUpdateManyWithoutCustomerNestedInput
+    refreshTokens?: CustomerRefreshTokenUncheckedUpdateManyWithoutCustomerNestedInput
+    contratos?: ContratoUncheckedUpdateManyWithoutCustomerNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
+    changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
   export type PagamentoUpsertWithWhereUniqueWithoutJazigoInput = {
     where: PagamentoWhereUniqueInput
     update: XOR<PagamentoUpdateWithoutJazigoInput, PagamentoUncheckedUpdateWithoutJazigoInput>
@@ -23345,6 +23710,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     contrato: ContratoCreateNestedOneWithoutJazigosInput
+    responsavelFinanceiroCustomer?: CustomerCreateNestedOneWithoutJazigosOndeResponsavelFinanceiroInput
   }
 
   export type JazigoUncheckedCreateWithoutPagamentosInput = {
@@ -23356,6 +23722,7 @@ export namespace Prisma {
     quantidadeGavetas?: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
+    responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23418,6 +23785,7 @@ export namespace Prisma {
     contratos?: ContratoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutPagamentosInput = {
@@ -23441,6 +23809,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutPagamentosInput = {
@@ -23505,6 +23874,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contrato?: ContratoUpdateOneRequiredWithoutJazigosNestedInput
+    responsavelFinanceiroCustomer?: CustomerUpdateOneWithoutJazigosOndeResponsavelFinanceiroNestedInput
   }
 
   export type JazigoUncheckedUpdateWithoutPagamentosInput = {
@@ -23516,6 +23886,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     contratoId?: StringFieldUpdateOperationsInput | string
+    responsavelFinanceiroCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23590,6 +23961,7 @@ export namespace Prisma {
     contratos?: ContratoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutPagamentosInput = {
@@ -23613,6 +23985,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type NotificacaoUpsertWithWhereUniqueWithoutPagamentoInput = {
@@ -23652,6 +24025,7 @@ export namespace Prisma {
     contratos?: ContratoCreateNestedManyWithoutCustomerInput
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutNotificacoesInput = {
@@ -23675,6 +24049,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedCreateNestedManyWithoutCustomerInput
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     changeRequests?: ChangeRequestUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutNotificacoesInput = {
@@ -23769,6 +24144,7 @@ export namespace Prisma {
     contratos?: ContratoUpdateManyWithoutCustomerNestedInput
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutNotificacoesInput = {
@@ -23792,6 +24168,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedUpdateManyWithoutCustomerNestedInput
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     changeRequests?: ChangeRequestUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type PagamentoUpsertWithoutNotificacoesInput = {
@@ -23876,6 +24253,7 @@ export namespace Prisma {
     contratos?: ContratoCreateNestedManyWithoutCustomerInput
     pagamentos?: PagamentoCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutChangeRequestsInput = {
@@ -23899,6 +24277,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedCreateNestedManyWithoutCustomerInput
     pagamentos?: PagamentoUncheckedCreateNestedManyWithoutCustomerInput
     notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutCustomerInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedCreateNestedManyWithoutResponsavelFinanceiroCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutChangeRequestsInput = {
@@ -23965,6 +24344,7 @@ export namespace Prisma {
     contratos?: ContratoUpdateManyWithoutCustomerNestedInput
     pagamentos?: PagamentoUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutChangeRequestsInput = {
@@ -23988,6 +24368,7 @@ export namespace Prisma {
     contratos?: ContratoUncheckedUpdateManyWithoutCustomerNestedInput
     pagamentos?: PagamentoUncheckedUpdateManyWithoutCustomerNestedInput
     notificacoes?: NotificacaoUncheckedUpdateManyWithoutCustomerNestedInput
+    jazigosOndeResponsavelFinanceiro?: JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerNestedInput
   }
 
   export type UserUpsertWithoutChangeRequestsInput = {
@@ -24168,6 +24549,20 @@ export namespace Prisma {
     justificativa?: string | null
     notaRevisao?: string | null
     revisadoEm?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type JazigoCreateManyResponsavelFinanceiroCustomerInput = {
+    id?: string
+    sqlServerId?: number | null
+    codigo: string
+    quadra?: string | null
+    setor?: string | null
+    quantidadeGavetas?: number
+    valorMensalidade: Decimal | DecimalJsLike | number | string
+    contratoId: string
+    syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24461,6 +24856,50 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type JazigoUpdateWithoutResponsavelFinanceiroCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sqlServerId?: NullableIntFieldUpdateOperationsInput | number | null
+    codigo?: StringFieldUpdateOperationsInput | string
+    quadra?: NullableStringFieldUpdateOperationsInput | string | null
+    setor?: NullableStringFieldUpdateOperationsInput | string | null
+    quantidadeGavetas?: IntFieldUpdateOperationsInput | number
+    valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contrato?: ContratoUpdateOneRequiredWithoutJazigosNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutJazigoNestedInput
+  }
+
+  export type JazigoUncheckedUpdateWithoutResponsavelFinanceiroCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sqlServerId?: NullableIntFieldUpdateOperationsInput | number | null
+    codigo?: StringFieldUpdateOperationsInput | string
+    quadra?: NullableStringFieldUpdateOperationsInput | string | null
+    setor?: NullableStringFieldUpdateOperationsInput | string | null
+    quantidadeGavetas?: IntFieldUpdateOperationsInput | number
+    valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    contratoId?: StringFieldUpdateOperationsInput | string
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutJazigoNestedInput
+  }
+
+  export type JazigoUncheckedUpdateManyWithoutResponsavelFinanceiroCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sqlServerId?: NullableIntFieldUpdateOperationsInput | number | null
+    codigo?: StringFieldUpdateOperationsInput | string
+    quadra?: NullableStringFieldUpdateOperationsInput | string | null
+    setor?: NullableStringFieldUpdateOperationsInput | string | null
+    quantidadeGavetas?: IntFieldUpdateOperationsInput | number
+    valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    contratoId?: StringFieldUpdateOperationsInput | string
+    syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type JazigoCreateManyContratoInput = {
     id?: string
     sqlServerId?: number | null
@@ -24469,6 +24908,7 @@ export namespace Prisma {
     setor?: string | null
     quantidadeGavetas?: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
+    responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -24509,6 +24949,7 @@ export namespace Prisma {
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    responsavelFinanceiroCustomer?: CustomerUpdateOneWithoutJazigosOndeResponsavelFinanceiroNestedInput
     pagamentos?: PagamentoUpdateManyWithoutJazigoNestedInput
   }
 
@@ -24520,6 +24961,7 @@ export namespace Prisma {
     setor?: NullableStringFieldUpdateOperationsInput | string | null
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    responsavelFinanceiroCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24534,6 +24976,7 @@ export namespace Prisma {
     setor?: NullableStringFieldUpdateOperationsInput | string | null
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    responsavelFinanceiroCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -134,6 +134,11 @@ model User {
 /// Integração Asaas:
 ///   asaasCustomerId é preenchido na primeira cobrança gerada pelo portal.
 ///   Sem este campo, cada nova cobrança criaria um cliente duplicado no Asaas.
+///
+/// Responsável financeiro por jazigo (cobrança):
+///   Quem paga a manutenção de um jazigo pode ser outro registo em `customers` (FK opcional em
+///   `Jazigos.responsavel_financeiro_customer_id`). Um mesmo `Customer` pode ser titular de uns
+///   contratos e pagador noutros jazigos — dados centralizados nesta tabela (CPF único, índices).
 model Customer {
   id             String  @id @default(uuid())
   sqlServerId    Int?    @unique @map("sql_server_id") // CodCessionario — nulo até o primeiro sync
@@ -163,6 +168,8 @@ model Customer {
   pagamentos     Pagamento[]
   notificacoes   Notificacao[]
   changeRequests ChangeRequest[]
+
+  jazigosOndeResponsavelFinanceiro Jazigo[] @relation("JazigoResponsavelFinanceiro")
 
   @@index([cpfCnpj])
   @@index([email])
@@ -327,6 +334,9 @@ model Jazigo {
   contratoId String   @map("contrato_id")
   contrato   Contrato @relation(fields: [contratoId], references: [id])
 
+  responsavelFinanceiroCustomerId String?   @map("responsavel_financeiro_customer_id")
+  responsavelFinanceiroCustomer   Customer? @relation("JazigoResponsavelFinanceiro", fields: [responsavelFinanceiroCustomerId], references: [id], onDelete: SetNull)
+
   pagamentos Pagamento[]
 
   syncedAt  DateTime @default(now()) @map("synced_at")
@@ -334,6 +344,7 @@ model Jazigo {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([contratoId])
+  @@index([responsavelFinanceiroCustomerId])
   @@map("jazigos")
 }
 

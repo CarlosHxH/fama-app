@@ -90,7 +90,11 @@ export function PagamentosClient() {
   const contratos = paymentContextQuery.data?.contratos ?? [];
   const contratoSelecionado = contratos.find((c) => c.id === contratoId) ?? null;
   const jazigos = contratoSelecionado?.jazigos ?? [];
-  const responsavel = contratoSelecionado?.responsavelFinanceiro ?? null;
+  const jazigoSelecionado = jazigos.find((j) => j.id === jazigoId) ?? null;
+  const responsavelCobranca =
+    tipoPagamento === "MANUTENCAO" && jazigoSelecionado
+      ? jazigoSelecionado.responsavelCobranca
+      : contratoSelecionado?.responsavelCobranca;
 
   const create = api.admin.createPaymentForUser.useMutation();
 
@@ -289,9 +293,20 @@ export function PagamentosClient() {
           <div className="rounded-xl border border-jardim-border bg-jardim-cream/40 px-3 py-2 text-xs text-jardim-text-muted">
             Cobrança em nome de:{" "}
             <strong className="text-jardim-green-dark">
-              {responsavel?.nome ?? selected?.name ?? "Titular"}
+              {responsavelCobranca?.nome ?? selected?.name ?? "Titular"}
             </strong>
-            {responsavel?.cpf ? ` · CPF ${responsavel.cpf}` : ""}
+            {responsavelCobranca?.cpf ? ` · CPF ${responsavelCobranca.cpf}` : ""}
+            {responsavelCobranca ? (
+              <span className="ml-1 text-jardim-text-light">
+                (
+                {responsavelCobranca.fonte === "customer_jazigo"
+                  ? "pagador por jazigo (cliente)"
+                  : responsavelCobranca.fonte === "contrato_legado"
+                    ? "responsável do contrato (sync)"
+                    : "titular"}
+                )
+              </span>
+            ) : null}
           </div>
         ) : null}
 

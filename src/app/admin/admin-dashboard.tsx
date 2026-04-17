@@ -202,13 +202,13 @@ export function AdminDashboard() {
             sub="Pagamentos quitados no período"
             icon={<CheckCircle2 className="h-5 w-5" strokeWidth={2} />}
           />
-          <KpiCard
+          {/* <KpiCard
             loading={loadingStats}
             label="Em atraso"
             value={String(stats.data?.overdueCount ?? 0)}
             sub="Vencidas ou pendentes após vencimento"
             icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
-          />
+          /> */}
           <KpiCard
             loading={loadingStats}
             label="Em dia (aberto)"
@@ -237,13 +237,13 @@ export function AdminDashboard() {
             sub="Pendentes com vencimento próximo"
             icon={<Clock className="h-5 w-5" strokeWidth={2} />}
           />
-          {/* <KpiCard
+          <KpiCard
             loading={loadingStats}
             label="Atraso > 30 dias"
             value={String(stats.data?.overdue30Count ?? 0)}
             sub={brl.format((stats.data?.overdue30AmountCents ?? 0) / 100)}
             icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
-          /> */}
+          />
         </section>
 
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">

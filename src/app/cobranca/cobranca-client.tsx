@@ -196,7 +196,6 @@ export function CobrancaClient() {
               createPending={createCharge.isPending}
               createError={createCharge.error?.message ?? null}
             />
-            <LegacySnapshotCard />
             <JazigosAccordion />
             <CobrancaNoticeBox />
             <CobrancaLegalBox />

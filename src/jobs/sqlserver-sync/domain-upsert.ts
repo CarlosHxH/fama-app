@@ -453,26 +453,42 @@ export async function upsertFinancialResponsibleFromRow(
   const cpfRaw = normalizeCpfCnpjDigits(
     pickRow(row, ["CPF", "cpf", "CpfCnpj", "cpfCnpj", "CpfCgc", "NumCpfCnpj"]),
   );
-  const cpf = (cpfRaw ?? "00000000000000").padStart(14, "0").slice(0, 14);
+  const cpfCnpj = (cpfRaw ?? "00000000000000").padStart(14, "0").slice(0, 14);
   const email = str(pickRow(row, ["Email", "email"]), 320) || null;
-  const telefone =
-    str(pickRow(row, ["Fone", "fone", "Telefone", "telefone", "Celular"]), 20) ||
-    null;
+  const motivo = str(pickRow(row, ["Motivo", "motivo", "Obs", "obs"]), 500) || null;
+
+  // ResponsavelFinanceiro v2.0: dados de contato vivem no Customer vinculado.
+  // Localiza ou cria o Customer pelo CPF/CNPJ antes de gravar o vínculo.
+  let customer = await prisma.customer.findUnique({ where: { cpfCnpj } });
+  if (!customer) {
+    customer = await prisma.customer.create({
+      data: {
+        cpfCnpj,
+        nome,
+        email,
+        primeiroAcesso: true,
+      },
+    });
+  } else if (customer.nome !== nome || customer.email !== email) {
+    customer = await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        nome,
+        ...(email !== null ? { email } : {}),
+      },
+    });
+  }
 
   await prisma.responsavelFinanceiro.upsert({
     where: { contratoId: contratoCtx.id },
     create: {
       contratoId: contratoCtx.id,
-      nome,
-      cpf,
-      email,
-      telefone,
+      customerId: customer.id,
+      motivo,
     },
     update: {
-      nome,
-      cpf,
-      email,
-      telefone,
+      customerId: customer.id,
+      motivo,
     },
   });
   return true;

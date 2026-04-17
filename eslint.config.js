@@ -35,6 +35,19 @@ export default tseslint.config(
       ],
     },
   },
+  // migrate.ts é um script ETL legado que usa mssql/pg sem tipagem nos recordsets.
+  // Desabilitar regras unsafe apenas para esse arquivo evita centenas de supressões inline.
+  {
+    files: ["src/lib/migrate.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+    },
+  },
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,

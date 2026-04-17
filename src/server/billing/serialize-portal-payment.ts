@@ -1,4 +1,4 @@
-import { Prisma } from "../../../generated/prisma/client";
+import type { Prisma } from "../../../generated/prisma/client";
 import type { BillingPaymentStatus } from "~/lib/billing-status";
 import { centsFromDecimal } from "~/server/billing/money";
 

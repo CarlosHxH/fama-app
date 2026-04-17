@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(sort -t: -k1 -n)",
+      "Bash(cat /c/Users/carlo/Desktop/facilmova/fama-app/.eslintrc*)",
+      "Bash(cat /c/Users/carlo/Desktop/facilmova/fama-app/eslint.config*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

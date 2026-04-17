@@ -45,7 +45,7 @@ function asaasErrorMessage(
     }
     const errors = (body as Record<string, unknown>).errors;
     if (Array.isArray(errors) && errors.length > 0) {
-      const first = errors[0];
+      const first: unknown = errors[0];
       if (first && typeof first === "object" && !Array.isArray(first)) {
         const description = (first as Record<string, unknown>).description;
         if (typeof description === "string" && description.trim().length > 0) {

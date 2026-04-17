@@ -130,10 +130,11 @@ async function pgBatchInsert(
     try {
       await pg.query(query, values)
       total += chunk.length
-    } catch(err: any) {
+    } catch(err: unknown) {
       // Re-lança com contexto: qual tabela, qual chunk
-      err.message = `[batch ${Math.floor(i/BATCH)+1} de ${table}] ${err.message}`
-      throw err
+      const e = err instanceof Error ? err : new Error(String(err))
+      e.message = `[batch ${Math.floor(i/BATCH)+1} de ${table}] ${e.message}`
+      throw e
     }
   }
   return total
@@ -622,11 +623,12 @@ async function migrateResponsaveisFinanceiros(conn: sql.ConnectionPool): Promise
   let skipped = 0
   let newCust = 0
 
-  for (const r of result.recordset) {
-    const cpf = normalizeCpf(r.CpfResponsavel)
+  for (const _r of result.recordset) {
+    const r = _r as Record<string, unknown>
+    const cpf = normalizeCpf(r.CpfResponsavel as string | null)
     if (!cpf) { skipped++; continue }
 
-    const codContrato = planoContratoMap.get(r.CodCessionarioPlano)
+    const codContrato = planoContratoMap.get(r.CodCessionarioPlano as number)
     if (!codContrato) { skipped++; continue }
 
     const contratoId = contratoUuid.get(codContrato)
@@ -640,7 +642,7 @@ async function migrateResponsaveisFinanceiros(conn: sql.ConnectionPool): Promise
       newCustomers.push([
         customerId,
         cpf,
-        (r.NomeResponsavel as string)?.trim(),
+        ((r.NomeResponsavel as string) ?? '').trim(),
         true,  // primeiroAcesso = true — definirá senha no 1º login
         true,
         now, now, now,
@@ -656,7 +658,7 @@ async function migrateResponsaveisFinanceiros(conn: sql.ConnectionPool): Promise
         uuidv4(),
         contratoId,
         customerId,
-        (r.Motivo as string)?.trim() || null,
+        ((r.Motivo as string) ?? '').trim() || null,
         now, now, now,
       ])
     }
@@ -712,8 +714,9 @@ async function migratePagamentos(conn: sql.ConnectionPool): Promise<void> {
     GROUP BY cj.CodContrato
   `)
   const jazigoParaContrato = new Map<number, number>()
-  for (const r of jazigoDoContrato.recordset) {
-    jazigoParaContrato.set(r.CodContrato, r.CodJazigo)
+  for (const _r of jazigoDoContrato.recordset) {
+    const r = _r as Record<string, unknown>
+    jazigoParaContrato.set(r.CodContrato as number, r.CodJazigo as number)
   }
 
   // Contrato mais recente do cessionário
@@ -726,8 +729,9 @@ async function migratePagamentos(conn: sql.ConnectionPool): Promise<void> {
     ) mx ON mx.MaxCC = cc.CodContCess
   `)
   const contratoParaCessionario = new Map<number, number>()
-  for (const r of contratoDoCessionario.recordset) {
-    contratoParaCessionario.set(r.CodCessionario, r.CodContrato)
+  for (const _r of contratoDoCessionario.recordset) {
+    const r = _r as Record<string, unknown>
+    contratoParaCessionario.set(r.CodCessionario as number, r.CodContrato as number)
   }
 
   const cols = [
@@ -740,33 +744,37 @@ async function migratePagamentos(conn: sql.ConnectionPool): Promise<void> {
   let skipped = 0
   const now = new Date()
 
-  for (const r of boletos.recordset) {
-    const customerId = cessionarioUuid.get(r.CodCessionario) ?? dbCustomerMap.get(r.CodCessionario)
+  for (const _r of boletos.recordset) {
+    const r = _r as Record<string, unknown>
+    const codCess = r.CodCessionario as number
+    const customerId = cessionarioUuid.get(codCess) ?? dbCustomerMap.get(codCess)
     if (!customerId) { skipped++; continue }
 
-    const codContrato = contratoParaCessionario.get(r.CodCessionario)
+    const codContrato = contratoParaCessionario.get(codCess)
     const contratoId  = codContrato ? contratoUuid.get(codContrato) ?? null : null
 
     const codJazigo = codContrato ? jazigoParaContrato.get(codContrato) : null
     const jazigoId  = codJazigo   ? jazigoUuid.get(codJazigo) ?? null : null
 
-    const dataVenc = oleToDate(r.DataVencimento)
+    const dataVenc = oleToDate(r.DataVencimento as number | null)
     if (!dataVenc) { skipped++; continue } // boleto sem vencimento é inválido
 
-    const dataPag  = oleToDate(r.DataLiquid)
-    const status   = mapStatusBoleto(r.Situacao)
+    const dataPag  = oleToDate(r.DataLiquid as number | null)
+    const status   = mapStatusBoleto(r.Situacao as string)
 
+    const recebido = r.ValorRecebido as number
+    const tarifa   = r.ValorTarifa as number
     // valorLiquido = recebido − tarifa bancária
-    const valorLiquido = r.ValorRecebido > 0
-      ? parseFloat((r.ValorRecebido - r.ValorTarifa).toFixed(2))
+    const valorLiquido = recebido > 0
+      ? parseFloat((recebido - tarifa).toFixed(2))
       : null
 
     rows.push([
       uuidv4(),
-      r.CodBoleto,
-      (r.NossoNumero as string)?.trim() || null,
-      r.ValorTitulo,
-      r.ValorRecebido > 0 ? r.ValorRecebido : null,
+      r.CodBoleto as number,
+      ((r.NossoNumero as string) ?? '').trim() || null,
+      r.ValorTitulo as number,
+      recebido > 0 ? recebido : null,
       valorLiquido,
       dataVenc,
       dataPag,
@@ -804,21 +812,23 @@ async function migratePagamentos(conn: sql.ConnectionPool): Promise<void> {
   const rowsAq: unknown[][] = []
   let skippedAq = 0
 
-  for (const r of pagtos.recordset) {
-    const customerId = cessionarioUuid.get(r.CodCessionario) ?? dbCustomerMap.get(r.CodCessionario)
+  for (const _r of pagtos.recordset) {
+    const r = _r as Record<string, unknown>
+    const codCess2 = r.CodCessionario as number
+    const customerId = cessionarioUuid.get(codCess2) ?? dbCustomerMap.get(codCess2)
     if (!customerId) { skippedAq++; continue }
 
-    const contratoId = contratoUuid.get(r.CodContrato)
+    const contratoId = contratoUuid.get(r.CodContrato as number)
     if (!contratoId) { skippedAq++; continue }
 
-    const dataVenc = oleToDate(r.VencimentoOle)
+    const dataVenc = oleToDate(r.VencimentoOle as number | null)
     if (!dataVenc) { skippedAq++; continue }
 
     rowsAq.push([
       uuidv4(),
       null,            // sql_server_id — não há CodPagto único aqui
       null,            // nosso_numero
-      r.ValorParcela,
+      r.ValorParcela as number,
       null,            // valor_pago
       null,            // valor_liquido
       dataVenc,

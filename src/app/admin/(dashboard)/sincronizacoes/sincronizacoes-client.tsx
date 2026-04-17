@@ -224,7 +224,7 @@ function SyncLogRow({ row }: { row: SyncRow }) {
     (Array.isArray(row.erroDetalhes)
       ? row.erroDetalhes.length > 0
       : typeof row.erroDetalhes === "object"
-        ? Object.keys(row.erroDetalhes as object).length > 0
+        ? Object.keys(row.erroDetalhes).length > 0
         : true);
 
   return (

@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { hash } from "bcrypt-ts";
-import type { Prisma, Role } from "../../../../generated/prisma/client";
+import type { Prisma } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
 import { createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
@@ -1066,7 +1066,7 @@ export const adminRouter = createTRPCRouter({
    */
   getCapabilities: adminProcedure.query(({ ctx }) => {
     const r = resolveStaffRole(
-      ctx.session.user.accountKind as "portal" | "admin",
+      ctx.session.user.accountKind,
       ctx.session.user.staffRole ?? undefined,
     );
     return {
@@ -1109,7 +1109,7 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      const nextRole = (patch.role ?? current.role) as Role;
+      const nextRole = patch.role ?? current.role;
       const nextAtivo = patch.ativo ?? current.ativo;
       const emailNorm = patch.email?.trim().toLowerCase();
 

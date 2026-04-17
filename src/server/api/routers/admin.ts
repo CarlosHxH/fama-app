@@ -169,7 +169,7 @@ export const adminRouter = createTRPCRouter({
           cpfCnpj: true,
           asaasCustomerId: true,
           _count: {
-            select: { pagamentos: true, telefones: true },
+            select: { pagamentosComoPagador: true, telefones: true },
           },
         },
       });
@@ -187,7 +187,7 @@ export const adminRouter = createTRPCRouter({
         cpfCnpj: u.cpfCnpj,
         asaasCustomerId: u.asaasCustomerId,
         _count: {
-          billingPayments: u._count.pagamentos,
+          billingPayments: u._count.pagamentosComoPagador,
           phones: u._count.telefones,
         },
       }));
@@ -272,7 +272,9 @@ export const adminRouter = createTRPCRouter({
               customer: {
                 select: { id: true, nome: true },
               },
-              responsavelFinanceiro: { select: { nome: true } },
+              responsavelFinanceiro: {
+                select: { customer: { select: { nome: true } } },
+              },
             },
           },
           responsavelFinanceiroCustomer: {
@@ -297,7 +299,7 @@ export const adminRouter = createTRPCRouter({
           responsavelLabel = payer.nome;
           responsavelFonte = "customer";
         } else if (legacy) {
-          responsavelLabel = `${legacy.nome} (contrato)`;
+          responsavelLabel = `${legacy.customer.nome} (contrato)`;
           responsavelFonte = "contrato";
         } else {
           responsavelLabel = j.contrato.customer.nome;
@@ -396,7 +398,7 @@ export const adminRouter = createTRPCRouter({
           updatedAt: true,
           _count: {
             select: {
-              pagamentos: true,
+              pagamentosComoPagador: true,
               telefones: true,
               enderecos: true,
               contratos: true,
@@ -505,10 +507,14 @@ export const adminRouter = createTRPCRouter({
           situacao: true,
           responsavelFinanceiro: {
             select: {
-              nome: true,
-              cpf: true,
-              email: true,
-              telefone: true,
+              motivo: true,
+              customer: {
+                select: {
+                  nome: true,
+                  cpfCnpj: true,
+                  email: true,
+                },
+              },
             },
           },
           jazigos: {
@@ -535,9 +541,9 @@ export const adminRouter = createTRPCRouter({
       const mapped = contratos.map((c) => {
         const legacy = c.responsavelFinanceiro
           ? {
-              nome: c.responsavelFinanceiro.nome,
-              cpf: c.responsavelFinanceiro.cpf,
-              email: c.responsavelFinanceiro.email,
+              nome: c.responsavelFinanceiro.customer.nome,
+              cpf: c.responsavelFinanceiro.customer.cpfCnpj,
+              email: c.responsavelFinanceiro.customer.email,
             }
           : null;
         return {
@@ -592,7 +598,9 @@ export const adminRouter = createTRPCRouter({
         input.contratoId && input.contratoId.length > 0
           ? await db.contrato.findFirst({
               where: { id: input.contratoId, customerId: customer.id },
-              include: { responsavelFinanceiro: true },
+              include: {
+                responsavelFinanceiro: { include: { customer: true } },
+              },
             })
           : null;
       if (input.contratoId && !contrato) {
@@ -619,7 +627,11 @@ export const adminRouter = createTRPCRouter({
                     email: true,
                   },
                 },
-                contrato: { include: { responsavelFinanceiro: true } },
+                contrato: {
+                  include: {
+                    responsavelFinanceiro: { include: { customer: true } },
+                  },
+                },
               },
             })
           : null;
@@ -636,9 +648,9 @@ export const adminRouter = createTRPCRouter({
         null;
       const legacySlice = legacyResp
         ? {
-            nome: legacyResp.nome,
-            cpf: legacyResp.cpf,
-            email: legacyResp.email,
+            nome: legacyResp.customer.nome,
+            cpf: legacyResp.customer.cpfCnpj,
+            email: legacyResp.customer.email,
           }
         : null;
 

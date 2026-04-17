@@ -205,6 +205,31 @@ export type ChangeRequest = $Result.DefaultSelection<Prisma.$ChangeRequestPayloa
  * Permite reprocessar registros específicos sem re-sincronizar a entidade inteira.
  */
 export type SyncLog = $Result.DefaultSelection<Prisma.$SyncLogPayload>
+/**
+ * Model vw_responsaveis_financeiros
+ * 
+ */
+export type vw_responsaveis_financeiros = $Result.DefaultSelection<Prisma.$vw_responsaveis_financeirosPayload>
+/**
+ * Model vw_inadimplentes
+ * 
+ */
+export type vw_inadimplentes = $Result.DefaultSelection<Prisma.$vw_inadimplentesPayload>
+/**
+ * Model vw_extrato_cliente
+ * 
+ */
+export type vw_extrato_cliente = $Result.DefaultSelection<Prisma.$vw_extrato_clientePayload>
+/**
+ * Model vw_dashboard_financeiro
+ * 
+ */
+export type vw_dashboard_financeiro = $Result.DefaultSelection<Prisma.$vw_dashboard_financeiroPayload>
+/**
+ * Model vw_jazigos_por_contrato
+ * 
+ */
+export type vw_jazigos_por_contrato = $Result.DefaultSelection<Prisma.$vw_jazigos_por_contratoPayload>
 
 /**
  * Enums
@@ -620,6 +645,56 @@ export class PrismaClient<
     * ```
     */
   get syncLog(): Prisma.SyncLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vw_responsaveis_financeiros`: Exposes CRUD operations for the **vw_responsaveis_financeiros** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Vw_responsaveis_financeiros
+    * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findMany()
+    * ```
+    */
+  get vw_responsaveis_financeiros(): Prisma.vw_responsaveis_financeirosDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vw_inadimplentes`: Exposes CRUD operations for the **vw_inadimplentes** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Vw_inadimplentes
+    * const vw_inadimplentes = await prisma.vw_inadimplentes.findMany()
+    * ```
+    */
+  get vw_inadimplentes(): Prisma.vw_inadimplentesDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vw_extrato_cliente`: Exposes CRUD operations for the **vw_extrato_cliente** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Vw_extrato_clientes
+    * const vw_extrato_clientes = await prisma.vw_extrato_cliente.findMany()
+    * ```
+    */
+  get vw_extrato_cliente(): Prisma.vw_extrato_clienteDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vw_dashboard_financeiro`: Exposes CRUD operations for the **vw_dashboard_financeiro** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Vw_dashboard_financeiros
+    * const vw_dashboard_financeiros = await prisma.vw_dashboard_financeiro.findMany()
+    * ```
+    */
+  get vw_dashboard_financeiro(): Prisma.vw_dashboard_financeiroDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vw_jazigos_por_contrato`: Exposes CRUD operations for the **vw_jazigos_por_contrato** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Vw_jazigos_por_contratoes
+    * const vw_jazigos_por_contratoes = await prisma.vw_jazigos_por_contrato.findMany()
+    * ```
+    */
+  get vw_jazigos_por_contrato(): Prisma.vw_jazigos_por_contratoDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1073,7 +1148,12 @@ export namespace Prisma {
     Pagamento: 'Pagamento',
     Notificacao: 'Notificacao',
     ChangeRequest: 'ChangeRequest',
-    SyncLog: 'SyncLog'
+    SyncLog: 'SyncLog',
+    vw_responsaveis_financeiros: 'vw_responsaveis_financeiros',
+    vw_inadimplentes: 'vw_inadimplentes',
+    vw_extrato_cliente: 'vw_extrato_cliente',
+    vw_dashboard_financeiro: 'vw_dashboard_financeiro',
+    vw_jazigos_por_contrato: 'vw_jazigos_por_contrato'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1092,7 +1172,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "customer" | "customerAddress" | "customerPhone" | "customerRefreshToken" | "contrato" | "responsavelFinanceiro" | "jazigo" | "tarifaJazigo" | "pagamento" | "notificacao" | "changeRequest" | "syncLog"
+      modelProps: "user" | "customer" | "customerAddress" | "customerPhone" | "customerRefreshToken" | "contrato" | "responsavelFinanceiro" | "jazigo" | "tarifaJazigo" | "pagamento" | "notificacao" | "changeRequest" | "syncLog" | "vw_responsaveis_financeiros" | "vw_inadimplentes" | "vw_extrato_cliente" | "vw_dashboard_financeiro" | "vw_jazigos_por_contrato"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2058,6 +2138,196 @@ export namespace Prisma {
           }
         }
       }
+      vw_responsaveis_financeiros: {
+        payload: Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>
+        fields: Prisma.vw_responsaveis_financeirosFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.vw_responsaveis_financeirosFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_responsaveis_financeirosPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.vw_responsaveis_financeirosFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_responsaveis_financeirosPayload>
+          }
+          findFirst: {
+            args: Prisma.vw_responsaveis_financeirosFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_responsaveis_financeirosPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.vw_responsaveis_financeirosFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_responsaveis_financeirosPayload>
+          }
+          findMany: {
+            args: Prisma.vw_responsaveis_financeirosFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_responsaveis_financeirosPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Vw_responsaveis_financeirosAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVw_responsaveis_financeiros>
+          }
+          groupBy: {
+            args: Prisma.vw_responsaveis_financeirosGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Vw_responsaveis_financeirosGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.vw_responsaveis_financeirosCountArgs<ExtArgs>
+            result: $Utils.Optional<Vw_responsaveis_financeirosCountAggregateOutputType> | number
+          }
+        }
+      }
+      vw_inadimplentes: {
+        payload: Prisma.$vw_inadimplentesPayload<ExtArgs>
+        fields: Prisma.vw_inadimplentesFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.vw_inadimplentesFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_inadimplentesPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.vw_inadimplentesFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_inadimplentesPayload>
+          }
+          findFirst: {
+            args: Prisma.vw_inadimplentesFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_inadimplentesPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.vw_inadimplentesFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_inadimplentesPayload>
+          }
+          findMany: {
+            args: Prisma.vw_inadimplentesFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_inadimplentesPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Vw_inadimplentesAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVw_inadimplentes>
+          }
+          groupBy: {
+            args: Prisma.vw_inadimplentesGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Vw_inadimplentesGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.vw_inadimplentesCountArgs<ExtArgs>
+            result: $Utils.Optional<Vw_inadimplentesCountAggregateOutputType> | number
+          }
+        }
+      }
+      vw_extrato_cliente: {
+        payload: Prisma.$vw_extrato_clientePayload<ExtArgs>
+        fields: Prisma.vw_extrato_clienteFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.vw_extrato_clienteFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_extrato_clientePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.vw_extrato_clienteFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_extrato_clientePayload>
+          }
+          findFirst: {
+            args: Prisma.vw_extrato_clienteFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_extrato_clientePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.vw_extrato_clienteFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_extrato_clientePayload>
+          }
+          findMany: {
+            args: Prisma.vw_extrato_clienteFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_extrato_clientePayload>[]
+          }
+          aggregate: {
+            args: Prisma.Vw_extrato_clienteAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVw_extrato_cliente>
+          }
+          groupBy: {
+            args: Prisma.vw_extrato_clienteGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Vw_extrato_clienteGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.vw_extrato_clienteCountArgs<ExtArgs>
+            result: $Utils.Optional<Vw_extrato_clienteCountAggregateOutputType> | number
+          }
+        }
+      }
+      vw_dashboard_financeiro: {
+        payload: Prisma.$vw_dashboard_financeiroPayload<ExtArgs>
+        fields: Prisma.vw_dashboard_financeiroFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.vw_dashboard_financeiroFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_dashboard_financeiroPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.vw_dashboard_financeiroFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_dashboard_financeiroPayload>
+          }
+          findFirst: {
+            args: Prisma.vw_dashboard_financeiroFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_dashboard_financeiroPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.vw_dashboard_financeiroFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_dashboard_financeiroPayload>
+          }
+          findMany: {
+            args: Prisma.vw_dashboard_financeiroFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_dashboard_financeiroPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Vw_dashboard_financeiroAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVw_dashboard_financeiro>
+          }
+          groupBy: {
+            args: Prisma.vw_dashboard_financeiroGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Vw_dashboard_financeiroGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.vw_dashboard_financeiroCountArgs<ExtArgs>
+            result: $Utils.Optional<Vw_dashboard_financeiroCountAggregateOutputType> | number
+          }
+        }
+      }
+      vw_jazigos_por_contrato: {
+        payload: Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>
+        fields: Prisma.vw_jazigos_por_contratoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.vw_jazigos_por_contratoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_jazigos_por_contratoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.vw_jazigos_por_contratoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_jazigos_por_contratoPayload>
+          }
+          findFirst: {
+            args: Prisma.vw_jazigos_por_contratoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_jazigos_por_contratoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.vw_jazigos_por_contratoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_jazigos_por_contratoPayload>
+          }
+          findMany: {
+            args: Prisma.vw_jazigos_por_contratoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$vw_jazigos_por_contratoPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Vw_jazigos_por_contratoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVw_jazigos_por_contrato>
+          }
+          groupBy: {
+            args: Prisma.vw_jazigos_por_contratoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Vw_jazigos_por_contratoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.vw_jazigos_por_contratoCountArgs<ExtArgs>
+            result: $Utils.Optional<Vw_jazigos_por_contratoCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2167,6 +2437,11 @@ export namespace Prisma {
     notificacao?: NotificacaoOmit
     changeRequest?: ChangeRequestOmit
     syncLog?: SyncLogOmit
+    vw_responsaveis_financeiros?: vw_responsaveis_financeirosOmit
+    vw_inadimplentes?: vw_inadimplentesOmit
+    vw_extrato_cliente?: vw_extrato_clienteOmit
+    vw_dashboard_financeiro?: vw_dashboard_financeiroOmit
+    vw_jazigos_por_contrato?: vw_jazigos_por_contratoOmit
   }
 
   /* Types for Logging */
@@ -18114,6 +18389,4136 @@ export namespace Prisma {
 
 
   /**
+   * Model vw_responsaveis_financeiros
+   */
+
+  export type AggregateVw_responsaveis_financeiros = {
+    _count: Vw_responsaveis_financeirosCountAggregateOutputType | null
+    _avg: Vw_responsaveis_financeirosAvgAggregateOutputType | null
+    _sum: Vw_responsaveis_financeirosSumAggregateOutputType | null
+    _min: Vw_responsaveis_financeirosMinAggregateOutputType | null
+    _max: Vw_responsaveis_financeirosMaxAggregateOutputType | null
+  }
+
+  export type Vw_responsaveis_financeirosAvgAggregateOutputType = {
+    total_jazigos: number | null
+    valor_total_mensalidade: Decimal | null
+    pagamentos_atrasados: number | null
+    pagamentos_pendentes: number | null
+  }
+
+  export type Vw_responsaveis_financeirosSumAggregateOutputType = {
+    total_jazigos: bigint | null
+    valor_total_mensalidade: Decimal | null
+    pagamentos_atrasados: bigint | null
+    pagamentos_pendentes: bigint | null
+  }
+
+  export type Vw_responsaveis_financeirosMinAggregateOutputType = {
+    responsavel_id: string | null
+    motivo: string | null
+    customer_id: string | null
+    responsavel_nome: string | null
+    responsavel_cpf: string | null
+    responsavel_email: string | null
+    responsavel_ativo: boolean | null
+    primeiro_acesso: boolean | null
+    responsavel_telefone: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    titular_id: string | null
+    titular_nome: string | null
+    titular_cpf: string | null
+    total_jazigos: bigint | null
+    valor_total_mensalidade: Decimal | null
+    pagamentos_atrasados: bigint | null
+    pagamentos_pendentes: bigint | null
+    synced_at: Date | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type Vw_responsaveis_financeirosMaxAggregateOutputType = {
+    responsavel_id: string | null
+    motivo: string | null
+    customer_id: string | null
+    responsavel_nome: string | null
+    responsavel_cpf: string | null
+    responsavel_email: string | null
+    responsavel_ativo: boolean | null
+    primeiro_acesso: boolean | null
+    responsavel_telefone: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    titular_id: string | null
+    titular_nome: string | null
+    titular_cpf: string | null
+    total_jazigos: bigint | null
+    valor_total_mensalidade: Decimal | null
+    pagamentos_atrasados: bigint | null
+    pagamentos_pendentes: bigint | null
+    synced_at: Date | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type Vw_responsaveis_financeirosCountAggregateOutputType = {
+    responsavel_id: number
+    motivo: number
+    customer_id: number
+    responsavel_nome: number
+    responsavel_cpf: number
+    responsavel_email: number
+    responsavel_ativo: number
+    primeiro_acesso: number
+    responsavel_telefone: number
+    contrato_id: number
+    numero_contrato: number
+    contrato_situacao: number
+    titular_id: number
+    titular_nome: number
+    titular_cpf: number
+    total_jazigos: number
+    valor_total_mensalidade: number
+    pagamentos_atrasados: number
+    pagamentos_pendentes: number
+    synced_at: number
+    created_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type Vw_responsaveis_financeirosAvgAggregateInputType = {
+    total_jazigos?: true
+    valor_total_mensalidade?: true
+    pagamentos_atrasados?: true
+    pagamentos_pendentes?: true
+  }
+
+  export type Vw_responsaveis_financeirosSumAggregateInputType = {
+    total_jazigos?: true
+    valor_total_mensalidade?: true
+    pagamentos_atrasados?: true
+    pagamentos_pendentes?: true
+  }
+
+  export type Vw_responsaveis_financeirosMinAggregateInputType = {
+    responsavel_id?: true
+    motivo?: true
+    customer_id?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    responsavel_email?: true
+    responsavel_ativo?: true
+    primeiro_acesso?: true
+    responsavel_telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    titular_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    total_jazigos?: true
+    valor_total_mensalidade?: true
+    pagamentos_atrasados?: true
+    pagamentos_pendentes?: true
+    synced_at?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type Vw_responsaveis_financeirosMaxAggregateInputType = {
+    responsavel_id?: true
+    motivo?: true
+    customer_id?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    responsavel_email?: true
+    responsavel_ativo?: true
+    primeiro_acesso?: true
+    responsavel_telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    titular_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    total_jazigos?: true
+    valor_total_mensalidade?: true
+    pagamentos_atrasados?: true
+    pagamentos_pendentes?: true
+    synced_at?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type Vw_responsaveis_financeirosCountAggregateInputType = {
+    responsavel_id?: true
+    motivo?: true
+    customer_id?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    responsavel_email?: true
+    responsavel_ativo?: true
+    primeiro_acesso?: true
+    responsavel_telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    titular_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    total_jazigos?: true
+    valor_total_mensalidade?: true
+    pagamentos_atrasados?: true
+    pagamentos_pendentes?: true
+    synced_at?: true
+    created_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type Vw_responsaveis_financeirosAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which vw_responsaveis_financeiros to aggregate.
+     */
+    where?: vw_responsaveis_financeirosWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_responsaveis_financeiros to fetch.
+     */
+    orderBy?: vw_responsaveis_financeirosOrderByWithRelationInput | vw_responsaveis_financeirosOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: vw_responsaveis_financeirosWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_responsaveis_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_responsaveis_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned vw_responsaveis_financeiros
+    **/
+    _count?: true | Vw_responsaveis_financeirosCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Vw_responsaveis_financeirosAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Vw_responsaveis_financeirosSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Vw_responsaveis_financeirosMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Vw_responsaveis_financeirosMaxAggregateInputType
+  }
+
+  export type GetVw_responsaveis_financeirosAggregateType<T extends Vw_responsaveis_financeirosAggregateArgs> = {
+        [P in keyof T & keyof AggregateVw_responsaveis_financeiros]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVw_responsaveis_financeiros[P]>
+      : GetScalarType<T[P], AggregateVw_responsaveis_financeiros[P]>
+  }
+
+
+
+
+  export type vw_responsaveis_financeirosGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: vw_responsaveis_financeirosWhereInput
+    orderBy?: vw_responsaveis_financeirosOrderByWithAggregationInput | vw_responsaveis_financeirosOrderByWithAggregationInput[]
+    by: Vw_responsaveis_financeirosScalarFieldEnum[] | Vw_responsaveis_financeirosScalarFieldEnum
+    having?: vw_responsaveis_financeirosScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Vw_responsaveis_financeirosCountAggregateInputType | true
+    _avg?: Vw_responsaveis_financeirosAvgAggregateInputType
+    _sum?: Vw_responsaveis_financeirosSumAggregateInputType
+    _min?: Vw_responsaveis_financeirosMinAggregateInputType
+    _max?: Vw_responsaveis_financeirosMaxAggregateInputType
+  }
+
+  export type Vw_responsaveis_financeirosGroupByOutputType = {
+    responsavel_id: string
+    motivo: string | null
+    customer_id: string
+    responsavel_nome: string
+    responsavel_cpf: string
+    responsavel_email: string | null
+    responsavel_ativo: boolean
+    primeiro_acesso: boolean
+    responsavel_telefone: string | null
+    contrato_id: string
+    numero_contrato: string
+    contrato_situacao: string
+    titular_id: string
+    titular_nome: string
+    titular_cpf: string
+    total_jazigos: bigint
+    valor_total_mensalidade: Decimal
+    pagamentos_atrasados: bigint
+    pagamentos_pendentes: bigint
+    synced_at: Date
+    created_at: Date
+    updated_at: Date
+    _count: Vw_responsaveis_financeirosCountAggregateOutputType | null
+    _avg: Vw_responsaveis_financeirosAvgAggregateOutputType | null
+    _sum: Vw_responsaveis_financeirosSumAggregateOutputType | null
+    _min: Vw_responsaveis_financeirosMinAggregateOutputType | null
+    _max: Vw_responsaveis_financeirosMaxAggregateOutputType | null
+  }
+
+  type GetVw_responsaveis_financeirosGroupByPayload<T extends vw_responsaveis_financeirosGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Vw_responsaveis_financeirosGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Vw_responsaveis_financeirosGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Vw_responsaveis_financeirosGroupByOutputType[P]>
+            : GetScalarType<T[P], Vw_responsaveis_financeirosGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type vw_responsaveis_financeirosSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    responsavel_id?: boolean
+    motivo?: boolean
+    customer_id?: boolean
+    responsavel_nome?: boolean
+    responsavel_cpf?: boolean
+    responsavel_email?: boolean
+    responsavel_ativo?: boolean
+    primeiro_acesso?: boolean
+    responsavel_telefone?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    titular_id?: boolean
+    titular_nome?: boolean
+    titular_cpf?: boolean
+    total_jazigos?: boolean
+    valor_total_mensalidade?: boolean
+    pagamentos_atrasados?: boolean
+    pagamentos_pendentes?: boolean
+    synced_at?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }, ExtArgs["result"]["vw_responsaveis_financeiros"]>
+
+
+
+  export type vw_responsaveis_financeirosSelectScalar = {
+    responsavel_id?: boolean
+    motivo?: boolean
+    customer_id?: boolean
+    responsavel_nome?: boolean
+    responsavel_cpf?: boolean
+    responsavel_email?: boolean
+    responsavel_ativo?: boolean
+    primeiro_acesso?: boolean
+    responsavel_telefone?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    titular_id?: boolean
+    titular_nome?: boolean
+    titular_cpf?: boolean
+    total_jazigos?: boolean
+    valor_total_mensalidade?: boolean
+    pagamentos_atrasados?: boolean
+    pagamentos_pendentes?: boolean
+    synced_at?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type vw_responsaveis_financeirosOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"responsavel_id" | "motivo" | "customer_id" | "responsavel_nome" | "responsavel_cpf" | "responsavel_email" | "responsavel_ativo" | "primeiro_acesso" | "responsavel_telefone" | "contrato_id" | "numero_contrato" | "contrato_situacao" | "titular_id" | "titular_nome" | "titular_cpf" | "total_jazigos" | "valor_total_mensalidade" | "pagamentos_atrasados" | "pagamentos_pendentes" | "synced_at" | "created_at" | "updated_at", ExtArgs["result"]["vw_responsaveis_financeiros"]>
+
+  export type $vw_responsaveis_financeirosPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "vw_responsaveis_financeiros"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      responsavel_id: string
+      motivo: string | null
+      customer_id: string
+      responsavel_nome: string
+      responsavel_cpf: string
+      responsavel_email: string | null
+      responsavel_ativo: boolean
+      primeiro_acesso: boolean
+      responsavel_telefone: string | null
+      contrato_id: string
+      numero_contrato: string
+      contrato_situacao: string
+      titular_id: string
+      titular_nome: string
+      titular_cpf: string
+      total_jazigos: bigint
+      valor_total_mensalidade: Prisma.Decimal
+      pagamentos_atrasados: bigint
+      pagamentos_pendentes: bigint
+      synced_at: Date
+      created_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["vw_responsaveis_financeiros"]>
+    composites: {}
+  }
+
+  type vw_responsaveis_financeirosGetPayload<S extends boolean | null | undefined | vw_responsaveis_financeirosDefaultArgs> = $Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload, S>
+
+  type vw_responsaveis_financeirosCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<vw_responsaveis_financeirosFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Vw_responsaveis_financeirosCountAggregateInputType | true
+    }
+
+  export interface vw_responsaveis_financeirosDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['vw_responsaveis_financeiros'], meta: { name: 'vw_responsaveis_financeiros' } }
+    /**
+     * Find zero or one Vw_responsaveis_financeiros that matches the filter.
+     * @param {vw_responsaveis_financeirosFindUniqueArgs} args - Arguments to find a Vw_responsaveis_financeiros
+     * @example
+     * // Get one Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends vw_responsaveis_financeirosFindUniqueArgs>(args: SelectSubset<T, vw_responsaveis_financeirosFindUniqueArgs<ExtArgs>>): Prisma__vw_responsaveis_financeirosClient<$Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Vw_responsaveis_financeiros that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {vw_responsaveis_financeirosFindUniqueOrThrowArgs} args - Arguments to find a Vw_responsaveis_financeiros
+     * @example
+     * // Get one Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends vw_responsaveis_financeirosFindUniqueOrThrowArgs>(args: SelectSubset<T, vw_responsaveis_financeirosFindUniqueOrThrowArgs<ExtArgs>>): Prisma__vw_responsaveis_financeirosClient<$Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_responsaveis_financeiros that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_responsaveis_financeirosFindFirstArgs} args - Arguments to find a Vw_responsaveis_financeiros
+     * @example
+     * // Get one Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends vw_responsaveis_financeirosFindFirstArgs>(args?: SelectSubset<T, vw_responsaveis_financeirosFindFirstArgs<ExtArgs>>): Prisma__vw_responsaveis_financeirosClient<$Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_responsaveis_financeiros that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_responsaveis_financeirosFindFirstOrThrowArgs} args - Arguments to find a Vw_responsaveis_financeiros
+     * @example
+     * // Get one Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends vw_responsaveis_financeirosFindFirstOrThrowArgs>(args?: SelectSubset<T, vw_responsaveis_financeirosFindFirstOrThrowArgs<ExtArgs>>): Prisma__vw_responsaveis_financeirosClient<$Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Vw_responsaveis_financeiros that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_responsaveis_financeirosFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findMany()
+     * 
+     * // Get first 10 Vw_responsaveis_financeiros
+     * const vw_responsaveis_financeiros = await prisma.vw_responsaveis_financeiros.findMany({ take: 10 })
+     * 
+     * // Only select the `responsavel_id`
+     * const vw_responsaveis_financeirosWithResponsavel_idOnly = await prisma.vw_responsaveis_financeiros.findMany({ select: { responsavel_id: true } })
+     * 
+     */
+    findMany<T extends vw_responsaveis_financeirosFindManyArgs>(args?: SelectSubset<T, vw_responsaveis_financeirosFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$vw_responsaveis_financeirosPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Vw_responsaveis_financeiros.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_responsaveis_financeirosCountArgs} args - Arguments to filter Vw_responsaveis_financeiros to count.
+     * @example
+     * // Count the number of Vw_responsaveis_financeiros
+     * const count = await prisma.vw_responsaveis_financeiros.count({
+     *   where: {
+     *     // ... the filter for the Vw_responsaveis_financeiros we want to count
+     *   }
+     * })
+    **/
+    count<T extends vw_responsaveis_financeirosCountArgs>(
+      args?: Subset<T, vw_responsaveis_financeirosCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Vw_responsaveis_financeirosCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Vw_responsaveis_financeiros.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Vw_responsaveis_financeirosAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Vw_responsaveis_financeirosAggregateArgs>(args: Subset<T, Vw_responsaveis_financeirosAggregateArgs>): Prisma.PrismaPromise<GetVw_responsaveis_financeirosAggregateType<T>>
+
+    /**
+     * Group by Vw_responsaveis_financeiros.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_responsaveis_financeirosGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends vw_responsaveis_financeirosGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: vw_responsaveis_financeirosGroupByArgs['orderBy'] }
+        : { orderBy?: vw_responsaveis_financeirosGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, vw_responsaveis_financeirosGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVw_responsaveis_financeirosGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the vw_responsaveis_financeiros model
+   */
+  readonly fields: vw_responsaveis_financeirosFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for vw_responsaveis_financeiros.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__vw_responsaveis_financeirosClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the vw_responsaveis_financeiros model
+   */
+  interface vw_responsaveis_financeirosFieldRefs {
+    readonly responsavel_id: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly motivo: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly customer_id: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly responsavel_nome: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly responsavel_cpf: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly responsavel_email: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly responsavel_ativo: FieldRef<"vw_responsaveis_financeiros", 'Boolean'>
+    readonly primeiro_acesso: FieldRef<"vw_responsaveis_financeiros", 'Boolean'>
+    readonly responsavel_telefone: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly contrato_id: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly numero_contrato: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly contrato_situacao: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly titular_id: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly titular_nome: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly titular_cpf: FieldRef<"vw_responsaveis_financeiros", 'String'>
+    readonly total_jazigos: FieldRef<"vw_responsaveis_financeiros", 'BigInt'>
+    readonly valor_total_mensalidade: FieldRef<"vw_responsaveis_financeiros", 'Decimal'>
+    readonly pagamentos_atrasados: FieldRef<"vw_responsaveis_financeiros", 'BigInt'>
+    readonly pagamentos_pendentes: FieldRef<"vw_responsaveis_financeiros", 'BigInt'>
+    readonly synced_at: FieldRef<"vw_responsaveis_financeiros", 'DateTime'>
+    readonly created_at: FieldRef<"vw_responsaveis_financeiros", 'DateTime'>
+    readonly updated_at: FieldRef<"vw_responsaveis_financeiros", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * vw_responsaveis_financeiros findUnique
+   */
+  export type vw_responsaveis_financeirosFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_responsaveis_financeiros to fetch.
+     */
+    where: vw_responsaveis_financeirosWhereUniqueInput
+  }
+
+  /**
+   * vw_responsaveis_financeiros findUniqueOrThrow
+   */
+  export type vw_responsaveis_financeirosFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_responsaveis_financeiros to fetch.
+     */
+    where: vw_responsaveis_financeirosWhereUniqueInput
+  }
+
+  /**
+   * vw_responsaveis_financeiros findFirst
+   */
+  export type vw_responsaveis_financeirosFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_responsaveis_financeiros to fetch.
+     */
+    where?: vw_responsaveis_financeirosWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_responsaveis_financeiros to fetch.
+     */
+    orderBy?: vw_responsaveis_financeirosOrderByWithRelationInput | vw_responsaveis_financeirosOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_responsaveis_financeiros.
+     */
+    cursor?: vw_responsaveis_financeirosWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_responsaveis_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_responsaveis_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_responsaveis_financeiros.
+     */
+    distinct?: Vw_responsaveis_financeirosScalarFieldEnum | Vw_responsaveis_financeirosScalarFieldEnum[]
+  }
+
+  /**
+   * vw_responsaveis_financeiros findFirstOrThrow
+   */
+  export type vw_responsaveis_financeirosFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_responsaveis_financeiros to fetch.
+     */
+    where?: vw_responsaveis_financeirosWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_responsaveis_financeiros to fetch.
+     */
+    orderBy?: vw_responsaveis_financeirosOrderByWithRelationInput | vw_responsaveis_financeirosOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_responsaveis_financeiros.
+     */
+    cursor?: vw_responsaveis_financeirosWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_responsaveis_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_responsaveis_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_responsaveis_financeiros.
+     */
+    distinct?: Vw_responsaveis_financeirosScalarFieldEnum | Vw_responsaveis_financeirosScalarFieldEnum[]
+  }
+
+  /**
+   * vw_responsaveis_financeiros findMany
+   */
+  export type vw_responsaveis_financeirosFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_responsaveis_financeiros to fetch.
+     */
+    where?: vw_responsaveis_financeirosWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_responsaveis_financeiros to fetch.
+     */
+    orderBy?: vw_responsaveis_financeirosOrderByWithRelationInput | vw_responsaveis_financeirosOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing vw_responsaveis_financeiros.
+     */
+    cursor?: vw_responsaveis_financeirosWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_responsaveis_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_responsaveis_financeiros.
+     */
+    skip?: number
+    distinct?: Vw_responsaveis_financeirosScalarFieldEnum | Vw_responsaveis_financeirosScalarFieldEnum[]
+  }
+
+  /**
+   * vw_responsaveis_financeiros without action
+   */
+  export type vw_responsaveis_financeirosDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_responsaveis_financeiros
+     */
+    select?: vw_responsaveis_financeirosSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_responsaveis_financeiros
+     */
+    omit?: vw_responsaveis_financeirosOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model vw_inadimplentes
+   */
+
+  export type AggregateVw_inadimplentes = {
+    _count: Vw_inadimplentesCountAggregateOutputType | null
+    _avg: Vw_inadimplentesAvgAggregateOutputType | null
+    _sum: Vw_inadimplentesSumAggregateOutputType | null
+    _min: Vw_inadimplentesMinAggregateOutputType | null
+    _max: Vw_inadimplentesMaxAggregateOutputType | null
+  }
+
+  export type Vw_inadimplentesAvgAggregateOutputType = {
+    valor_titulo: Decimal | null
+    dias_atraso: number | null
+    quantidade_gavetas: number | null
+  }
+
+  export type Vw_inadimplentesSumAggregateOutputType = {
+    valor_titulo: Decimal | null
+    dias_atraso: number | null
+    quantidade_gavetas: number | null
+  }
+
+  export type Vw_inadimplentesMinAggregateOutputType = {
+    customer_id: string | null
+    nome: string | null
+    cpf_cnpj: string | null
+    email: string | null
+    telefone: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    pagamento_id: string | null
+    data_vencimento: Date | null
+    valor_titulo: Decimal | null
+    nosso_numero: string | null
+    tipo_pagamento: string | null
+    dias_atraso: number | null
+    jazigo_codigo: string | null
+    jazigo_quadra: string | null
+    quantidade_gavetas: number | null
+  }
+
+  export type Vw_inadimplentesMaxAggregateOutputType = {
+    customer_id: string | null
+    nome: string | null
+    cpf_cnpj: string | null
+    email: string | null
+    telefone: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    pagamento_id: string | null
+    data_vencimento: Date | null
+    valor_titulo: Decimal | null
+    nosso_numero: string | null
+    tipo_pagamento: string | null
+    dias_atraso: number | null
+    jazigo_codigo: string | null
+    jazigo_quadra: string | null
+    quantidade_gavetas: number | null
+  }
+
+  export type Vw_inadimplentesCountAggregateOutputType = {
+    customer_id: number
+    nome: number
+    cpf_cnpj: number
+    email: number
+    telefone: number
+    contrato_id: number
+    numero_contrato: number
+    contrato_situacao: number
+    pagamento_id: number
+    data_vencimento: number
+    valor_titulo: number
+    nosso_numero: number
+    tipo_pagamento: number
+    dias_atraso: number
+    jazigo_codigo: number
+    jazigo_quadra: number
+    quantidade_gavetas: number
+    _all: number
+  }
+
+
+  export type Vw_inadimplentesAvgAggregateInputType = {
+    valor_titulo?: true
+    dias_atraso?: true
+    quantidade_gavetas?: true
+  }
+
+  export type Vw_inadimplentesSumAggregateInputType = {
+    valor_titulo?: true
+    dias_atraso?: true
+    quantidade_gavetas?: true
+  }
+
+  export type Vw_inadimplentesMinAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    email?: true
+    telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    pagamento_id?: true
+    data_vencimento?: true
+    valor_titulo?: true
+    nosso_numero?: true
+    tipo_pagamento?: true
+    dias_atraso?: true
+    jazigo_codigo?: true
+    jazigo_quadra?: true
+    quantidade_gavetas?: true
+  }
+
+  export type Vw_inadimplentesMaxAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    email?: true
+    telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    pagamento_id?: true
+    data_vencimento?: true
+    valor_titulo?: true
+    nosso_numero?: true
+    tipo_pagamento?: true
+    dias_atraso?: true
+    jazigo_codigo?: true
+    jazigo_quadra?: true
+    quantidade_gavetas?: true
+  }
+
+  export type Vw_inadimplentesCountAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    email?: true
+    telefone?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    pagamento_id?: true
+    data_vencimento?: true
+    valor_titulo?: true
+    nosso_numero?: true
+    tipo_pagamento?: true
+    dias_atraso?: true
+    jazigo_codigo?: true
+    jazigo_quadra?: true
+    quantidade_gavetas?: true
+    _all?: true
+  }
+
+  export type Vw_inadimplentesAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which vw_inadimplentes to aggregate.
+     */
+    where?: vw_inadimplentesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_inadimplentes to fetch.
+     */
+    orderBy?: vw_inadimplentesOrderByWithRelationInput | vw_inadimplentesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: vw_inadimplentesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_inadimplentes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_inadimplentes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned vw_inadimplentes
+    **/
+    _count?: true | Vw_inadimplentesCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Vw_inadimplentesAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Vw_inadimplentesSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Vw_inadimplentesMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Vw_inadimplentesMaxAggregateInputType
+  }
+
+  export type GetVw_inadimplentesAggregateType<T extends Vw_inadimplentesAggregateArgs> = {
+        [P in keyof T & keyof AggregateVw_inadimplentes]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVw_inadimplentes[P]>
+      : GetScalarType<T[P], AggregateVw_inadimplentes[P]>
+  }
+
+
+
+
+  export type vw_inadimplentesGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: vw_inadimplentesWhereInput
+    orderBy?: vw_inadimplentesOrderByWithAggregationInput | vw_inadimplentesOrderByWithAggregationInput[]
+    by: Vw_inadimplentesScalarFieldEnum[] | Vw_inadimplentesScalarFieldEnum
+    having?: vw_inadimplentesScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Vw_inadimplentesCountAggregateInputType | true
+    _avg?: Vw_inadimplentesAvgAggregateInputType
+    _sum?: Vw_inadimplentesSumAggregateInputType
+    _min?: Vw_inadimplentesMinAggregateInputType
+    _max?: Vw_inadimplentesMaxAggregateInputType
+  }
+
+  export type Vw_inadimplentesGroupByOutputType = {
+    customer_id: string
+    nome: string
+    cpf_cnpj: string
+    email: string | null
+    telefone: string | null
+    contrato_id: string
+    numero_contrato: string
+    contrato_situacao: string
+    pagamento_id: string
+    data_vencimento: Date
+    valor_titulo: Decimal
+    nosso_numero: string | null
+    tipo_pagamento: string
+    dias_atraso: number
+    jazigo_codigo: string | null
+    jazigo_quadra: string | null
+    quantidade_gavetas: number | null
+    _count: Vw_inadimplentesCountAggregateOutputType | null
+    _avg: Vw_inadimplentesAvgAggregateOutputType | null
+    _sum: Vw_inadimplentesSumAggregateOutputType | null
+    _min: Vw_inadimplentesMinAggregateOutputType | null
+    _max: Vw_inadimplentesMaxAggregateOutputType | null
+  }
+
+  type GetVw_inadimplentesGroupByPayload<T extends vw_inadimplentesGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Vw_inadimplentesGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Vw_inadimplentesGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Vw_inadimplentesGroupByOutputType[P]>
+            : GetScalarType<T[P], Vw_inadimplentesGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type vw_inadimplentesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    customer_id?: boolean
+    nome?: boolean
+    cpf_cnpj?: boolean
+    email?: boolean
+    telefone?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    pagamento_id?: boolean
+    data_vencimento?: boolean
+    valor_titulo?: boolean
+    nosso_numero?: boolean
+    tipo_pagamento?: boolean
+    dias_atraso?: boolean
+    jazigo_codigo?: boolean
+    jazigo_quadra?: boolean
+    quantidade_gavetas?: boolean
+  }, ExtArgs["result"]["vw_inadimplentes"]>
+
+
+
+  export type vw_inadimplentesSelectScalar = {
+    customer_id?: boolean
+    nome?: boolean
+    cpf_cnpj?: boolean
+    email?: boolean
+    telefone?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    pagamento_id?: boolean
+    data_vencimento?: boolean
+    valor_titulo?: boolean
+    nosso_numero?: boolean
+    tipo_pagamento?: boolean
+    dias_atraso?: boolean
+    jazigo_codigo?: boolean
+    jazigo_quadra?: boolean
+    quantidade_gavetas?: boolean
+  }
+
+  export type vw_inadimplentesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"customer_id" | "nome" | "cpf_cnpj" | "email" | "telefone" | "contrato_id" | "numero_contrato" | "contrato_situacao" | "pagamento_id" | "data_vencimento" | "valor_titulo" | "nosso_numero" | "tipo_pagamento" | "dias_atraso" | "jazigo_codigo" | "jazigo_quadra" | "quantidade_gavetas", ExtArgs["result"]["vw_inadimplentes"]>
+
+  export type $vw_inadimplentesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "vw_inadimplentes"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      customer_id: string
+      nome: string
+      cpf_cnpj: string
+      email: string | null
+      telefone: string | null
+      contrato_id: string
+      numero_contrato: string
+      contrato_situacao: string
+      pagamento_id: string
+      data_vencimento: Date
+      valor_titulo: Prisma.Decimal
+      nosso_numero: string | null
+      tipo_pagamento: string
+      dias_atraso: number
+      jazigo_codigo: string | null
+      jazigo_quadra: string | null
+      quantidade_gavetas: number | null
+    }, ExtArgs["result"]["vw_inadimplentes"]>
+    composites: {}
+  }
+
+  type vw_inadimplentesGetPayload<S extends boolean | null | undefined | vw_inadimplentesDefaultArgs> = $Result.GetResult<Prisma.$vw_inadimplentesPayload, S>
+
+  type vw_inadimplentesCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<vw_inadimplentesFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Vw_inadimplentesCountAggregateInputType | true
+    }
+
+  export interface vw_inadimplentesDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['vw_inadimplentes'], meta: { name: 'vw_inadimplentes' } }
+    /**
+     * Find zero or one Vw_inadimplentes that matches the filter.
+     * @param {vw_inadimplentesFindUniqueArgs} args - Arguments to find a Vw_inadimplentes
+     * @example
+     * // Get one Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends vw_inadimplentesFindUniqueArgs>(args: SelectSubset<T, vw_inadimplentesFindUniqueArgs<ExtArgs>>): Prisma__vw_inadimplentesClient<$Result.GetResult<Prisma.$vw_inadimplentesPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Vw_inadimplentes that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {vw_inadimplentesFindUniqueOrThrowArgs} args - Arguments to find a Vw_inadimplentes
+     * @example
+     * // Get one Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends vw_inadimplentesFindUniqueOrThrowArgs>(args: SelectSubset<T, vw_inadimplentesFindUniqueOrThrowArgs<ExtArgs>>): Prisma__vw_inadimplentesClient<$Result.GetResult<Prisma.$vw_inadimplentesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_inadimplentes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_inadimplentesFindFirstArgs} args - Arguments to find a Vw_inadimplentes
+     * @example
+     * // Get one Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends vw_inadimplentesFindFirstArgs>(args?: SelectSubset<T, vw_inadimplentesFindFirstArgs<ExtArgs>>): Prisma__vw_inadimplentesClient<$Result.GetResult<Prisma.$vw_inadimplentesPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_inadimplentes that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_inadimplentesFindFirstOrThrowArgs} args - Arguments to find a Vw_inadimplentes
+     * @example
+     * // Get one Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends vw_inadimplentesFindFirstOrThrowArgs>(args?: SelectSubset<T, vw_inadimplentesFindFirstOrThrowArgs<ExtArgs>>): Prisma__vw_inadimplentesClient<$Result.GetResult<Prisma.$vw_inadimplentesPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Vw_inadimplentes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_inadimplentesFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findMany()
+     * 
+     * // Get first 10 Vw_inadimplentes
+     * const vw_inadimplentes = await prisma.vw_inadimplentes.findMany({ take: 10 })
+     * 
+     * // Only select the `customer_id`
+     * const vw_inadimplentesWithCustomer_idOnly = await prisma.vw_inadimplentes.findMany({ select: { customer_id: true } })
+     * 
+     */
+    findMany<T extends vw_inadimplentesFindManyArgs>(args?: SelectSubset<T, vw_inadimplentesFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$vw_inadimplentesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Vw_inadimplentes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_inadimplentesCountArgs} args - Arguments to filter Vw_inadimplentes to count.
+     * @example
+     * // Count the number of Vw_inadimplentes
+     * const count = await prisma.vw_inadimplentes.count({
+     *   where: {
+     *     // ... the filter for the Vw_inadimplentes we want to count
+     *   }
+     * })
+    **/
+    count<T extends vw_inadimplentesCountArgs>(
+      args?: Subset<T, vw_inadimplentesCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Vw_inadimplentesCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Vw_inadimplentes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Vw_inadimplentesAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Vw_inadimplentesAggregateArgs>(args: Subset<T, Vw_inadimplentesAggregateArgs>): Prisma.PrismaPromise<GetVw_inadimplentesAggregateType<T>>
+
+    /**
+     * Group by Vw_inadimplentes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_inadimplentesGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends vw_inadimplentesGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: vw_inadimplentesGroupByArgs['orderBy'] }
+        : { orderBy?: vw_inadimplentesGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, vw_inadimplentesGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVw_inadimplentesGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the vw_inadimplentes model
+   */
+  readonly fields: vw_inadimplentesFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for vw_inadimplentes.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__vw_inadimplentesClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the vw_inadimplentes model
+   */
+  interface vw_inadimplentesFieldRefs {
+    readonly customer_id: FieldRef<"vw_inadimplentes", 'String'>
+    readonly nome: FieldRef<"vw_inadimplentes", 'String'>
+    readonly cpf_cnpj: FieldRef<"vw_inadimplentes", 'String'>
+    readonly email: FieldRef<"vw_inadimplentes", 'String'>
+    readonly telefone: FieldRef<"vw_inadimplentes", 'String'>
+    readonly contrato_id: FieldRef<"vw_inadimplentes", 'String'>
+    readonly numero_contrato: FieldRef<"vw_inadimplentes", 'String'>
+    readonly contrato_situacao: FieldRef<"vw_inadimplentes", 'String'>
+    readonly pagamento_id: FieldRef<"vw_inadimplentes", 'String'>
+    readonly data_vencimento: FieldRef<"vw_inadimplentes", 'DateTime'>
+    readonly valor_titulo: FieldRef<"vw_inadimplentes", 'Decimal'>
+    readonly nosso_numero: FieldRef<"vw_inadimplentes", 'String'>
+    readonly tipo_pagamento: FieldRef<"vw_inadimplentes", 'String'>
+    readonly dias_atraso: FieldRef<"vw_inadimplentes", 'Int'>
+    readonly jazigo_codigo: FieldRef<"vw_inadimplentes", 'String'>
+    readonly jazigo_quadra: FieldRef<"vw_inadimplentes", 'String'>
+    readonly quantidade_gavetas: FieldRef<"vw_inadimplentes", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * vw_inadimplentes findUnique
+   */
+  export type vw_inadimplentesFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_inadimplentes to fetch.
+     */
+    where: vw_inadimplentesWhereUniqueInput
+  }
+
+  /**
+   * vw_inadimplentes findUniqueOrThrow
+   */
+  export type vw_inadimplentesFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_inadimplentes to fetch.
+     */
+    where: vw_inadimplentesWhereUniqueInput
+  }
+
+  /**
+   * vw_inadimplentes findFirst
+   */
+  export type vw_inadimplentesFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_inadimplentes to fetch.
+     */
+    where?: vw_inadimplentesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_inadimplentes to fetch.
+     */
+    orderBy?: vw_inadimplentesOrderByWithRelationInput | vw_inadimplentesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_inadimplentes.
+     */
+    cursor?: vw_inadimplentesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_inadimplentes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_inadimplentes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_inadimplentes.
+     */
+    distinct?: Vw_inadimplentesScalarFieldEnum | Vw_inadimplentesScalarFieldEnum[]
+  }
+
+  /**
+   * vw_inadimplentes findFirstOrThrow
+   */
+  export type vw_inadimplentesFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_inadimplentes to fetch.
+     */
+    where?: vw_inadimplentesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_inadimplentes to fetch.
+     */
+    orderBy?: vw_inadimplentesOrderByWithRelationInput | vw_inadimplentesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_inadimplentes.
+     */
+    cursor?: vw_inadimplentesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_inadimplentes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_inadimplentes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_inadimplentes.
+     */
+    distinct?: Vw_inadimplentesScalarFieldEnum | Vw_inadimplentesScalarFieldEnum[]
+  }
+
+  /**
+   * vw_inadimplentes findMany
+   */
+  export type vw_inadimplentesFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_inadimplentes to fetch.
+     */
+    where?: vw_inadimplentesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_inadimplentes to fetch.
+     */
+    orderBy?: vw_inadimplentesOrderByWithRelationInput | vw_inadimplentesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing vw_inadimplentes.
+     */
+    cursor?: vw_inadimplentesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_inadimplentes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_inadimplentes.
+     */
+    skip?: number
+    distinct?: Vw_inadimplentesScalarFieldEnum | Vw_inadimplentesScalarFieldEnum[]
+  }
+
+  /**
+   * vw_inadimplentes without action
+   */
+  export type vw_inadimplentesDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_inadimplentes
+     */
+    select?: vw_inadimplentesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_inadimplentes
+     */
+    omit?: vw_inadimplentesOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model vw_extrato_cliente
+   */
+
+  export type AggregateVw_extrato_cliente = {
+    _count: Vw_extrato_clienteCountAggregateOutputType | null
+    _avg: Vw_extrato_clienteAvgAggregateOutputType | null
+    _sum: Vw_extrato_clienteSumAggregateOutputType | null
+    _min: Vw_extrato_clienteMinAggregateOutputType | null
+    _max: Vw_extrato_clienteMaxAggregateOutputType | null
+  }
+
+  export type Vw_extrato_clienteAvgAggregateOutputType = {
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    valor_titulo: Decimal | null
+    valor_pago: Decimal | null
+    valor_liquido: Decimal | null
+    dias_atraso: number | null
+  }
+
+  export type Vw_extrato_clienteSumAggregateOutputType = {
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    valor_titulo: Decimal | null
+    valor_pago: Decimal | null
+    valor_liquido: Decimal | null
+    dias_atraso: number | null
+  }
+
+  export type Vw_extrato_clienteMinAggregateOutputType = {
+    customer_id: string | null
+    nome: string | null
+    cpf_cnpj: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    jazigo_codigo: string | null
+    quadra: string | null
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    pagamento_id: string | null
+    tipo_pagamento: string | null
+    status: string | null
+    data_vencimento: Date | null
+    data_pagamento: Date | null
+    valor_titulo: Decimal | null
+    valor_pago: Decimal | null
+    valor_liquido: Decimal | null
+    nosso_numero: string | null
+    metodo_pagamento: string | null
+    invoice_url: string | null
+    dias_atraso: number | null
+  }
+
+  export type Vw_extrato_clienteMaxAggregateOutputType = {
+    customer_id: string | null
+    nome: string | null
+    cpf_cnpj: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    jazigo_codigo: string | null
+    quadra: string | null
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    pagamento_id: string | null
+    tipo_pagamento: string | null
+    status: string | null
+    data_vencimento: Date | null
+    data_pagamento: Date | null
+    valor_titulo: Decimal | null
+    valor_pago: Decimal | null
+    valor_liquido: Decimal | null
+    nosso_numero: string | null
+    metodo_pagamento: string | null
+    invoice_url: string | null
+    dias_atraso: number | null
+  }
+
+  export type Vw_extrato_clienteCountAggregateOutputType = {
+    customer_id: number
+    nome: number
+    cpf_cnpj: number
+    numero_contrato: number
+    contrato_situacao: number
+    jazigo_codigo: number
+    quadra: number
+    quantidade_gavetas: number
+    valor_mensalidade: number
+    pagamento_id: number
+    tipo_pagamento: number
+    status: number
+    data_vencimento: number
+    data_pagamento: number
+    valor_titulo: number
+    valor_pago: number
+    valor_liquido: number
+    nosso_numero: number
+    metodo_pagamento: number
+    invoice_url: number
+    dias_atraso: number
+    _all: number
+  }
+
+
+  export type Vw_extrato_clienteAvgAggregateInputType = {
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    valor_titulo?: true
+    valor_pago?: true
+    valor_liquido?: true
+    dias_atraso?: true
+  }
+
+  export type Vw_extrato_clienteSumAggregateInputType = {
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    valor_titulo?: true
+    valor_pago?: true
+    valor_liquido?: true
+    dias_atraso?: true
+  }
+
+  export type Vw_extrato_clienteMinAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    jazigo_codigo?: true
+    quadra?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    pagamento_id?: true
+    tipo_pagamento?: true
+    status?: true
+    data_vencimento?: true
+    data_pagamento?: true
+    valor_titulo?: true
+    valor_pago?: true
+    valor_liquido?: true
+    nosso_numero?: true
+    metodo_pagamento?: true
+    invoice_url?: true
+    dias_atraso?: true
+  }
+
+  export type Vw_extrato_clienteMaxAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    jazigo_codigo?: true
+    quadra?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    pagamento_id?: true
+    tipo_pagamento?: true
+    status?: true
+    data_vencimento?: true
+    data_pagamento?: true
+    valor_titulo?: true
+    valor_pago?: true
+    valor_liquido?: true
+    nosso_numero?: true
+    metodo_pagamento?: true
+    invoice_url?: true
+    dias_atraso?: true
+  }
+
+  export type Vw_extrato_clienteCountAggregateInputType = {
+    customer_id?: true
+    nome?: true
+    cpf_cnpj?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    jazigo_codigo?: true
+    quadra?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    pagamento_id?: true
+    tipo_pagamento?: true
+    status?: true
+    data_vencimento?: true
+    data_pagamento?: true
+    valor_titulo?: true
+    valor_pago?: true
+    valor_liquido?: true
+    nosso_numero?: true
+    metodo_pagamento?: true
+    invoice_url?: true
+    dias_atraso?: true
+    _all?: true
+  }
+
+  export type Vw_extrato_clienteAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which vw_extrato_cliente to aggregate.
+     */
+    where?: vw_extrato_clienteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_extrato_clientes to fetch.
+     */
+    orderBy?: vw_extrato_clienteOrderByWithRelationInput | vw_extrato_clienteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: vw_extrato_clienteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_extrato_clientes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_extrato_clientes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned vw_extrato_clientes
+    **/
+    _count?: true | Vw_extrato_clienteCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Vw_extrato_clienteAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Vw_extrato_clienteSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Vw_extrato_clienteMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Vw_extrato_clienteMaxAggregateInputType
+  }
+
+  export type GetVw_extrato_clienteAggregateType<T extends Vw_extrato_clienteAggregateArgs> = {
+        [P in keyof T & keyof AggregateVw_extrato_cliente]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVw_extrato_cliente[P]>
+      : GetScalarType<T[P], AggregateVw_extrato_cliente[P]>
+  }
+
+
+
+
+  export type vw_extrato_clienteGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: vw_extrato_clienteWhereInput
+    orderBy?: vw_extrato_clienteOrderByWithAggregationInput | vw_extrato_clienteOrderByWithAggregationInput[]
+    by: Vw_extrato_clienteScalarFieldEnum[] | Vw_extrato_clienteScalarFieldEnum
+    having?: vw_extrato_clienteScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Vw_extrato_clienteCountAggregateInputType | true
+    _avg?: Vw_extrato_clienteAvgAggregateInputType
+    _sum?: Vw_extrato_clienteSumAggregateInputType
+    _min?: Vw_extrato_clienteMinAggregateInputType
+    _max?: Vw_extrato_clienteMaxAggregateInputType
+  }
+
+  export type Vw_extrato_clienteGroupByOutputType = {
+    customer_id: string
+    nome: string
+    cpf_cnpj: string
+    numero_contrato: string
+    contrato_situacao: string
+    jazigo_codigo: string | null
+    quadra: string | null
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    pagamento_id: string
+    tipo_pagamento: string
+    status: string
+    data_vencimento: Date
+    data_pagamento: Date | null
+    valor_titulo: Decimal
+    valor_pago: Decimal | null
+    valor_liquido: Decimal | null
+    nosso_numero: string | null
+    metodo_pagamento: string | null
+    invoice_url: string | null
+    dias_atraso: number
+    _count: Vw_extrato_clienteCountAggregateOutputType | null
+    _avg: Vw_extrato_clienteAvgAggregateOutputType | null
+    _sum: Vw_extrato_clienteSumAggregateOutputType | null
+    _min: Vw_extrato_clienteMinAggregateOutputType | null
+    _max: Vw_extrato_clienteMaxAggregateOutputType | null
+  }
+
+  type GetVw_extrato_clienteGroupByPayload<T extends vw_extrato_clienteGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Vw_extrato_clienteGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Vw_extrato_clienteGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Vw_extrato_clienteGroupByOutputType[P]>
+            : GetScalarType<T[P], Vw_extrato_clienteGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type vw_extrato_clienteSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    customer_id?: boolean
+    nome?: boolean
+    cpf_cnpj?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    jazigo_codigo?: boolean
+    quadra?: boolean
+    quantidade_gavetas?: boolean
+    valor_mensalidade?: boolean
+    pagamento_id?: boolean
+    tipo_pagamento?: boolean
+    status?: boolean
+    data_vencimento?: boolean
+    data_pagamento?: boolean
+    valor_titulo?: boolean
+    valor_pago?: boolean
+    valor_liquido?: boolean
+    nosso_numero?: boolean
+    metodo_pagamento?: boolean
+    invoice_url?: boolean
+    dias_atraso?: boolean
+  }, ExtArgs["result"]["vw_extrato_cliente"]>
+
+
+
+  export type vw_extrato_clienteSelectScalar = {
+    customer_id?: boolean
+    nome?: boolean
+    cpf_cnpj?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    jazigo_codigo?: boolean
+    quadra?: boolean
+    quantidade_gavetas?: boolean
+    valor_mensalidade?: boolean
+    pagamento_id?: boolean
+    tipo_pagamento?: boolean
+    status?: boolean
+    data_vencimento?: boolean
+    data_pagamento?: boolean
+    valor_titulo?: boolean
+    valor_pago?: boolean
+    valor_liquido?: boolean
+    nosso_numero?: boolean
+    metodo_pagamento?: boolean
+    invoice_url?: boolean
+    dias_atraso?: boolean
+  }
+
+  export type vw_extrato_clienteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"customer_id" | "nome" | "cpf_cnpj" | "numero_contrato" | "contrato_situacao" | "jazigo_codigo" | "quadra" | "quantidade_gavetas" | "valor_mensalidade" | "pagamento_id" | "tipo_pagamento" | "status" | "data_vencimento" | "data_pagamento" | "valor_titulo" | "valor_pago" | "valor_liquido" | "nosso_numero" | "metodo_pagamento" | "invoice_url" | "dias_atraso", ExtArgs["result"]["vw_extrato_cliente"]>
+
+  export type $vw_extrato_clientePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "vw_extrato_cliente"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      customer_id: string
+      nome: string
+      cpf_cnpj: string
+      numero_contrato: string
+      contrato_situacao: string
+      jazigo_codigo: string | null
+      quadra: string | null
+      quantidade_gavetas: number | null
+      valor_mensalidade: Prisma.Decimal | null
+      pagamento_id: string
+      tipo_pagamento: string
+      status: string
+      data_vencimento: Date
+      data_pagamento: Date | null
+      valor_titulo: Prisma.Decimal
+      valor_pago: Prisma.Decimal | null
+      valor_liquido: Prisma.Decimal | null
+      nosso_numero: string | null
+      metodo_pagamento: string | null
+      invoice_url: string | null
+      dias_atraso: number
+    }, ExtArgs["result"]["vw_extrato_cliente"]>
+    composites: {}
+  }
+
+  type vw_extrato_clienteGetPayload<S extends boolean | null | undefined | vw_extrato_clienteDefaultArgs> = $Result.GetResult<Prisma.$vw_extrato_clientePayload, S>
+
+  type vw_extrato_clienteCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<vw_extrato_clienteFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Vw_extrato_clienteCountAggregateInputType | true
+    }
+
+  export interface vw_extrato_clienteDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['vw_extrato_cliente'], meta: { name: 'vw_extrato_cliente' } }
+    /**
+     * Find zero or one Vw_extrato_cliente that matches the filter.
+     * @param {vw_extrato_clienteFindUniqueArgs} args - Arguments to find a Vw_extrato_cliente
+     * @example
+     * // Get one Vw_extrato_cliente
+     * const vw_extrato_cliente = await prisma.vw_extrato_cliente.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends vw_extrato_clienteFindUniqueArgs>(args: SelectSubset<T, vw_extrato_clienteFindUniqueArgs<ExtArgs>>): Prisma__vw_extrato_clienteClient<$Result.GetResult<Prisma.$vw_extrato_clientePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Vw_extrato_cliente that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {vw_extrato_clienteFindUniqueOrThrowArgs} args - Arguments to find a Vw_extrato_cliente
+     * @example
+     * // Get one Vw_extrato_cliente
+     * const vw_extrato_cliente = await prisma.vw_extrato_cliente.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends vw_extrato_clienteFindUniqueOrThrowArgs>(args: SelectSubset<T, vw_extrato_clienteFindUniqueOrThrowArgs<ExtArgs>>): Prisma__vw_extrato_clienteClient<$Result.GetResult<Prisma.$vw_extrato_clientePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_extrato_cliente that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_extrato_clienteFindFirstArgs} args - Arguments to find a Vw_extrato_cliente
+     * @example
+     * // Get one Vw_extrato_cliente
+     * const vw_extrato_cliente = await prisma.vw_extrato_cliente.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends vw_extrato_clienteFindFirstArgs>(args?: SelectSubset<T, vw_extrato_clienteFindFirstArgs<ExtArgs>>): Prisma__vw_extrato_clienteClient<$Result.GetResult<Prisma.$vw_extrato_clientePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_extrato_cliente that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_extrato_clienteFindFirstOrThrowArgs} args - Arguments to find a Vw_extrato_cliente
+     * @example
+     * // Get one Vw_extrato_cliente
+     * const vw_extrato_cliente = await prisma.vw_extrato_cliente.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends vw_extrato_clienteFindFirstOrThrowArgs>(args?: SelectSubset<T, vw_extrato_clienteFindFirstOrThrowArgs<ExtArgs>>): Prisma__vw_extrato_clienteClient<$Result.GetResult<Prisma.$vw_extrato_clientePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Vw_extrato_clientes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_extrato_clienteFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Vw_extrato_clientes
+     * const vw_extrato_clientes = await prisma.vw_extrato_cliente.findMany()
+     * 
+     * // Get first 10 Vw_extrato_clientes
+     * const vw_extrato_clientes = await prisma.vw_extrato_cliente.findMany({ take: 10 })
+     * 
+     * // Only select the `customer_id`
+     * const vw_extrato_clienteWithCustomer_idOnly = await prisma.vw_extrato_cliente.findMany({ select: { customer_id: true } })
+     * 
+     */
+    findMany<T extends vw_extrato_clienteFindManyArgs>(args?: SelectSubset<T, vw_extrato_clienteFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$vw_extrato_clientePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Vw_extrato_clientes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_extrato_clienteCountArgs} args - Arguments to filter Vw_extrato_clientes to count.
+     * @example
+     * // Count the number of Vw_extrato_clientes
+     * const count = await prisma.vw_extrato_cliente.count({
+     *   where: {
+     *     // ... the filter for the Vw_extrato_clientes we want to count
+     *   }
+     * })
+    **/
+    count<T extends vw_extrato_clienteCountArgs>(
+      args?: Subset<T, vw_extrato_clienteCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Vw_extrato_clienteCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Vw_extrato_cliente.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Vw_extrato_clienteAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Vw_extrato_clienteAggregateArgs>(args: Subset<T, Vw_extrato_clienteAggregateArgs>): Prisma.PrismaPromise<GetVw_extrato_clienteAggregateType<T>>
+
+    /**
+     * Group by Vw_extrato_cliente.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_extrato_clienteGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends vw_extrato_clienteGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: vw_extrato_clienteGroupByArgs['orderBy'] }
+        : { orderBy?: vw_extrato_clienteGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, vw_extrato_clienteGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVw_extrato_clienteGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the vw_extrato_cliente model
+   */
+  readonly fields: vw_extrato_clienteFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for vw_extrato_cliente.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__vw_extrato_clienteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the vw_extrato_cliente model
+   */
+  interface vw_extrato_clienteFieldRefs {
+    readonly customer_id: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly nome: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly cpf_cnpj: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly numero_contrato: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly contrato_situacao: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly jazigo_codigo: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly quadra: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly quantidade_gavetas: FieldRef<"vw_extrato_cliente", 'Int'>
+    readonly valor_mensalidade: FieldRef<"vw_extrato_cliente", 'Decimal'>
+    readonly pagamento_id: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly tipo_pagamento: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly status: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly data_vencimento: FieldRef<"vw_extrato_cliente", 'DateTime'>
+    readonly data_pagamento: FieldRef<"vw_extrato_cliente", 'DateTime'>
+    readonly valor_titulo: FieldRef<"vw_extrato_cliente", 'Decimal'>
+    readonly valor_pago: FieldRef<"vw_extrato_cliente", 'Decimal'>
+    readonly valor_liquido: FieldRef<"vw_extrato_cliente", 'Decimal'>
+    readonly nosso_numero: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly metodo_pagamento: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly invoice_url: FieldRef<"vw_extrato_cliente", 'String'>
+    readonly dias_atraso: FieldRef<"vw_extrato_cliente", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * vw_extrato_cliente findUnique
+   */
+  export type vw_extrato_clienteFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_extrato_cliente to fetch.
+     */
+    where: vw_extrato_clienteWhereUniqueInput
+  }
+
+  /**
+   * vw_extrato_cliente findUniqueOrThrow
+   */
+  export type vw_extrato_clienteFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_extrato_cliente to fetch.
+     */
+    where: vw_extrato_clienteWhereUniqueInput
+  }
+
+  /**
+   * vw_extrato_cliente findFirst
+   */
+  export type vw_extrato_clienteFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_extrato_cliente to fetch.
+     */
+    where?: vw_extrato_clienteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_extrato_clientes to fetch.
+     */
+    orderBy?: vw_extrato_clienteOrderByWithRelationInput | vw_extrato_clienteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_extrato_clientes.
+     */
+    cursor?: vw_extrato_clienteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_extrato_clientes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_extrato_clientes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_extrato_clientes.
+     */
+    distinct?: Vw_extrato_clienteScalarFieldEnum | Vw_extrato_clienteScalarFieldEnum[]
+  }
+
+  /**
+   * vw_extrato_cliente findFirstOrThrow
+   */
+  export type vw_extrato_clienteFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_extrato_cliente to fetch.
+     */
+    where?: vw_extrato_clienteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_extrato_clientes to fetch.
+     */
+    orderBy?: vw_extrato_clienteOrderByWithRelationInput | vw_extrato_clienteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_extrato_clientes.
+     */
+    cursor?: vw_extrato_clienteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_extrato_clientes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_extrato_clientes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_extrato_clientes.
+     */
+    distinct?: Vw_extrato_clienteScalarFieldEnum | Vw_extrato_clienteScalarFieldEnum[]
+  }
+
+  /**
+   * vw_extrato_cliente findMany
+   */
+  export type vw_extrato_clienteFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_extrato_clientes to fetch.
+     */
+    where?: vw_extrato_clienteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_extrato_clientes to fetch.
+     */
+    orderBy?: vw_extrato_clienteOrderByWithRelationInput | vw_extrato_clienteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing vw_extrato_clientes.
+     */
+    cursor?: vw_extrato_clienteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_extrato_clientes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_extrato_clientes.
+     */
+    skip?: number
+    distinct?: Vw_extrato_clienteScalarFieldEnum | Vw_extrato_clienteScalarFieldEnum[]
+  }
+
+  /**
+   * vw_extrato_cliente without action
+   */
+  export type vw_extrato_clienteDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_extrato_cliente
+     */
+    select?: vw_extrato_clienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_extrato_cliente
+     */
+    omit?: vw_extrato_clienteOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model vw_dashboard_financeiro
+   */
+
+  export type AggregateVw_dashboard_financeiro = {
+    _count: Vw_dashboard_financeiroCountAggregateOutputType | null
+    _avg: Vw_dashboard_financeiroAvgAggregateOutputType | null
+    _sum: Vw_dashboard_financeiroSumAggregateOutputType | null
+    _min: Vw_dashboard_financeiroMinAggregateOutputType | null
+    _max: Vw_dashboard_financeiroMaxAggregateOutputType | null
+  }
+
+  export type Vw_dashboard_financeiroAvgAggregateOutputType = {
+    total_pagos: number | null
+    total_pendentes: number | null
+    total_atrasados: number | null
+    total_cancelados: number | null
+    valor_recebido: Decimal | null
+    valor_a_receber: Decimal | null
+    valor_em_atraso: Decimal | null
+    pagos_mes_atual: number | null
+    valor_recebido_mes_atual: Decimal | null
+    id: number | null
+  }
+
+  export type Vw_dashboard_financeiroSumAggregateOutputType = {
+    total_pagos: bigint | null
+    total_pendentes: bigint | null
+    total_atrasados: bigint | null
+    total_cancelados: bigint | null
+    valor_recebido: Decimal | null
+    valor_a_receber: Decimal | null
+    valor_em_atraso: Decimal | null
+    pagos_mes_atual: bigint | null
+    valor_recebido_mes_atual: Decimal | null
+    id: number | null
+  }
+
+  export type Vw_dashboard_financeiroMinAggregateOutputType = {
+    total_pagos: bigint | null
+    total_pendentes: bigint | null
+    total_atrasados: bigint | null
+    total_cancelados: bigint | null
+    valor_recebido: Decimal | null
+    valor_a_receber: Decimal | null
+    valor_em_atraso: Decimal | null
+    pagos_mes_atual: bigint | null
+    valor_recebido_mes_atual: Decimal | null
+    id: number | null
+  }
+
+  export type Vw_dashboard_financeiroMaxAggregateOutputType = {
+    total_pagos: bigint | null
+    total_pendentes: bigint | null
+    total_atrasados: bigint | null
+    total_cancelados: bigint | null
+    valor_recebido: Decimal | null
+    valor_a_receber: Decimal | null
+    valor_em_atraso: Decimal | null
+    pagos_mes_atual: bigint | null
+    valor_recebido_mes_atual: Decimal | null
+    id: number | null
+  }
+
+  export type Vw_dashboard_financeiroCountAggregateOutputType = {
+    total_pagos: number
+    total_pendentes: number
+    total_atrasados: number
+    total_cancelados: number
+    valor_recebido: number
+    valor_a_receber: number
+    valor_em_atraso: number
+    pagos_mes_atual: number
+    valor_recebido_mes_atual: number
+    id: number
+    _all: number
+  }
+
+
+  export type Vw_dashboard_financeiroAvgAggregateInputType = {
+    total_pagos?: true
+    total_pendentes?: true
+    total_atrasados?: true
+    total_cancelados?: true
+    valor_recebido?: true
+    valor_a_receber?: true
+    valor_em_atraso?: true
+    pagos_mes_atual?: true
+    valor_recebido_mes_atual?: true
+    id?: true
+  }
+
+  export type Vw_dashboard_financeiroSumAggregateInputType = {
+    total_pagos?: true
+    total_pendentes?: true
+    total_atrasados?: true
+    total_cancelados?: true
+    valor_recebido?: true
+    valor_a_receber?: true
+    valor_em_atraso?: true
+    pagos_mes_atual?: true
+    valor_recebido_mes_atual?: true
+    id?: true
+  }
+
+  export type Vw_dashboard_financeiroMinAggregateInputType = {
+    total_pagos?: true
+    total_pendentes?: true
+    total_atrasados?: true
+    total_cancelados?: true
+    valor_recebido?: true
+    valor_a_receber?: true
+    valor_em_atraso?: true
+    pagos_mes_atual?: true
+    valor_recebido_mes_atual?: true
+    id?: true
+  }
+
+  export type Vw_dashboard_financeiroMaxAggregateInputType = {
+    total_pagos?: true
+    total_pendentes?: true
+    total_atrasados?: true
+    total_cancelados?: true
+    valor_recebido?: true
+    valor_a_receber?: true
+    valor_em_atraso?: true
+    pagos_mes_atual?: true
+    valor_recebido_mes_atual?: true
+    id?: true
+  }
+
+  export type Vw_dashboard_financeiroCountAggregateInputType = {
+    total_pagos?: true
+    total_pendentes?: true
+    total_atrasados?: true
+    total_cancelados?: true
+    valor_recebido?: true
+    valor_a_receber?: true
+    valor_em_atraso?: true
+    pagos_mes_atual?: true
+    valor_recebido_mes_atual?: true
+    id?: true
+    _all?: true
+  }
+
+  export type Vw_dashboard_financeiroAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which vw_dashboard_financeiro to aggregate.
+     */
+    where?: vw_dashboard_financeiroWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_dashboard_financeiros to fetch.
+     */
+    orderBy?: vw_dashboard_financeiroOrderByWithRelationInput | vw_dashboard_financeiroOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: vw_dashboard_financeiroWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_dashboard_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_dashboard_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned vw_dashboard_financeiros
+    **/
+    _count?: true | Vw_dashboard_financeiroCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Vw_dashboard_financeiroAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Vw_dashboard_financeiroSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Vw_dashboard_financeiroMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Vw_dashboard_financeiroMaxAggregateInputType
+  }
+
+  export type GetVw_dashboard_financeiroAggregateType<T extends Vw_dashboard_financeiroAggregateArgs> = {
+        [P in keyof T & keyof AggregateVw_dashboard_financeiro]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVw_dashboard_financeiro[P]>
+      : GetScalarType<T[P], AggregateVw_dashboard_financeiro[P]>
+  }
+
+
+
+
+  export type vw_dashboard_financeiroGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: vw_dashboard_financeiroWhereInput
+    orderBy?: vw_dashboard_financeiroOrderByWithAggregationInput | vw_dashboard_financeiroOrderByWithAggregationInput[]
+    by: Vw_dashboard_financeiroScalarFieldEnum[] | Vw_dashboard_financeiroScalarFieldEnum
+    having?: vw_dashboard_financeiroScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Vw_dashboard_financeiroCountAggregateInputType | true
+    _avg?: Vw_dashboard_financeiroAvgAggregateInputType
+    _sum?: Vw_dashboard_financeiroSumAggregateInputType
+    _min?: Vw_dashboard_financeiroMinAggregateInputType
+    _max?: Vw_dashboard_financeiroMaxAggregateInputType
+  }
+
+  export type Vw_dashboard_financeiroGroupByOutputType = {
+    total_pagos: bigint
+    total_pendentes: bigint
+    total_atrasados: bigint
+    total_cancelados: bigint
+    valor_recebido: Decimal
+    valor_a_receber: Decimal
+    valor_em_atraso: Decimal
+    pagos_mes_atual: bigint
+    valor_recebido_mes_atual: Decimal
+    id: number
+    _count: Vw_dashboard_financeiroCountAggregateOutputType | null
+    _avg: Vw_dashboard_financeiroAvgAggregateOutputType | null
+    _sum: Vw_dashboard_financeiroSumAggregateOutputType | null
+    _min: Vw_dashboard_financeiroMinAggregateOutputType | null
+    _max: Vw_dashboard_financeiroMaxAggregateOutputType | null
+  }
+
+  type GetVw_dashboard_financeiroGroupByPayload<T extends vw_dashboard_financeiroGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Vw_dashboard_financeiroGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Vw_dashboard_financeiroGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Vw_dashboard_financeiroGroupByOutputType[P]>
+            : GetScalarType<T[P], Vw_dashboard_financeiroGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type vw_dashboard_financeiroSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    total_pagos?: boolean
+    total_pendentes?: boolean
+    total_atrasados?: boolean
+    total_cancelados?: boolean
+    valor_recebido?: boolean
+    valor_a_receber?: boolean
+    valor_em_atraso?: boolean
+    pagos_mes_atual?: boolean
+    valor_recebido_mes_atual?: boolean
+    id?: boolean
+  }, ExtArgs["result"]["vw_dashboard_financeiro"]>
+
+
+
+  export type vw_dashboard_financeiroSelectScalar = {
+    total_pagos?: boolean
+    total_pendentes?: boolean
+    total_atrasados?: boolean
+    total_cancelados?: boolean
+    valor_recebido?: boolean
+    valor_a_receber?: boolean
+    valor_em_atraso?: boolean
+    pagos_mes_atual?: boolean
+    valor_recebido_mes_atual?: boolean
+    id?: boolean
+  }
+
+  export type vw_dashboard_financeiroOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"total_pagos" | "total_pendentes" | "total_atrasados" | "total_cancelados" | "valor_recebido" | "valor_a_receber" | "valor_em_atraso" | "pagos_mes_atual" | "valor_recebido_mes_atual" | "id", ExtArgs["result"]["vw_dashboard_financeiro"]>
+
+  export type $vw_dashboard_financeiroPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "vw_dashboard_financeiro"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      total_pagos: bigint
+      total_pendentes: bigint
+      total_atrasados: bigint
+      total_cancelados: bigint
+      valor_recebido: Prisma.Decimal
+      valor_a_receber: Prisma.Decimal
+      valor_em_atraso: Prisma.Decimal
+      pagos_mes_atual: bigint
+      valor_recebido_mes_atual: Prisma.Decimal
+      id: number
+    }, ExtArgs["result"]["vw_dashboard_financeiro"]>
+    composites: {}
+  }
+
+  type vw_dashboard_financeiroGetPayload<S extends boolean | null | undefined | vw_dashboard_financeiroDefaultArgs> = $Result.GetResult<Prisma.$vw_dashboard_financeiroPayload, S>
+
+  type vw_dashboard_financeiroCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<vw_dashboard_financeiroFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Vw_dashboard_financeiroCountAggregateInputType | true
+    }
+
+  export interface vw_dashboard_financeiroDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['vw_dashboard_financeiro'], meta: { name: 'vw_dashboard_financeiro' } }
+    /**
+     * Find zero or one Vw_dashboard_financeiro that matches the filter.
+     * @param {vw_dashboard_financeiroFindUniqueArgs} args - Arguments to find a Vw_dashboard_financeiro
+     * @example
+     * // Get one Vw_dashboard_financeiro
+     * const vw_dashboard_financeiro = await prisma.vw_dashboard_financeiro.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends vw_dashboard_financeiroFindUniqueArgs>(args: SelectSubset<T, vw_dashboard_financeiroFindUniqueArgs<ExtArgs>>): Prisma__vw_dashboard_financeiroClient<$Result.GetResult<Prisma.$vw_dashboard_financeiroPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Vw_dashboard_financeiro that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {vw_dashboard_financeiroFindUniqueOrThrowArgs} args - Arguments to find a Vw_dashboard_financeiro
+     * @example
+     * // Get one Vw_dashboard_financeiro
+     * const vw_dashboard_financeiro = await prisma.vw_dashboard_financeiro.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends vw_dashboard_financeiroFindUniqueOrThrowArgs>(args: SelectSubset<T, vw_dashboard_financeiroFindUniqueOrThrowArgs<ExtArgs>>): Prisma__vw_dashboard_financeiroClient<$Result.GetResult<Prisma.$vw_dashboard_financeiroPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_dashboard_financeiro that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_dashboard_financeiroFindFirstArgs} args - Arguments to find a Vw_dashboard_financeiro
+     * @example
+     * // Get one Vw_dashboard_financeiro
+     * const vw_dashboard_financeiro = await prisma.vw_dashboard_financeiro.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends vw_dashboard_financeiroFindFirstArgs>(args?: SelectSubset<T, vw_dashboard_financeiroFindFirstArgs<ExtArgs>>): Prisma__vw_dashboard_financeiroClient<$Result.GetResult<Prisma.$vw_dashboard_financeiroPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_dashboard_financeiro that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_dashboard_financeiroFindFirstOrThrowArgs} args - Arguments to find a Vw_dashboard_financeiro
+     * @example
+     * // Get one Vw_dashboard_financeiro
+     * const vw_dashboard_financeiro = await prisma.vw_dashboard_financeiro.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends vw_dashboard_financeiroFindFirstOrThrowArgs>(args?: SelectSubset<T, vw_dashboard_financeiroFindFirstOrThrowArgs<ExtArgs>>): Prisma__vw_dashboard_financeiroClient<$Result.GetResult<Prisma.$vw_dashboard_financeiroPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Vw_dashboard_financeiros that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_dashboard_financeiroFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Vw_dashboard_financeiros
+     * const vw_dashboard_financeiros = await prisma.vw_dashboard_financeiro.findMany()
+     * 
+     * // Get first 10 Vw_dashboard_financeiros
+     * const vw_dashboard_financeiros = await prisma.vw_dashboard_financeiro.findMany({ take: 10 })
+     * 
+     * // Only select the `total_pagos`
+     * const vw_dashboard_financeiroWithTotal_pagosOnly = await prisma.vw_dashboard_financeiro.findMany({ select: { total_pagos: true } })
+     * 
+     */
+    findMany<T extends vw_dashboard_financeiroFindManyArgs>(args?: SelectSubset<T, vw_dashboard_financeiroFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$vw_dashboard_financeiroPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Vw_dashboard_financeiros.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_dashboard_financeiroCountArgs} args - Arguments to filter Vw_dashboard_financeiros to count.
+     * @example
+     * // Count the number of Vw_dashboard_financeiros
+     * const count = await prisma.vw_dashboard_financeiro.count({
+     *   where: {
+     *     // ... the filter for the Vw_dashboard_financeiros we want to count
+     *   }
+     * })
+    **/
+    count<T extends vw_dashboard_financeiroCountArgs>(
+      args?: Subset<T, vw_dashboard_financeiroCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Vw_dashboard_financeiroCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Vw_dashboard_financeiro.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Vw_dashboard_financeiroAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Vw_dashboard_financeiroAggregateArgs>(args: Subset<T, Vw_dashboard_financeiroAggregateArgs>): Prisma.PrismaPromise<GetVw_dashboard_financeiroAggregateType<T>>
+
+    /**
+     * Group by Vw_dashboard_financeiro.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_dashboard_financeiroGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends vw_dashboard_financeiroGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: vw_dashboard_financeiroGroupByArgs['orderBy'] }
+        : { orderBy?: vw_dashboard_financeiroGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, vw_dashboard_financeiroGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVw_dashboard_financeiroGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the vw_dashboard_financeiro model
+   */
+  readonly fields: vw_dashboard_financeiroFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for vw_dashboard_financeiro.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__vw_dashboard_financeiroClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the vw_dashboard_financeiro model
+   */
+  interface vw_dashboard_financeiroFieldRefs {
+    readonly total_pagos: FieldRef<"vw_dashboard_financeiro", 'BigInt'>
+    readonly total_pendentes: FieldRef<"vw_dashboard_financeiro", 'BigInt'>
+    readonly total_atrasados: FieldRef<"vw_dashboard_financeiro", 'BigInt'>
+    readonly total_cancelados: FieldRef<"vw_dashboard_financeiro", 'BigInt'>
+    readonly valor_recebido: FieldRef<"vw_dashboard_financeiro", 'Decimal'>
+    readonly valor_a_receber: FieldRef<"vw_dashboard_financeiro", 'Decimal'>
+    readonly valor_em_atraso: FieldRef<"vw_dashboard_financeiro", 'Decimal'>
+    readonly pagos_mes_atual: FieldRef<"vw_dashboard_financeiro", 'BigInt'>
+    readonly valor_recebido_mes_atual: FieldRef<"vw_dashboard_financeiro", 'Decimal'>
+    readonly id: FieldRef<"vw_dashboard_financeiro", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * vw_dashboard_financeiro findUnique
+   */
+  export type vw_dashboard_financeiroFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_dashboard_financeiro to fetch.
+     */
+    where: vw_dashboard_financeiroWhereUniqueInput
+  }
+
+  /**
+   * vw_dashboard_financeiro findUniqueOrThrow
+   */
+  export type vw_dashboard_financeiroFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_dashboard_financeiro to fetch.
+     */
+    where: vw_dashboard_financeiroWhereUniqueInput
+  }
+
+  /**
+   * vw_dashboard_financeiro findFirst
+   */
+  export type vw_dashboard_financeiroFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_dashboard_financeiro to fetch.
+     */
+    where?: vw_dashboard_financeiroWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_dashboard_financeiros to fetch.
+     */
+    orderBy?: vw_dashboard_financeiroOrderByWithRelationInput | vw_dashboard_financeiroOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_dashboard_financeiros.
+     */
+    cursor?: vw_dashboard_financeiroWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_dashboard_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_dashboard_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_dashboard_financeiros.
+     */
+    distinct?: Vw_dashboard_financeiroScalarFieldEnum | Vw_dashboard_financeiroScalarFieldEnum[]
+  }
+
+  /**
+   * vw_dashboard_financeiro findFirstOrThrow
+   */
+  export type vw_dashboard_financeiroFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_dashboard_financeiro to fetch.
+     */
+    where?: vw_dashboard_financeiroWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_dashboard_financeiros to fetch.
+     */
+    orderBy?: vw_dashboard_financeiroOrderByWithRelationInput | vw_dashboard_financeiroOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_dashboard_financeiros.
+     */
+    cursor?: vw_dashboard_financeiroWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_dashboard_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_dashboard_financeiros.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_dashboard_financeiros.
+     */
+    distinct?: Vw_dashboard_financeiroScalarFieldEnum | Vw_dashboard_financeiroScalarFieldEnum[]
+  }
+
+  /**
+   * vw_dashboard_financeiro findMany
+   */
+  export type vw_dashboard_financeiroFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_dashboard_financeiros to fetch.
+     */
+    where?: vw_dashboard_financeiroWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_dashboard_financeiros to fetch.
+     */
+    orderBy?: vw_dashboard_financeiroOrderByWithRelationInput | vw_dashboard_financeiroOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing vw_dashboard_financeiros.
+     */
+    cursor?: vw_dashboard_financeiroWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_dashboard_financeiros from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_dashboard_financeiros.
+     */
+    skip?: number
+    distinct?: Vw_dashboard_financeiroScalarFieldEnum | Vw_dashboard_financeiroScalarFieldEnum[]
+  }
+
+  /**
+   * vw_dashboard_financeiro without action
+   */
+  export type vw_dashboard_financeiroDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_dashboard_financeiro
+     */
+    select?: vw_dashboard_financeiroSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_dashboard_financeiro
+     */
+    omit?: vw_dashboard_financeiroOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model vw_jazigos_por_contrato
+   */
+
+  export type AggregateVw_jazigos_por_contrato = {
+    _count: Vw_jazigos_por_contratoCountAggregateOutputType | null
+    _avg: Vw_jazigos_por_contratoAvgAggregateOutputType | null
+    _sum: Vw_jazigos_por_contratoSumAggregateOutputType | null
+    _min: Vw_jazigos_por_contratoMinAggregateOutputType | null
+    _max: Vw_jazigos_por_contratoMaxAggregateOutputType | null
+  }
+
+  export type Vw_jazigos_por_contratoAvgAggregateOutputType = {
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+  }
+
+  export type Vw_jazigos_por_contratoSumAggregateOutputType = {
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+  }
+
+  export type Vw_jazigos_por_contratoMinAggregateOutputType = {
+    jazigo_id: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    customer_id: string | null
+    titular_nome: string | null
+    titular_cpf: string | null
+    responsavel_nome: string | null
+    responsavel_cpf: string | null
+    codigo: string | null
+    quadra: string | null
+    setor: string | null
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    status_financeiro: string | null
+  }
+
+  export type Vw_jazigos_por_contratoMaxAggregateOutputType = {
+    jazigo_id: string | null
+    contrato_id: string | null
+    numero_contrato: string | null
+    contrato_situacao: string | null
+    customer_id: string | null
+    titular_nome: string | null
+    titular_cpf: string | null
+    responsavel_nome: string | null
+    responsavel_cpf: string | null
+    codigo: string | null
+    quadra: string | null
+    setor: string | null
+    quantidade_gavetas: number | null
+    valor_mensalidade: Decimal | null
+    status_financeiro: string | null
+  }
+
+  export type Vw_jazigos_por_contratoCountAggregateOutputType = {
+    jazigo_id: number
+    contrato_id: number
+    numero_contrato: number
+    contrato_situacao: number
+    customer_id: number
+    titular_nome: number
+    titular_cpf: number
+    responsavel_nome: number
+    responsavel_cpf: number
+    codigo: number
+    quadra: number
+    setor: number
+    quantidade_gavetas: number
+    valor_mensalidade: number
+    status_financeiro: number
+    _all: number
+  }
+
+
+  export type Vw_jazigos_por_contratoAvgAggregateInputType = {
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+  }
+
+  export type Vw_jazigos_por_contratoSumAggregateInputType = {
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+  }
+
+  export type Vw_jazigos_por_contratoMinAggregateInputType = {
+    jazigo_id?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    customer_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    codigo?: true
+    quadra?: true
+    setor?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    status_financeiro?: true
+  }
+
+  export type Vw_jazigos_por_contratoMaxAggregateInputType = {
+    jazigo_id?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    customer_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    codigo?: true
+    quadra?: true
+    setor?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    status_financeiro?: true
+  }
+
+  export type Vw_jazigos_por_contratoCountAggregateInputType = {
+    jazigo_id?: true
+    contrato_id?: true
+    numero_contrato?: true
+    contrato_situacao?: true
+    customer_id?: true
+    titular_nome?: true
+    titular_cpf?: true
+    responsavel_nome?: true
+    responsavel_cpf?: true
+    codigo?: true
+    quadra?: true
+    setor?: true
+    quantidade_gavetas?: true
+    valor_mensalidade?: true
+    status_financeiro?: true
+    _all?: true
+  }
+
+  export type Vw_jazigos_por_contratoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which vw_jazigos_por_contrato to aggregate.
+     */
+    where?: vw_jazigos_por_contratoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_jazigos_por_contratoes to fetch.
+     */
+    orderBy?: vw_jazigos_por_contratoOrderByWithRelationInput | vw_jazigos_por_contratoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: vw_jazigos_por_contratoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_jazigos_por_contratoes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_jazigos_por_contratoes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned vw_jazigos_por_contratoes
+    **/
+    _count?: true | Vw_jazigos_por_contratoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Vw_jazigos_por_contratoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Vw_jazigos_por_contratoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Vw_jazigos_por_contratoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Vw_jazigos_por_contratoMaxAggregateInputType
+  }
+
+  export type GetVw_jazigos_por_contratoAggregateType<T extends Vw_jazigos_por_contratoAggregateArgs> = {
+        [P in keyof T & keyof AggregateVw_jazigos_por_contrato]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVw_jazigos_por_contrato[P]>
+      : GetScalarType<T[P], AggregateVw_jazigos_por_contrato[P]>
+  }
+
+
+
+
+  export type vw_jazigos_por_contratoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: vw_jazigos_por_contratoWhereInput
+    orderBy?: vw_jazigos_por_contratoOrderByWithAggregationInput | vw_jazigos_por_contratoOrderByWithAggregationInput[]
+    by: Vw_jazigos_por_contratoScalarFieldEnum[] | Vw_jazigos_por_contratoScalarFieldEnum
+    having?: vw_jazigos_por_contratoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Vw_jazigos_por_contratoCountAggregateInputType | true
+    _avg?: Vw_jazigos_por_contratoAvgAggregateInputType
+    _sum?: Vw_jazigos_por_contratoSumAggregateInputType
+    _min?: Vw_jazigos_por_contratoMinAggregateInputType
+    _max?: Vw_jazigos_por_contratoMaxAggregateInputType
+  }
+
+  export type Vw_jazigos_por_contratoGroupByOutputType = {
+    jazigo_id: string
+    contrato_id: string
+    numero_contrato: string
+    contrato_situacao: string
+    customer_id: string
+    titular_nome: string
+    titular_cpf: string
+    responsavel_nome: string | null
+    responsavel_cpf: string | null
+    codigo: string
+    quadra: string | null
+    setor: string | null
+    quantidade_gavetas: number
+    valor_mensalidade: Decimal
+    status_financeiro: string
+    _count: Vw_jazigos_por_contratoCountAggregateOutputType | null
+    _avg: Vw_jazigos_por_contratoAvgAggregateOutputType | null
+    _sum: Vw_jazigos_por_contratoSumAggregateOutputType | null
+    _min: Vw_jazigos_por_contratoMinAggregateOutputType | null
+    _max: Vw_jazigos_por_contratoMaxAggregateOutputType | null
+  }
+
+  type GetVw_jazigos_por_contratoGroupByPayload<T extends vw_jazigos_por_contratoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Vw_jazigos_por_contratoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Vw_jazigos_por_contratoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Vw_jazigos_por_contratoGroupByOutputType[P]>
+            : GetScalarType<T[P], Vw_jazigos_por_contratoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type vw_jazigos_por_contratoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    jazigo_id?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    customer_id?: boolean
+    titular_nome?: boolean
+    titular_cpf?: boolean
+    responsavel_nome?: boolean
+    responsavel_cpf?: boolean
+    codigo?: boolean
+    quadra?: boolean
+    setor?: boolean
+    quantidade_gavetas?: boolean
+    valor_mensalidade?: boolean
+    status_financeiro?: boolean
+  }, ExtArgs["result"]["vw_jazigos_por_contrato"]>
+
+
+
+  export type vw_jazigos_por_contratoSelectScalar = {
+    jazigo_id?: boolean
+    contrato_id?: boolean
+    numero_contrato?: boolean
+    contrato_situacao?: boolean
+    customer_id?: boolean
+    titular_nome?: boolean
+    titular_cpf?: boolean
+    responsavel_nome?: boolean
+    responsavel_cpf?: boolean
+    codigo?: boolean
+    quadra?: boolean
+    setor?: boolean
+    quantidade_gavetas?: boolean
+    valor_mensalidade?: boolean
+    status_financeiro?: boolean
+  }
+
+  export type vw_jazigos_por_contratoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"jazigo_id" | "contrato_id" | "numero_contrato" | "contrato_situacao" | "customer_id" | "titular_nome" | "titular_cpf" | "responsavel_nome" | "responsavel_cpf" | "codigo" | "quadra" | "setor" | "quantidade_gavetas" | "valor_mensalidade" | "status_financeiro", ExtArgs["result"]["vw_jazigos_por_contrato"]>
+
+  export type $vw_jazigos_por_contratoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "vw_jazigos_por_contrato"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      jazigo_id: string
+      contrato_id: string
+      numero_contrato: string
+      contrato_situacao: string
+      customer_id: string
+      titular_nome: string
+      titular_cpf: string
+      responsavel_nome: string | null
+      responsavel_cpf: string | null
+      codigo: string
+      quadra: string | null
+      setor: string | null
+      quantidade_gavetas: number
+      valor_mensalidade: Prisma.Decimal
+      status_financeiro: string
+    }, ExtArgs["result"]["vw_jazigos_por_contrato"]>
+    composites: {}
+  }
+
+  type vw_jazigos_por_contratoGetPayload<S extends boolean | null | undefined | vw_jazigos_por_contratoDefaultArgs> = $Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload, S>
+
+  type vw_jazigos_por_contratoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<vw_jazigos_por_contratoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Vw_jazigos_por_contratoCountAggregateInputType | true
+    }
+
+  export interface vw_jazigos_por_contratoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['vw_jazigos_por_contrato'], meta: { name: 'vw_jazigos_por_contrato' } }
+    /**
+     * Find zero or one Vw_jazigos_por_contrato that matches the filter.
+     * @param {vw_jazigos_por_contratoFindUniqueArgs} args - Arguments to find a Vw_jazigos_por_contrato
+     * @example
+     * // Get one Vw_jazigos_por_contrato
+     * const vw_jazigos_por_contrato = await prisma.vw_jazigos_por_contrato.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends vw_jazigos_por_contratoFindUniqueArgs>(args: SelectSubset<T, vw_jazigos_por_contratoFindUniqueArgs<ExtArgs>>): Prisma__vw_jazigos_por_contratoClient<$Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Vw_jazigos_por_contrato that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {vw_jazigos_por_contratoFindUniqueOrThrowArgs} args - Arguments to find a Vw_jazigos_por_contrato
+     * @example
+     * // Get one Vw_jazigos_por_contrato
+     * const vw_jazigos_por_contrato = await prisma.vw_jazigos_por_contrato.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends vw_jazigos_por_contratoFindUniqueOrThrowArgs>(args: SelectSubset<T, vw_jazigos_por_contratoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__vw_jazigos_por_contratoClient<$Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_jazigos_por_contrato that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_jazigos_por_contratoFindFirstArgs} args - Arguments to find a Vw_jazigos_por_contrato
+     * @example
+     * // Get one Vw_jazigos_por_contrato
+     * const vw_jazigos_por_contrato = await prisma.vw_jazigos_por_contrato.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends vw_jazigos_por_contratoFindFirstArgs>(args?: SelectSubset<T, vw_jazigos_por_contratoFindFirstArgs<ExtArgs>>): Prisma__vw_jazigos_por_contratoClient<$Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Vw_jazigos_por_contrato that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_jazigos_por_contratoFindFirstOrThrowArgs} args - Arguments to find a Vw_jazigos_por_contrato
+     * @example
+     * // Get one Vw_jazigos_por_contrato
+     * const vw_jazigos_por_contrato = await prisma.vw_jazigos_por_contrato.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends vw_jazigos_por_contratoFindFirstOrThrowArgs>(args?: SelectSubset<T, vw_jazigos_por_contratoFindFirstOrThrowArgs<ExtArgs>>): Prisma__vw_jazigos_por_contratoClient<$Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Vw_jazigos_por_contratoes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_jazigos_por_contratoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Vw_jazigos_por_contratoes
+     * const vw_jazigos_por_contratoes = await prisma.vw_jazigos_por_contrato.findMany()
+     * 
+     * // Get first 10 Vw_jazigos_por_contratoes
+     * const vw_jazigos_por_contratoes = await prisma.vw_jazigos_por_contrato.findMany({ take: 10 })
+     * 
+     * // Only select the `jazigo_id`
+     * const vw_jazigos_por_contratoWithJazigo_idOnly = await prisma.vw_jazigos_por_contrato.findMany({ select: { jazigo_id: true } })
+     * 
+     */
+    findMany<T extends vw_jazigos_por_contratoFindManyArgs>(args?: SelectSubset<T, vw_jazigos_por_contratoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$vw_jazigos_por_contratoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Vw_jazigos_por_contratoes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_jazigos_por_contratoCountArgs} args - Arguments to filter Vw_jazigos_por_contratoes to count.
+     * @example
+     * // Count the number of Vw_jazigos_por_contratoes
+     * const count = await prisma.vw_jazigos_por_contrato.count({
+     *   where: {
+     *     // ... the filter for the Vw_jazigos_por_contratoes we want to count
+     *   }
+     * })
+    **/
+    count<T extends vw_jazigos_por_contratoCountArgs>(
+      args?: Subset<T, vw_jazigos_por_contratoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Vw_jazigos_por_contratoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Vw_jazigos_por_contrato.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Vw_jazigos_por_contratoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Vw_jazigos_por_contratoAggregateArgs>(args: Subset<T, Vw_jazigos_por_contratoAggregateArgs>): Prisma.PrismaPromise<GetVw_jazigos_por_contratoAggregateType<T>>
+
+    /**
+     * Group by Vw_jazigos_por_contrato.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {vw_jazigos_por_contratoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends vw_jazigos_por_contratoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: vw_jazigos_por_contratoGroupByArgs['orderBy'] }
+        : { orderBy?: vw_jazigos_por_contratoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, vw_jazigos_por_contratoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVw_jazigos_por_contratoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the vw_jazigos_por_contrato model
+   */
+  readonly fields: vw_jazigos_por_contratoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for vw_jazigos_por_contrato.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__vw_jazigos_por_contratoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the vw_jazigos_por_contrato model
+   */
+  interface vw_jazigos_por_contratoFieldRefs {
+    readonly jazigo_id: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly contrato_id: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly numero_contrato: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly contrato_situacao: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly customer_id: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly titular_nome: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly titular_cpf: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly responsavel_nome: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly responsavel_cpf: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly codigo: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly quadra: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly setor: FieldRef<"vw_jazigos_por_contrato", 'String'>
+    readonly quantidade_gavetas: FieldRef<"vw_jazigos_por_contrato", 'Int'>
+    readonly valor_mensalidade: FieldRef<"vw_jazigos_por_contrato", 'Decimal'>
+    readonly status_financeiro: FieldRef<"vw_jazigos_por_contrato", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * vw_jazigos_por_contrato findUnique
+   */
+  export type vw_jazigos_por_contratoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_jazigos_por_contrato to fetch.
+     */
+    where: vw_jazigos_por_contratoWhereUniqueInput
+  }
+
+  /**
+   * vw_jazigos_por_contrato findUniqueOrThrow
+   */
+  export type vw_jazigos_por_contratoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_jazigos_por_contrato to fetch.
+     */
+    where: vw_jazigos_por_contratoWhereUniqueInput
+  }
+
+  /**
+   * vw_jazigos_por_contrato findFirst
+   */
+  export type vw_jazigos_por_contratoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_jazigos_por_contrato to fetch.
+     */
+    where?: vw_jazigos_por_contratoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_jazigos_por_contratoes to fetch.
+     */
+    orderBy?: vw_jazigos_por_contratoOrderByWithRelationInput | vw_jazigos_por_contratoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_jazigos_por_contratoes.
+     */
+    cursor?: vw_jazigos_por_contratoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_jazigos_por_contratoes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_jazigos_por_contratoes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_jazigos_por_contratoes.
+     */
+    distinct?: Vw_jazigos_por_contratoScalarFieldEnum | Vw_jazigos_por_contratoScalarFieldEnum[]
+  }
+
+  /**
+   * vw_jazigos_por_contrato findFirstOrThrow
+   */
+  export type vw_jazigos_por_contratoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_jazigos_por_contrato to fetch.
+     */
+    where?: vw_jazigos_por_contratoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_jazigos_por_contratoes to fetch.
+     */
+    orderBy?: vw_jazigos_por_contratoOrderByWithRelationInput | vw_jazigos_por_contratoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for vw_jazigos_por_contratoes.
+     */
+    cursor?: vw_jazigos_por_contratoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_jazigos_por_contratoes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_jazigos_por_contratoes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of vw_jazigos_por_contratoes.
+     */
+    distinct?: Vw_jazigos_por_contratoScalarFieldEnum | Vw_jazigos_por_contratoScalarFieldEnum[]
+  }
+
+  /**
+   * vw_jazigos_por_contrato findMany
+   */
+  export type vw_jazigos_por_contratoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+    /**
+     * Filter, which vw_jazigos_por_contratoes to fetch.
+     */
+    where?: vw_jazigos_por_contratoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of vw_jazigos_por_contratoes to fetch.
+     */
+    orderBy?: vw_jazigos_por_contratoOrderByWithRelationInput | vw_jazigos_por_contratoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing vw_jazigos_por_contratoes.
+     */
+    cursor?: vw_jazigos_por_contratoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` vw_jazigos_por_contratoes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` vw_jazigos_por_contratoes.
+     */
+    skip?: number
+    distinct?: Vw_jazigos_por_contratoScalarFieldEnum | Vw_jazigos_por_contratoScalarFieldEnum[]
+  }
+
+  /**
+   * vw_jazigos_por_contrato without action
+   */
+  export type vw_jazigos_por_contratoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the vw_jazigos_por_contrato
+     */
+    select?: vw_jazigos_por_contratoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the vw_jazigos_por_contrato
+     */
+    omit?: vw_jazigos_por_contratoOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18348,6 +22753,121 @@ export namespace Prisma {
   };
 
   export type SyncLogScalarFieldEnum = (typeof SyncLogScalarFieldEnum)[keyof typeof SyncLogScalarFieldEnum]
+
+
+  export const Vw_responsaveis_financeirosScalarFieldEnum: {
+    responsavel_id: 'responsavel_id',
+    motivo: 'motivo',
+    customer_id: 'customer_id',
+    responsavel_nome: 'responsavel_nome',
+    responsavel_cpf: 'responsavel_cpf',
+    responsavel_email: 'responsavel_email',
+    responsavel_ativo: 'responsavel_ativo',
+    primeiro_acesso: 'primeiro_acesso',
+    responsavel_telefone: 'responsavel_telefone',
+    contrato_id: 'contrato_id',
+    numero_contrato: 'numero_contrato',
+    contrato_situacao: 'contrato_situacao',
+    titular_id: 'titular_id',
+    titular_nome: 'titular_nome',
+    titular_cpf: 'titular_cpf',
+    total_jazigos: 'total_jazigos',
+    valor_total_mensalidade: 'valor_total_mensalidade',
+    pagamentos_atrasados: 'pagamentos_atrasados',
+    pagamentos_pendentes: 'pagamentos_pendentes',
+    synced_at: 'synced_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
+  };
+
+  export type Vw_responsaveis_financeirosScalarFieldEnum = (typeof Vw_responsaveis_financeirosScalarFieldEnum)[keyof typeof Vw_responsaveis_financeirosScalarFieldEnum]
+
+
+  export const Vw_inadimplentesScalarFieldEnum: {
+    customer_id: 'customer_id',
+    nome: 'nome',
+    cpf_cnpj: 'cpf_cnpj',
+    email: 'email',
+    telefone: 'telefone',
+    contrato_id: 'contrato_id',
+    numero_contrato: 'numero_contrato',
+    contrato_situacao: 'contrato_situacao',
+    pagamento_id: 'pagamento_id',
+    data_vencimento: 'data_vencimento',
+    valor_titulo: 'valor_titulo',
+    nosso_numero: 'nosso_numero',
+    tipo_pagamento: 'tipo_pagamento',
+    dias_atraso: 'dias_atraso',
+    jazigo_codigo: 'jazigo_codigo',
+    jazigo_quadra: 'jazigo_quadra',
+    quantidade_gavetas: 'quantidade_gavetas'
+  };
+
+  export type Vw_inadimplentesScalarFieldEnum = (typeof Vw_inadimplentesScalarFieldEnum)[keyof typeof Vw_inadimplentesScalarFieldEnum]
+
+
+  export const Vw_extrato_clienteScalarFieldEnum: {
+    customer_id: 'customer_id',
+    nome: 'nome',
+    cpf_cnpj: 'cpf_cnpj',
+    numero_contrato: 'numero_contrato',
+    contrato_situacao: 'contrato_situacao',
+    jazigo_codigo: 'jazigo_codigo',
+    quadra: 'quadra',
+    quantidade_gavetas: 'quantidade_gavetas',
+    valor_mensalidade: 'valor_mensalidade',
+    pagamento_id: 'pagamento_id',
+    tipo_pagamento: 'tipo_pagamento',
+    status: 'status',
+    data_vencimento: 'data_vencimento',
+    data_pagamento: 'data_pagamento',
+    valor_titulo: 'valor_titulo',
+    valor_pago: 'valor_pago',
+    valor_liquido: 'valor_liquido',
+    nosso_numero: 'nosso_numero',
+    metodo_pagamento: 'metodo_pagamento',
+    invoice_url: 'invoice_url',
+    dias_atraso: 'dias_atraso'
+  };
+
+  export type Vw_extrato_clienteScalarFieldEnum = (typeof Vw_extrato_clienteScalarFieldEnum)[keyof typeof Vw_extrato_clienteScalarFieldEnum]
+
+
+  export const Vw_dashboard_financeiroScalarFieldEnum: {
+    total_pagos: 'total_pagos',
+    total_pendentes: 'total_pendentes',
+    total_atrasados: 'total_atrasados',
+    total_cancelados: 'total_cancelados',
+    valor_recebido: 'valor_recebido',
+    valor_a_receber: 'valor_a_receber',
+    valor_em_atraso: 'valor_em_atraso',
+    pagos_mes_atual: 'pagos_mes_atual',
+    valor_recebido_mes_atual: 'valor_recebido_mes_atual',
+    id: 'id'
+  };
+
+  export type Vw_dashboard_financeiroScalarFieldEnum = (typeof Vw_dashboard_financeiroScalarFieldEnum)[keyof typeof Vw_dashboard_financeiroScalarFieldEnum]
+
+
+  export const Vw_jazigos_por_contratoScalarFieldEnum: {
+    jazigo_id: 'jazigo_id',
+    contrato_id: 'contrato_id',
+    numero_contrato: 'numero_contrato',
+    contrato_situacao: 'contrato_situacao',
+    customer_id: 'customer_id',
+    titular_nome: 'titular_nome',
+    titular_cpf: 'titular_cpf',
+    responsavel_nome: 'responsavel_nome',
+    responsavel_cpf: 'responsavel_cpf',
+    codigo: 'codigo',
+    quadra: 'quadra',
+    setor: 'setor',
+    quantidade_gavetas: 'quantidade_gavetas',
+    valor_mensalidade: 'valor_mensalidade',
+    status_financeiro: 'status_financeiro'
+  };
+
+  export type Vw_jazigos_por_contratoScalarFieldEnum = (typeof Vw_jazigos_por_contratoScalarFieldEnum)[keyof typeof Vw_jazigos_por_contratoScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18645,6 +23165,20 @@ export namespace Prisma {
    * Reference to a field of type 'SyncStatus[]'
    */
   export type ListEnumSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SyncStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'BigInt'
+   */
+  export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+  /**
+   * Reference to a field of type 'BigInt[]'
+   */
+  export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 
@@ -19854,6 +24388,576 @@ export namespace Prisma {
     erroDetalhes?: JsonNullableWithAggregatesFilter<"SyncLog">
     dataInicio?: DateTimeWithAggregatesFilter<"SyncLog"> | Date | string
     dataFim?: DateTimeNullableWithAggregatesFilter<"SyncLog"> | Date | string | null
+  }
+
+  export type vw_responsaveis_financeirosWhereInput = {
+    AND?: vw_responsaveis_financeirosWhereInput | vw_responsaveis_financeirosWhereInput[]
+    OR?: vw_responsaveis_financeirosWhereInput[]
+    NOT?: vw_responsaveis_financeirosWhereInput | vw_responsaveis_financeirosWhereInput[]
+    responsavel_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    motivo?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    customer_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_nome?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_cpf?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_email?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    responsavel_ativo?: BoolFilter<"vw_responsaveis_financeiros"> | boolean
+    primeiro_acesso?: BoolFilter<"vw_responsaveis_financeiros"> | boolean
+    responsavel_telefone?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    contrato_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    numero_contrato?: StringFilter<"vw_responsaveis_financeiros"> | string
+    contrato_situacao?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_nome?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_cpf?: StringFilter<"vw_responsaveis_financeiros"> | string
+    total_jazigos?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    valor_total_mensalidade?: DecimalFilter<"vw_responsaveis_financeiros"> | Decimal | DecimalJsLike | number | string
+    pagamentos_atrasados?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    pagamentos_pendentes?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    synced_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+    created_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+    updated_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+  }
+
+  export type vw_responsaveis_financeirosOrderByWithRelationInput = {
+    responsavel_id?: SortOrder
+    motivo?: SortOrderInput | SortOrder
+    customer_id?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    responsavel_email?: SortOrderInput | SortOrder
+    responsavel_ativo?: SortOrder
+    primeiro_acesso?: SortOrder
+    responsavel_telefone?: SortOrderInput | SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    titular_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+    synced_at?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type vw_responsaveis_financeirosWhereUniqueInput = Prisma.AtLeast<{
+    responsavel_id?: string
+    AND?: vw_responsaveis_financeirosWhereInput | vw_responsaveis_financeirosWhereInput[]
+    OR?: vw_responsaveis_financeirosWhereInput[]
+    NOT?: vw_responsaveis_financeirosWhereInput | vw_responsaveis_financeirosWhereInput[]
+    motivo?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    customer_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_nome?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_cpf?: StringFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_email?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    responsavel_ativo?: BoolFilter<"vw_responsaveis_financeiros"> | boolean
+    primeiro_acesso?: BoolFilter<"vw_responsaveis_financeiros"> | boolean
+    responsavel_telefone?: StringNullableFilter<"vw_responsaveis_financeiros"> | string | null
+    contrato_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    numero_contrato?: StringFilter<"vw_responsaveis_financeiros"> | string
+    contrato_situacao?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_id?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_nome?: StringFilter<"vw_responsaveis_financeiros"> | string
+    titular_cpf?: StringFilter<"vw_responsaveis_financeiros"> | string
+    total_jazigos?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    valor_total_mensalidade?: DecimalFilter<"vw_responsaveis_financeiros"> | Decimal | DecimalJsLike | number | string
+    pagamentos_atrasados?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    pagamentos_pendentes?: BigIntFilter<"vw_responsaveis_financeiros"> | bigint | number
+    synced_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+    created_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+    updated_at?: DateTimeFilter<"vw_responsaveis_financeiros"> | Date | string
+  }, "responsavel_id">
+
+  export type vw_responsaveis_financeirosOrderByWithAggregationInput = {
+    responsavel_id?: SortOrder
+    motivo?: SortOrderInput | SortOrder
+    customer_id?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    responsavel_email?: SortOrderInput | SortOrder
+    responsavel_ativo?: SortOrder
+    primeiro_acesso?: SortOrder
+    responsavel_telefone?: SortOrderInput | SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    titular_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+    synced_at?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: vw_responsaveis_financeirosCountOrderByAggregateInput
+    _avg?: vw_responsaveis_financeirosAvgOrderByAggregateInput
+    _max?: vw_responsaveis_financeirosMaxOrderByAggregateInput
+    _min?: vw_responsaveis_financeirosMinOrderByAggregateInput
+    _sum?: vw_responsaveis_financeirosSumOrderByAggregateInput
+  }
+
+  export type vw_responsaveis_financeirosScalarWhereWithAggregatesInput = {
+    AND?: vw_responsaveis_financeirosScalarWhereWithAggregatesInput | vw_responsaveis_financeirosScalarWhereWithAggregatesInput[]
+    OR?: vw_responsaveis_financeirosScalarWhereWithAggregatesInput[]
+    NOT?: vw_responsaveis_financeirosScalarWhereWithAggregatesInput | vw_responsaveis_financeirosScalarWhereWithAggregatesInput[]
+    responsavel_id?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    motivo?: StringNullableWithAggregatesFilter<"vw_responsaveis_financeiros"> | string | null
+    customer_id?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_nome?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_cpf?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    responsavel_email?: StringNullableWithAggregatesFilter<"vw_responsaveis_financeiros"> | string | null
+    responsavel_ativo?: BoolWithAggregatesFilter<"vw_responsaveis_financeiros"> | boolean
+    primeiro_acesso?: BoolWithAggregatesFilter<"vw_responsaveis_financeiros"> | boolean
+    responsavel_telefone?: StringNullableWithAggregatesFilter<"vw_responsaveis_financeiros"> | string | null
+    contrato_id?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    numero_contrato?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    contrato_situacao?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    titular_id?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    titular_nome?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    titular_cpf?: StringWithAggregatesFilter<"vw_responsaveis_financeiros"> | string
+    total_jazigos?: BigIntWithAggregatesFilter<"vw_responsaveis_financeiros"> | bigint | number
+    valor_total_mensalidade?: DecimalWithAggregatesFilter<"vw_responsaveis_financeiros"> | Decimal | DecimalJsLike | number | string
+    pagamentos_atrasados?: BigIntWithAggregatesFilter<"vw_responsaveis_financeiros"> | bigint | number
+    pagamentos_pendentes?: BigIntWithAggregatesFilter<"vw_responsaveis_financeiros"> | bigint | number
+    synced_at?: DateTimeWithAggregatesFilter<"vw_responsaveis_financeiros"> | Date | string
+    created_at?: DateTimeWithAggregatesFilter<"vw_responsaveis_financeiros"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"vw_responsaveis_financeiros"> | Date | string
+  }
+
+  export type vw_inadimplentesWhereInput = {
+    AND?: vw_inadimplentesWhereInput | vw_inadimplentesWhereInput[]
+    OR?: vw_inadimplentesWhereInput[]
+    NOT?: vw_inadimplentesWhereInput | vw_inadimplentesWhereInput[]
+    customer_id?: StringFilter<"vw_inadimplentes"> | string
+    nome?: StringFilter<"vw_inadimplentes"> | string
+    cpf_cnpj?: StringFilter<"vw_inadimplentes"> | string
+    email?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    telefone?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    contrato_id?: StringFilter<"vw_inadimplentes"> | string
+    numero_contrato?: StringFilter<"vw_inadimplentes"> | string
+    contrato_situacao?: StringFilter<"vw_inadimplentes"> | string
+    pagamento_id?: StringFilter<"vw_inadimplentes"> | string
+    data_vencimento?: DateTimeFilter<"vw_inadimplentes"> | Date | string
+    valor_titulo?: DecimalFilter<"vw_inadimplentes"> | Decimal | DecimalJsLike | number | string
+    nosso_numero?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    tipo_pagamento?: StringFilter<"vw_inadimplentes"> | string
+    dias_atraso?: IntFilter<"vw_inadimplentes"> | number
+    jazigo_codigo?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    jazigo_quadra?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    quantidade_gavetas?: IntNullableFilter<"vw_inadimplentes"> | number | null
+  }
+
+  export type vw_inadimplentesOrderByWithRelationInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    email?: SortOrderInput | SortOrder
+    telefone?: SortOrderInput | SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    pagamento_id?: SortOrder
+    data_vencimento?: SortOrder
+    valor_titulo?: SortOrder
+    nosso_numero?: SortOrderInput | SortOrder
+    tipo_pagamento?: SortOrder
+    dias_atraso?: SortOrder
+    jazigo_codigo?: SortOrderInput | SortOrder
+    jazigo_quadra?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrderInput | SortOrder
+  }
+
+  export type vw_inadimplentesWhereUniqueInput = Prisma.AtLeast<{
+    pagamento_id?: string
+    AND?: vw_inadimplentesWhereInput | vw_inadimplentesWhereInput[]
+    OR?: vw_inadimplentesWhereInput[]
+    NOT?: vw_inadimplentesWhereInput | vw_inadimplentesWhereInput[]
+    customer_id?: StringFilter<"vw_inadimplentes"> | string
+    nome?: StringFilter<"vw_inadimplentes"> | string
+    cpf_cnpj?: StringFilter<"vw_inadimplentes"> | string
+    email?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    telefone?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    contrato_id?: StringFilter<"vw_inadimplentes"> | string
+    numero_contrato?: StringFilter<"vw_inadimplentes"> | string
+    contrato_situacao?: StringFilter<"vw_inadimplentes"> | string
+    data_vencimento?: DateTimeFilter<"vw_inadimplentes"> | Date | string
+    valor_titulo?: DecimalFilter<"vw_inadimplentes"> | Decimal | DecimalJsLike | number | string
+    nosso_numero?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    tipo_pagamento?: StringFilter<"vw_inadimplentes"> | string
+    dias_atraso?: IntFilter<"vw_inadimplentes"> | number
+    jazigo_codigo?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    jazigo_quadra?: StringNullableFilter<"vw_inadimplentes"> | string | null
+    quantidade_gavetas?: IntNullableFilter<"vw_inadimplentes"> | number | null
+  }, "pagamento_id">
+
+  export type vw_inadimplentesOrderByWithAggregationInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    email?: SortOrderInput | SortOrder
+    telefone?: SortOrderInput | SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    pagamento_id?: SortOrder
+    data_vencimento?: SortOrder
+    valor_titulo?: SortOrder
+    nosso_numero?: SortOrderInput | SortOrder
+    tipo_pagamento?: SortOrder
+    dias_atraso?: SortOrder
+    jazigo_codigo?: SortOrderInput | SortOrder
+    jazigo_quadra?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrderInput | SortOrder
+    _count?: vw_inadimplentesCountOrderByAggregateInput
+    _avg?: vw_inadimplentesAvgOrderByAggregateInput
+    _max?: vw_inadimplentesMaxOrderByAggregateInput
+    _min?: vw_inadimplentesMinOrderByAggregateInput
+    _sum?: vw_inadimplentesSumOrderByAggregateInput
+  }
+
+  export type vw_inadimplentesScalarWhereWithAggregatesInput = {
+    AND?: vw_inadimplentesScalarWhereWithAggregatesInput | vw_inadimplentesScalarWhereWithAggregatesInput[]
+    OR?: vw_inadimplentesScalarWhereWithAggregatesInput[]
+    NOT?: vw_inadimplentesScalarWhereWithAggregatesInput | vw_inadimplentesScalarWhereWithAggregatesInput[]
+    customer_id?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    nome?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    cpf_cnpj?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    email?: StringNullableWithAggregatesFilter<"vw_inadimplentes"> | string | null
+    telefone?: StringNullableWithAggregatesFilter<"vw_inadimplentes"> | string | null
+    contrato_id?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    numero_contrato?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    contrato_situacao?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    pagamento_id?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    data_vencimento?: DateTimeWithAggregatesFilter<"vw_inadimplentes"> | Date | string
+    valor_titulo?: DecimalWithAggregatesFilter<"vw_inadimplentes"> | Decimal | DecimalJsLike | number | string
+    nosso_numero?: StringNullableWithAggregatesFilter<"vw_inadimplentes"> | string | null
+    tipo_pagamento?: StringWithAggregatesFilter<"vw_inadimplentes"> | string
+    dias_atraso?: IntWithAggregatesFilter<"vw_inadimplentes"> | number
+    jazigo_codigo?: StringNullableWithAggregatesFilter<"vw_inadimplentes"> | string | null
+    jazigo_quadra?: StringNullableWithAggregatesFilter<"vw_inadimplentes"> | string | null
+    quantidade_gavetas?: IntNullableWithAggregatesFilter<"vw_inadimplentes"> | number | null
+  }
+
+  export type vw_extrato_clienteWhereInput = {
+    AND?: vw_extrato_clienteWhereInput | vw_extrato_clienteWhereInput[]
+    OR?: vw_extrato_clienteWhereInput[]
+    NOT?: vw_extrato_clienteWhereInput | vw_extrato_clienteWhereInput[]
+    customer_id?: StringFilter<"vw_extrato_cliente"> | string
+    nome?: StringFilter<"vw_extrato_cliente"> | string
+    cpf_cnpj?: StringFilter<"vw_extrato_cliente"> | string
+    numero_contrato?: StringFilter<"vw_extrato_cliente"> | string
+    contrato_situacao?: StringFilter<"vw_extrato_cliente"> | string
+    jazigo_codigo?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    quadra?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    quantidade_gavetas?: IntNullableFilter<"vw_extrato_cliente"> | number | null
+    valor_mensalidade?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    pagamento_id?: StringFilter<"vw_extrato_cliente"> | string
+    tipo_pagamento?: StringFilter<"vw_extrato_cliente"> | string
+    status?: StringFilter<"vw_extrato_cliente"> | string
+    data_vencimento?: DateTimeFilter<"vw_extrato_cliente"> | Date | string
+    data_pagamento?: DateTimeNullableFilter<"vw_extrato_cliente"> | Date | string | null
+    valor_titulo?: DecimalFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string
+    valor_pago?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    valor_liquido?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    nosso_numero?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    metodo_pagamento?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    invoice_url?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    dias_atraso?: IntFilter<"vw_extrato_cliente"> | number
+  }
+
+  export type vw_extrato_clienteOrderByWithRelationInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    jazigo_codigo?: SortOrderInput | SortOrder
+    quadra?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrderInput | SortOrder
+    valor_mensalidade?: SortOrderInput | SortOrder
+    pagamento_id?: SortOrder
+    tipo_pagamento?: SortOrder
+    status?: SortOrder
+    data_vencimento?: SortOrder
+    data_pagamento?: SortOrderInput | SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrderInput | SortOrder
+    valor_liquido?: SortOrderInput | SortOrder
+    nosso_numero?: SortOrderInput | SortOrder
+    metodo_pagamento?: SortOrderInput | SortOrder
+    invoice_url?: SortOrderInput | SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_extrato_clienteWhereUniqueInput = Prisma.AtLeast<{
+    pagamento_id?: string
+    AND?: vw_extrato_clienteWhereInput | vw_extrato_clienteWhereInput[]
+    OR?: vw_extrato_clienteWhereInput[]
+    NOT?: vw_extrato_clienteWhereInput | vw_extrato_clienteWhereInput[]
+    customer_id?: StringFilter<"vw_extrato_cliente"> | string
+    nome?: StringFilter<"vw_extrato_cliente"> | string
+    cpf_cnpj?: StringFilter<"vw_extrato_cliente"> | string
+    numero_contrato?: StringFilter<"vw_extrato_cliente"> | string
+    contrato_situacao?: StringFilter<"vw_extrato_cliente"> | string
+    jazigo_codigo?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    quadra?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    quantidade_gavetas?: IntNullableFilter<"vw_extrato_cliente"> | number | null
+    valor_mensalidade?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    tipo_pagamento?: StringFilter<"vw_extrato_cliente"> | string
+    status?: StringFilter<"vw_extrato_cliente"> | string
+    data_vencimento?: DateTimeFilter<"vw_extrato_cliente"> | Date | string
+    data_pagamento?: DateTimeNullableFilter<"vw_extrato_cliente"> | Date | string | null
+    valor_titulo?: DecimalFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string
+    valor_pago?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    valor_liquido?: DecimalNullableFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    nosso_numero?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    metodo_pagamento?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    invoice_url?: StringNullableFilter<"vw_extrato_cliente"> | string | null
+    dias_atraso?: IntFilter<"vw_extrato_cliente"> | number
+  }, "pagamento_id">
+
+  export type vw_extrato_clienteOrderByWithAggregationInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    jazigo_codigo?: SortOrderInput | SortOrder
+    quadra?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrderInput | SortOrder
+    valor_mensalidade?: SortOrderInput | SortOrder
+    pagamento_id?: SortOrder
+    tipo_pagamento?: SortOrder
+    status?: SortOrder
+    data_vencimento?: SortOrder
+    data_pagamento?: SortOrderInput | SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrderInput | SortOrder
+    valor_liquido?: SortOrderInput | SortOrder
+    nosso_numero?: SortOrderInput | SortOrder
+    metodo_pagamento?: SortOrderInput | SortOrder
+    invoice_url?: SortOrderInput | SortOrder
+    dias_atraso?: SortOrder
+    _count?: vw_extrato_clienteCountOrderByAggregateInput
+    _avg?: vw_extrato_clienteAvgOrderByAggregateInput
+    _max?: vw_extrato_clienteMaxOrderByAggregateInput
+    _min?: vw_extrato_clienteMinOrderByAggregateInput
+    _sum?: vw_extrato_clienteSumOrderByAggregateInput
+  }
+
+  export type vw_extrato_clienteScalarWhereWithAggregatesInput = {
+    AND?: vw_extrato_clienteScalarWhereWithAggregatesInput | vw_extrato_clienteScalarWhereWithAggregatesInput[]
+    OR?: vw_extrato_clienteScalarWhereWithAggregatesInput[]
+    NOT?: vw_extrato_clienteScalarWhereWithAggregatesInput | vw_extrato_clienteScalarWhereWithAggregatesInput[]
+    customer_id?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    nome?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    cpf_cnpj?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    numero_contrato?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    contrato_situacao?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    jazigo_codigo?: StringNullableWithAggregatesFilter<"vw_extrato_cliente"> | string | null
+    quadra?: StringNullableWithAggregatesFilter<"vw_extrato_cliente"> | string | null
+    quantidade_gavetas?: IntNullableWithAggregatesFilter<"vw_extrato_cliente"> | number | null
+    valor_mensalidade?: DecimalNullableWithAggregatesFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    pagamento_id?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    tipo_pagamento?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    status?: StringWithAggregatesFilter<"vw_extrato_cliente"> | string
+    data_vencimento?: DateTimeWithAggregatesFilter<"vw_extrato_cliente"> | Date | string
+    data_pagamento?: DateTimeNullableWithAggregatesFilter<"vw_extrato_cliente"> | Date | string | null
+    valor_titulo?: DecimalWithAggregatesFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string
+    valor_pago?: DecimalNullableWithAggregatesFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    valor_liquido?: DecimalNullableWithAggregatesFilter<"vw_extrato_cliente"> | Decimal | DecimalJsLike | number | string | null
+    nosso_numero?: StringNullableWithAggregatesFilter<"vw_extrato_cliente"> | string | null
+    metodo_pagamento?: StringNullableWithAggregatesFilter<"vw_extrato_cliente"> | string | null
+    invoice_url?: StringNullableWithAggregatesFilter<"vw_extrato_cliente"> | string | null
+    dias_atraso?: IntWithAggregatesFilter<"vw_extrato_cliente"> | number
+  }
+
+  export type vw_dashboard_financeiroWhereInput = {
+    AND?: vw_dashboard_financeiroWhereInput | vw_dashboard_financeiroWhereInput[]
+    OR?: vw_dashboard_financeiroWhereInput[]
+    NOT?: vw_dashboard_financeiroWhereInput | vw_dashboard_financeiroWhereInput[]
+    total_pagos?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_pendentes?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_atrasados?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_cancelados?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_a_receber?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_em_atraso?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    pagos_mes_atual?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido_mes_atual?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    id?: IntFilter<"vw_dashboard_financeiro"> | number
+  }
+
+  export type vw_dashboard_financeiroOrderByWithRelationInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: vw_dashboard_financeiroWhereInput | vw_dashboard_financeiroWhereInput[]
+    OR?: vw_dashboard_financeiroWhereInput[]
+    NOT?: vw_dashboard_financeiroWhereInput | vw_dashboard_financeiroWhereInput[]
+    total_pagos?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_pendentes?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_atrasados?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_cancelados?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_a_receber?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_em_atraso?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    pagos_mes_atual?: BigIntFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido_mes_atual?: DecimalFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+  }, "id">
+
+  export type vw_dashboard_financeiroOrderByWithAggregationInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+    _count?: vw_dashboard_financeiroCountOrderByAggregateInput
+    _avg?: vw_dashboard_financeiroAvgOrderByAggregateInput
+    _max?: vw_dashboard_financeiroMaxOrderByAggregateInput
+    _min?: vw_dashboard_financeiroMinOrderByAggregateInput
+    _sum?: vw_dashboard_financeiroSumOrderByAggregateInput
+  }
+
+  export type vw_dashboard_financeiroScalarWhereWithAggregatesInput = {
+    AND?: vw_dashboard_financeiroScalarWhereWithAggregatesInput | vw_dashboard_financeiroScalarWhereWithAggregatesInput[]
+    OR?: vw_dashboard_financeiroScalarWhereWithAggregatesInput[]
+    NOT?: vw_dashboard_financeiroScalarWhereWithAggregatesInput | vw_dashboard_financeiroScalarWhereWithAggregatesInput[]
+    total_pagos?: BigIntWithAggregatesFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_pendentes?: BigIntWithAggregatesFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_atrasados?: BigIntWithAggregatesFilter<"vw_dashboard_financeiro"> | bigint | number
+    total_cancelados?: BigIntWithAggregatesFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido?: DecimalWithAggregatesFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_a_receber?: DecimalWithAggregatesFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    valor_em_atraso?: DecimalWithAggregatesFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    pagos_mes_atual?: BigIntWithAggregatesFilter<"vw_dashboard_financeiro"> | bigint | number
+    valor_recebido_mes_atual?: DecimalWithAggregatesFilter<"vw_dashboard_financeiro"> | Decimal | DecimalJsLike | number | string
+    id?: IntWithAggregatesFilter<"vw_dashboard_financeiro"> | number
+  }
+
+  export type vw_jazigos_por_contratoWhereInput = {
+    AND?: vw_jazigos_por_contratoWhereInput | vw_jazigos_por_contratoWhereInput[]
+    OR?: vw_jazigos_por_contratoWhereInput[]
+    NOT?: vw_jazigos_por_contratoWhereInput | vw_jazigos_por_contratoWhereInput[]
+    jazigo_id?: StringFilter<"vw_jazigos_por_contrato"> | string
+    contrato_id?: StringFilter<"vw_jazigos_por_contrato"> | string
+    numero_contrato?: StringFilter<"vw_jazigos_por_contrato"> | string
+    contrato_situacao?: StringFilter<"vw_jazigos_por_contrato"> | string
+    customer_id?: StringFilter<"vw_jazigos_por_contrato"> | string
+    titular_nome?: StringFilter<"vw_jazigos_por_contrato"> | string
+    titular_cpf?: StringFilter<"vw_jazigos_por_contrato"> | string
+    responsavel_nome?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    responsavel_cpf?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    codigo?: StringFilter<"vw_jazigos_por_contrato"> | string
+    quadra?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    setor?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    quantidade_gavetas?: IntFilter<"vw_jazigos_por_contrato"> | number
+    valor_mensalidade?: DecimalFilter<"vw_jazigos_por_contrato"> | Decimal | DecimalJsLike | number | string
+    status_financeiro?: StringFilter<"vw_jazigos_por_contrato"> | string
+  }
+
+  export type vw_jazigos_por_contratoOrderByWithRelationInput = {
+    jazigo_id?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    customer_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    responsavel_nome?: SortOrderInput | SortOrder
+    responsavel_cpf?: SortOrderInput | SortOrder
+    codigo?: SortOrder
+    quadra?: SortOrderInput | SortOrder
+    setor?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    status_financeiro?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoWhereUniqueInput = Prisma.AtLeast<{
+    jazigo_id?: string
+    AND?: vw_jazigos_por_contratoWhereInput | vw_jazigos_por_contratoWhereInput[]
+    OR?: vw_jazigos_por_contratoWhereInput[]
+    NOT?: vw_jazigos_por_contratoWhereInput | vw_jazigos_por_contratoWhereInput[]
+    contrato_id?: StringFilter<"vw_jazigos_por_contrato"> | string
+    numero_contrato?: StringFilter<"vw_jazigos_por_contrato"> | string
+    contrato_situacao?: StringFilter<"vw_jazigos_por_contrato"> | string
+    customer_id?: StringFilter<"vw_jazigos_por_contrato"> | string
+    titular_nome?: StringFilter<"vw_jazigos_por_contrato"> | string
+    titular_cpf?: StringFilter<"vw_jazigos_por_contrato"> | string
+    responsavel_nome?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    responsavel_cpf?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    codigo?: StringFilter<"vw_jazigos_por_contrato"> | string
+    quadra?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    setor?: StringNullableFilter<"vw_jazigos_por_contrato"> | string | null
+    quantidade_gavetas?: IntFilter<"vw_jazigos_por_contrato"> | number
+    valor_mensalidade?: DecimalFilter<"vw_jazigos_por_contrato"> | Decimal | DecimalJsLike | number | string
+    status_financeiro?: StringFilter<"vw_jazigos_por_contrato"> | string
+  }, "jazigo_id">
+
+  export type vw_jazigos_por_contratoOrderByWithAggregationInput = {
+    jazigo_id?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    customer_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    responsavel_nome?: SortOrderInput | SortOrder
+    responsavel_cpf?: SortOrderInput | SortOrder
+    codigo?: SortOrder
+    quadra?: SortOrderInput | SortOrder
+    setor?: SortOrderInput | SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    status_financeiro?: SortOrder
+    _count?: vw_jazigos_por_contratoCountOrderByAggregateInput
+    _avg?: vw_jazigos_por_contratoAvgOrderByAggregateInput
+    _max?: vw_jazigos_por_contratoMaxOrderByAggregateInput
+    _min?: vw_jazigos_por_contratoMinOrderByAggregateInput
+    _sum?: vw_jazigos_por_contratoSumOrderByAggregateInput
+  }
+
+  export type vw_jazigos_por_contratoScalarWhereWithAggregatesInput = {
+    AND?: vw_jazigos_por_contratoScalarWhereWithAggregatesInput | vw_jazigos_por_contratoScalarWhereWithAggregatesInput[]
+    OR?: vw_jazigos_por_contratoScalarWhereWithAggregatesInput[]
+    NOT?: vw_jazigos_por_contratoScalarWhereWithAggregatesInput | vw_jazigos_por_contratoScalarWhereWithAggregatesInput[]
+    jazigo_id?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    contrato_id?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    numero_contrato?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    contrato_situacao?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    customer_id?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    titular_nome?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    titular_cpf?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    responsavel_nome?: StringNullableWithAggregatesFilter<"vw_jazigos_por_contrato"> | string | null
+    responsavel_cpf?: StringNullableWithAggregatesFilter<"vw_jazigos_por_contrato"> | string | null
+    codigo?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
+    quadra?: StringNullableWithAggregatesFilter<"vw_jazigos_por_contrato"> | string | null
+    setor?: StringNullableWithAggregatesFilter<"vw_jazigos_por_contrato"> | string | null
+    quantidade_gavetas?: IntWithAggregatesFilter<"vw_jazigos_por_contrato"> | number
+    valor_mensalidade?: DecimalWithAggregatesFilter<"vw_jazigos_por_contrato"> | Decimal | DecimalJsLike | number | string
+    status_financeiro?: StringWithAggregatesFilter<"vw_jazigos_por_contrato"> | string
   }
 
   export type UserCreateInput = {
@@ -22504,6 +27608,413 @@ export namespace Prisma {
     _max?: NestedEnumSyncStatusFilter<$PrismaModel>
   }
 
+  export type BigIntFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntFilter<$PrismaModel> | bigint | number
+  }
+
+  export type vw_responsaveis_financeirosCountOrderByAggregateInput = {
+    responsavel_id?: SortOrder
+    motivo?: SortOrder
+    customer_id?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    responsavel_email?: SortOrder
+    responsavel_ativo?: SortOrder
+    primeiro_acesso?: SortOrder
+    responsavel_telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    titular_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+    synced_at?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type vw_responsaveis_financeirosAvgOrderByAggregateInput = {
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+  }
+
+  export type vw_responsaveis_financeirosMaxOrderByAggregateInput = {
+    responsavel_id?: SortOrder
+    motivo?: SortOrder
+    customer_id?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    responsavel_email?: SortOrder
+    responsavel_ativo?: SortOrder
+    primeiro_acesso?: SortOrder
+    responsavel_telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    titular_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+    synced_at?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type vw_responsaveis_financeirosMinOrderByAggregateInput = {
+    responsavel_id?: SortOrder
+    motivo?: SortOrder
+    customer_id?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    responsavel_email?: SortOrder
+    responsavel_ativo?: SortOrder
+    primeiro_acesso?: SortOrder
+    responsavel_telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    titular_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+    synced_at?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type vw_responsaveis_financeirosSumOrderByAggregateInput = {
+    total_jazigos?: SortOrder
+    valor_total_mensalidade?: SortOrder
+    pagamentos_atrasados?: SortOrder
+    pagamentos_pendentes?: SortOrder
+  }
+
+  export type BigIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntWithAggregatesFilter<$PrismaModel> | bigint | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedBigIntFilter<$PrismaModel>
+    _min?: NestedBigIntFilter<$PrismaModel>
+    _max?: NestedBigIntFilter<$PrismaModel>
+  }
+
+  export type vw_inadimplentesCountOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    email?: SortOrder
+    telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    pagamento_id?: SortOrder
+    data_vencimento?: SortOrder
+    valor_titulo?: SortOrder
+    nosso_numero?: SortOrder
+    tipo_pagamento?: SortOrder
+    dias_atraso?: SortOrder
+    jazigo_codigo?: SortOrder
+    jazigo_quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+  }
+
+  export type vw_inadimplentesAvgOrderByAggregateInput = {
+    valor_titulo?: SortOrder
+    dias_atraso?: SortOrder
+    quantidade_gavetas?: SortOrder
+  }
+
+  export type vw_inadimplentesMaxOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    email?: SortOrder
+    telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    pagamento_id?: SortOrder
+    data_vencimento?: SortOrder
+    valor_titulo?: SortOrder
+    nosso_numero?: SortOrder
+    tipo_pagamento?: SortOrder
+    dias_atraso?: SortOrder
+    jazigo_codigo?: SortOrder
+    jazigo_quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+  }
+
+  export type vw_inadimplentesMinOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    email?: SortOrder
+    telefone?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    pagamento_id?: SortOrder
+    data_vencimento?: SortOrder
+    valor_titulo?: SortOrder
+    nosso_numero?: SortOrder
+    tipo_pagamento?: SortOrder
+    dias_atraso?: SortOrder
+    jazigo_codigo?: SortOrder
+    jazigo_quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+  }
+
+  export type vw_inadimplentesSumOrderByAggregateInput = {
+    valor_titulo?: SortOrder
+    dias_atraso?: SortOrder
+    quantidade_gavetas?: SortOrder
+  }
+
+  export type vw_extrato_clienteCountOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    jazigo_codigo?: SortOrder
+    quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    pagamento_id?: SortOrder
+    tipo_pagamento?: SortOrder
+    status?: SortOrder
+    data_vencimento?: SortOrder
+    data_pagamento?: SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrder
+    valor_liquido?: SortOrder
+    nosso_numero?: SortOrder
+    metodo_pagamento?: SortOrder
+    invoice_url?: SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_extrato_clienteAvgOrderByAggregateInput = {
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrder
+    valor_liquido?: SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_extrato_clienteMaxOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    jazigo_codigo?: SortOrder
+    quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    pagamento_id?: SortOrder
+    tipo_pagamento?: SortOrder
+    status?: SortOrder
+    data_vencimento?: SortOrder
+    data_pagamento?: SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrder
+    valor_liquido?: SortOrder
+    nosso_numero?: SortOrder
+    metodo_pagamento?: SortOrder
+    invoice_url?: SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_extrato_clienteMinOrderByAggregateInput = {
+    customer_id?: SortOrder
+    nome?: SortOrder
+    cpf_cnpj?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    jazigo_codigo?: SortOrder
+    quadra?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    pagamento_id?: SortOrder
+    tipo_pagamento?: SortOrder
+    status?: SortOrder
+    data_vencimento?: SortOrder
+    data_pagamento?: SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrder
+    valor_liquido?: SortOrder
+    nosso_numero?: SortOrder
+    metodo_pagamento?: SortOrder
+    invoice_url?: SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_extrato_clienteSumOrderByAggregateInput = {
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    valor_titulo?: SortOrder
+    valor_pago?: SortOrder
+    valor_liquido?: SortOrder
+    dias_atraso?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroCountOrderByAggregateInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroAvgOrderByAggregateInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroMaxOrderByAggregateInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroMinOrderByAggregateInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_dashboard_financeiroSumOrderByAggregateInput = {
+    total_pagos?: SortOrder
+    total_pendentes?: SortOrder
+    total_atrasados?: SortOrder
+    total_cancelados?: SortOrder
+    valor_recebido?: SortOrder
+    valor_a_receber?: SortOrder
+    valor_em_atraso?: SortOrder
+    pagos_mes_atual?: SortOrder
+    valor_recebido_mes_atual?: SortOrder
+    id?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoCountOrderByAggregateInput = {
+    jazigo_id?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    customer_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    codigo?: SortOrder
+    quadra?: SortOrder
+    setor?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    status_financeiro?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoAvgOrderByAggregateInput = {
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoMaxOrderByAggregateInput = {
+    jazigo_id?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    customer_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    codigo?: SortOrder
+    quadra?: SortOrder
+    setor?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    status_financeiro?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoMinOrderByAggregateInput = {
+    jazigo_id?: SortOrder
+    contrato_id?: SortOrder
+    numero_contrato?: SortOrder
+    contrato_situacao?: SortOrder
+    customer_id?: SortOrder
+    titular_nome?: SortOrder
+    titular_cpf?: SortOrder
+    responsavel_nome?: SortOrder
+    responsavel_cpf?: SortOrder
+    codigo?: SortOrder
+    quadra?: SortOrder
+    setor?: SortOrder
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+    status_financeiro?: SortOrder
+  }
+
+  export type vw_jazigos_por_contratoSumOrderByAggregateInput = {
+    quantidade_gavetas?: SortOrder
+    valor_mensalidade?: SortOrder
+  }
+
   export type ChangeRequestCreateNestedManyWithoutRevisadoPorInput = {
     create?: XOR<ChangeRequestCreateWithoutRevisadoPorInput, ChangeRequestUncheckedCreateWithoutRevisadoPorInput> | ChangeRequestCreateWithoutRevisadoPorInput[] | ChangeRequestUncheckedCreateWithoutRevisadoPorInput[]
     connectOrCreate?: ChangeRequestCreateOrConnectWithoutRevisadoPorInput | ChangeRequestCreateOrConnectWithoutRevisadoPorInput[]
@@ -24005,6 +29516,33 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSyncStatusFilter<$PrismaModel>
     _max?: NestedEnumSyncStatusFilter<$PrismaModel>
+  }
+
+  export type NestedBigIntFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntFilter<$PrismaModel> | bigint | number
+  }
+
+  export type NestedBigIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntWithAggregatesFilter<$PrismaModel> | bigint | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedBigIntFilter<$PrismaModel>
+    _min?: NestedBigIntFilter<$PrismaModel>
+    _max?: NestedBigIntFilter<$PrismaModel>
   }
 
   export type ChangeRequestCreateWithoutRevisadoPorInput = {

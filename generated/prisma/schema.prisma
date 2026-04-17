@@ -32,8 +32,9 @@
 // =============================================================================
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -663,4 +664,147 @@ model SyncLog {
   @@index([jobName])
   @@index([dataInicio])
   @@map("sync_logs")
+}
+
+view vw_responsaveis_financeiros {
+  responsavel_id String  @unique
+  motivo         String?
+
+  customer_id          String
+  responsavel_nome     String
+  responsavel_cpf      String
+  responsavel_email    String?
+  responsavel_ativo    Boolean
+  primeiro_acesso      Boolean
+  responsavel_telefone String?
+
+  contrato_id       String
+  numero_contrato   String
+  contrato_situacao String
+
+  titular_id   String
+  titular_nome String
+  titular_cpf  String
+
+  total_jazigos           BigInt
+  valor_total_mensalidade Decimal @db.Decimal(10, 2)
+  pagamentos_atrasados    BigInt
+  pagamentos_pendentes    BigInt
+
+  synced_at  DateTime
+  created_at DateTime
+  updated_at DateTime
+
+  @@map("vw_responsaveis_financeiros")
+}
+
+// -----------------------------------------------------------------------------
+// 2. vw_inadimplentes
+// -----------------------------------------------------------------------------
+view vw_inadimplentes {
+  customer_id String
+  nome        String
+  cpf_cnpj    String
+  email       String?
+  telefone    String?
+
+  contrato_id       String
+  numero_contrato   String
+  contrato_situacao String
+
+  pagamento_id    String   @unique
+  data_vencimento DateTime @db.Date
+  valor_titulo    Decimal  @db.Decimal(10, 2)
+  nosso_numero    String?
+  tipo_pagamento  String
+  dias_atraso     Int
+
+  jazigo_codigo      String?
+  jazigo_quadra      String?
+  quantidade_gavetas Int?
+
+  @@map("vw_inadimplentes")
+}
+
+// -----------------------------------------------------------------------------
+// 3. vw_extrato_cliente
+// -----------------------------------------------------------------------------
+view vw_extrato_cliente {
+  customer_id String
+  nome        String
+  cpf_cnpj    String
+
+  numero_contrato   String
+  contrato_situacao String
+
+  jazigo_codigo      String?
+  quadra             String?
+  quantidade_gavetas Int?
+  valor_mensalidade  Decimal? @db.Decimal(10, 2)
+
+  pagamento_id     String    @unique
+  tipo_pagamento   String
+  status           String
+  data_vencimento  DateTime  @db.Date
+  data_pagamento   DateTime? @db.Date
+  valor_titulo     Decimal   @db.Decimal(10, 2)
+  valor_pago       Decimal?  @db.Decimal(10, 2)
+  valor_liquido    Decimal?  @db.Decimal(10, 2)
+  nosso_numero     String?
+  metodo_pagamento String?
+  invoice_url      String?
+  dias_atraso      Int
+
+  @@map("vw_extrato_cliente")
+}
+
+// -----------------------------------------------------------------------------
+// 4. vw_dashboard_financeiro
+// -----------------------------------------------------------------------------
+view vw_dashboard_financeiro {
+  total_pagos      BigInt
+  total_pendentes  BigInt
+  total_atrasados  BigInt
+  total_cancelados BigInt
+
+  valor_recebido  Decimal @db.Decimal(10, 2)
+  valor_a_receber Decimal @db.Decimal(10, 2)
+  valor_em_atraso Decimal @db.Decimal(10, 2)
+
+  pagos_mes_atual          BigInt
+  valor_recebido_mes_atual Decimal @db.Decimal(10, 2)
+
+  // Views de agregação sem PK precisam de @unique num campo calculado.
+  // Como esta view tem uma única linha, use um campo constante como âncora:
+  // Adicione ao SQL da view: 1::int AS id
+  id Int @unique
+
+  @@map("vw_dashboard_financeiro")
+}
+
+// -----------------------------------------------------------------------------
+// 5. vw_jazigos_por_contrato
+// -----------------------------------------------------------------------------
+view vw_jazigos_por_contrato {
+  jazigo_id String @unique
+
+  contrato_id       String
+  numero_contrato   String
+  contrato_situacao String
+
+  customer_id  String
+  titular_nome String
+  titular_cpf  String
+
+  responsavel_nome String?
+  responsavel_cpf  String?
+
+  codigo             String
+  quadra             String?
+  setor              String?
+  quantidade_gavetas Int
+  valor_mensalidade  Decimal @db.Decimal(10, 2)
+  status_financeiro  String
+
+  @@map("vw_jazigos_por_contrato")
 }

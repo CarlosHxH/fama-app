@@ -44,7 +44,7 @@ export async function getTitularLegacySnapshot(
           responsavelFinanceiro: true,
         },
       },
-      pagamentos: {
+      pagamentosComoPagador: {
         orderBy: { dataVencimento: "desc" },
         take: 100,
       },
@@ -86,7 +86,7 @@ export async function getTitularLegacySnapshot(
     }),
   );
 
-  const faturas = customer.pagamentos.map((p) =>
+  const faturas = customer.pagamentosComoPagador.map((p) =>
     toJsonSafe({
       id: p.id,
       sqlServerId: p.sqlServerId,

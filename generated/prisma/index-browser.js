@@ -305,6 +305,106 @@ exports.Prisma.SyncLogScalarFieldEnum = {
   dataFim: 'dataFim'
 };
 
+exports.Prisma.Vw_responsaveis_financeirosScalarFieldEnum = {
+  responsavel_id: 'responsavel_id',
+  motivo: 'motivo',
+  customer_id: 'customer_id',
+  responsavel_nome: 'responsavel_nome',
+  responsavel_cpf: 'responsavel_cpf',
+  responsavel_email: 'responsavel_email',
+  responsavel_ativo: 'responsavel_ativo',
+  primeiro_acesso: 'primeiro_acesso',
+  responsavel_telefone: 'responsavel_telefone',
+  contrato_id: 'contrato_id',
+  numero_contrato: 'numero_contrato',
+  contrato_situacao: 'contrato_situacao',
+  titular_id: 'titular_id',
+  titular_nome: 'titular_nome',
+  titular_cpf: 'titular_cpf',
+  total_jazigos: 'total_jazigos',
+  valor_total_mensalidade: 'valor_total_mensalidade',
+  pagamentos_atrasados: 'pagamentos_atrasados',
+  pagamentos_pendentes: 'pagamentos_pendentes',
+  synced_at: 'synced_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Vw_inadimplentesScalarFieldEnum = {
+  customer_id: 'customer_id',
+  nome: 'nome',
+  cpf_cnpj: 'cpf_cnpj',
+  email: 'email',
+  telefone: 'telefone',
+  contrato_id: 'contrato_id',
+  numero_contrato: 'numero_contrato',
+  contrato_situacao: 'contrato_situacao',
+  pagamento_id: 'pagamento_id',
+  data_vencimento: 'data_vencimento',
+  valor_titulo: 'valor_titulo',
+  nosso_numero: 'nosso_numero',
+  tipo_pagamento: 'tipo_pagamento',
+  dias_atraso: 'dias_atraso',
+  jazigo_codigo: 'jazigo_codigo',
+  jazigo_quadra: 'jazigo_quadra',
+  quantidade_gavetas: 'quantidade_gavetas'
+};
+
+exports.Prisma.Vw_extrato_clienteScalarFieldEnum = {
+  customer_id: 'customer_id',
+  nome: 'nome',
+  cpf_cnpj: 'cpf_cnpj',
+  numero_contrato: 'numero_contrato',
+  contrato_situacao: 'contrato_situacao',
+  jazigo_codigo: 'jazigo_codigo',
+  quadra: 'quadra',
+  quantidade_gavetas: 'quantidade_gavetas',
+  valor_mensalidade: 'valor_mensalidade',
+  pagamento_id: 'pagamento_id',
+  tipo_pagamento: 'tipo_pagamento',
+  status: 'status',
+  data_vencimento: 'data_vencimento',
+  data_pagamento: 'data_pagamento',
+  valor_titulo: 'valor_titulo',
+  valor_pago: 'valor_pago',
+  valor_liquido: 'valor_liquido',
+  nosso_numero: 'nosso_numero',
+  metodo_pagamento: 'metodo_pagamento',
+  invoice_url: 'invoice_url',
+  dias_atraso: 'dias_atraso'
+};
+
+exports.Prisma.Vw_dashboard_financeiroScalarFieldEnum = {
+  total_pagos: 'total_pagos',
+  total_pendentes: 'total_pendentes',
+  total_atrasados: 'total_atrasados',
+  total_cancelados: 'total_cancelados',
+  valor_recebido: 'valor_recebido',
+  valor_a_receber: 'valor_a_receber',
+  valor_em_atraso: 'valor_em_atraso',
+  pagos_mes_atual: 'pagos_mes_atual',
+  valor_recebido_mes_atual: 'valor_recebido_mes_atual',
+  id: 'id'
+};
+
+exports.Prisma.Vw_jazigos_por_contratoScalarFieldEnum = {
+  jazigo_id: 'jazigo_id',
+  contrato_id: 'contrato_id',
+  numero_contrato: 'numero_contrato',
+  contrato_situacao: 'contrato_situacao',
+  customer_id: 'customer_id',
+  titular_nome: 'titular_nome',
+  titular_cpf: 'titular_cpf',
+  responsavel_nome: 'responsavel_nome',
+  responsavel_cpf: 'responsavel_cpf',
+  codigo: 'codigo',
+  quadra: 'quadra',
+  setor: 'setor',
+  quantidade_gavetas: 'quantidade_gavetas',
+  valor_mensalidade: 'valor_mensalidade',
+  status_financeiro: 'status_financeiro'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -425,7 +525,12 @@ exports.Prisma.ModelName = {
   Pagamento: 'Pagamento',
   Notificacao: 'Notificacao',
   ChangeRequest: 'ChangeRequest',
-  SyncLog: 'SyncLog'
+  SyncLog: 'SyncLog',
+  vw_responsaveis_financeiros: 'vw_responsaveis_financeiros',
+  vw_inadimplentes: 'vw_inadimplentes',
+  vw_extrato_cliente: 'vw_extrato_cliente',
+  vw_dashboard_financeiro: 'vw_dashboard_financeiro',
+  vw_jazigos_por_contrato: 'vw_jazigos_por_contrato'
 };
 
 /**

@@ -230,7 +230,7 @@ export function ClienteDetalhesClient() {
             <dd className="mt-0.5 text-jardim-text">
               {c._count.contratos} contrato(s) · {c._count.enderecos}{" "}
               endereço(s) · {c._count.telefones} telefone(s) ·{" "}
-              {c._count.pagamentos} cobrança(s)
+              {c._count.pagamentosComoPagador} cobrança(s)
             </dd>
           </div>
         </dl>

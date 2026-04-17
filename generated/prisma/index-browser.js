@@ -151,6 +151,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
 
 exports.Prisma.CustomerAddressScalarFieldEnum = {
   id: 'id',
+  sqlServerId: 'sqlServerId',
   customerId: 'customerId',
   tipo: 'tipo',
   logradouro: 'logradouro',
@@ -168,6 +169,7 @@ exports.Prisma.CustomerAddressScalarFieldEnum = {
 
 exports.Prisma.CustomerPhoneScalarFieldEnum = {
   id: 'id',
+  sqlServerId: 'sqlServerId',
   customerId: 'customerId',
   tipo: 'tipo',
   numero: 'numero',
@@ -183,6 +185,9 @@ exports.Prisma.CustomerRefreshTokenScalarFieldEnum = {
   token: 'token',
   expiresAt: 'expiresAt',
   revogado: 'revogado',
+  userAgent: 'userAgent',
+  ipOrigem: 'ipOrigem',
+  nomeDispositivo: 'nomeDispositivo',
   createdAt: 'createdAt'
 };
 
@@ -200,10 +205,7 @@ exports.Prisma.ContratoScalarFieldEnum = {
 exports.Prisma.ResponsavelFinanceiroScalarFieldEnum = {
   id: 'id',
   contratoId: 'contratoId',
-  nome: 'nome',
-  cpf: 'cpf',
-  email: 'email',
-  telefone: 'telefone',
+  customerId: 'customerId',
   motivo: 'motivo',
   syncedAt: 'syncedAt',
   createdAt: 'createdAt',
@@ -223,6 +225,16 @@ exports.Prisma.JazigoScalarFieldEnum = {
   syncedAt: 'syncedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TarifaJazigoScalarFieldEnum = {
+  id: 'id',
+  quantidadeGavetas: 'quantidadeGavetas',
+  valorMensalidade: 'valorMensalidade',
+  vigenteDesde: 'vigenteDesde',
+  decretoCriador: 'decretoCriador',
+  observacoes: 'observacoes',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.PagamentoScalarFieldEnum = {
@@ -246,6 +258,7 @@ exports.Prisma.PagamentoScalarFieldEnum = {
   jazigoId: 'jazigoId',
   contratoId: 'contratoId',
   customerId: 'customerId',
+  titularContratoId: 'titularContratoId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -259,6 +272,7 @@ exports.Prisma.NotificacaoScalarFieldEnum = {
   assunto: 'assunto',
   mensagem: 'mensagem',
   erroDetalhe: 'erroDetalhe',
+  chaveIdempotencia: 'chaveIdempotencia',
   enviadoEm: 'enviadoEm',
   entregueEm: 'entregueEm'
 };
@@ -271,6 +285,7 @@ exports.Prisma.ChangeRequestScalarFieldEnum = {
   status: 'status',
   dadoAntigo: 'dadoAntigo',
   dadoNovo: 'dadoNovo',
+  dadoAplicado: 'dadoAplicado',
   justificativa: 'justificativa',
   notaRevisao: 'notaRevisao',
   revisadoEm: 'revisadoEm',
@@ -339,7 +354,10 @@ exports.TipoTelefone = exports.$Enums.TipoTelefone = {
 exports.SituacaoContrato = exports.$Enums.SituacaoContrato = {
   ATIVO: 'ATIVO',
   INATIVO: 'INATIVO',
-  QUITADO: 'QUITADO'
+  QUITADO: 'QUITADO',
+  RESCINDIDO: 'RESCINDIDO',
+  SUSPENSO: 'SUSPENSO',
+  TRANSFERIDO: 'TRANSFERIDO'
 };
 
 exports.StatusPagamento = exports.$Enums.StatusPagamento = {
@@ -403,6 +421,7 @@ exports.Prisma.ModelName = {
   Contrato: 'Contrato',
   ResponsavelFinanceiro: 'ResponsavelFinanceiro',
   Jazigo: 'Jazigo',
+  TarifaJazigo: 'TarifaJazigo',
   Pagamento: 'Pagamento',
   Notificacao: 'Notificacao',
   ChangeRequest: 'ChangeRequest',

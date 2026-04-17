@@ -1,6 +1,34 @@
 // =============================================================================
 // schema.prisma — Portal do Cessionário (Cemitério)
 // Banco: PostgreSQL 17+
+// Versão: 2.0 — correções aplicadas sobre a revisão de 2025-04
+// =============================================================================
+//
+// CHANGELOG v2.0
+// ──────────────────────────────────────────────────────────────────────────────
+// [CRÍTICO] ResponsavelFinanceiro agora possui FK opcional para Customer,
+//           eliminando dados duplicados quando o responsável já tem cadastro.
+//
+// [CRÍTICO] Responsável financeiro unificado no nível do Jazigo.
+//           ResponsavelFinanceiro (legado) mantido para contratos antigos do
+//           SQL Server, mas a precedência está documentada e enforçada via
+//           campo `precedencia` e comentários de serviço.
+//
+// [CRÍTICO] Pagamento.customerId agora representa QUEM EFETIVAMENTE PAGA
+//           (responsável resolvido pela hierarquia), não o titular do contrato.
+//           Campo `titularContratoId` adicionado para rastreabilidade do titular.
+//
+// [MÉDIO]   ChangeRequest ganhou `dadoAplicado` para fechar o ciclo de auditoria.
+//
+// [MÉDIO]   Notificacao ganhou `chaveIdempotencia` para evitar envios duplicados.
+//
+// [MÉDIO]   SituacaoContrato expandido: RESCINDIDO, SUSPENSO, TRANSFERIDO.
+//
+// [BAIXO]   CustomerRefreshToken ganhou metadados de dispositivo/IP.
+//
+// [BAIXO]   TarifaJazigo adicionada para histórico de reajustes tarifários.
+//
+// [BAIXO]   Índices adicionais em pagamentos, contratos e customers.
 // =============================================================================
 
 generator client {
@@ -34,10 +62,14 @@ enum TipoEndereco {
   COMERCIAL
 }
 
+/// Situações sincronizadas do SQL Server (A/I/Q) + estados nativos do portal.
 enum SituacaoContrato {
   ATIVO // A — sincronizado do SQL Server
-  INATIVO // I
-  QUITADO // Q
+  INATIVO // I — sincronizado do SQL Server
+  QUITADO // Q — sincronizado do SQL Server
+  RESCINDIDO // cancelado por inadimplência ou rescisão voluntária
+  SUSPENSO // inadimplência temporária; pode retornar a ATIVO
+  TRANSFERIDO // titularidade cedida a outro cessionário
 }
 
 enum StatusPagamento {
@@ -136,16 +168,23 @@ model User {
 ///   Sem este campo, cada nova cobrança criaria um cliente duplicado no Asaas.
 ///
 /// Responsável financeiro por jazigo (cobrança):
-///   Quem paga a manutenção de um jazigo pode ser outro registo em `customers` (FK opcional em
-///   `Jazigos.responsavel_financeiro_customer_id`). Um mesmo `Customer` pode ser titular de uns
-///   contratos e pagador noutros jazigos — dados centralizados nesta tabela (CPF único, índices).
+///   Um mesmo Customer pode ser titular de uns contratos e pagador noutros
+///   jazigos — dados sempre centralizados nesta tabela (CPF único).
+///
+///   HIERARQUIA DE RESOLUÇÃO DO PAGADOR (enforçada na camada de serviço):
+///     1. Jazigo.responsavelFinanceiroCustomer (FK direta — mais recente)
+///     2. ResponsavelFinanceiro.customer (sync SQL Server — sempre um Customer)
+///     3. Titular do contrato (Customer do Contrato)
+///
+///   Pagamento.customerId DEVE refletir o pagador resolvido pela hierarquia,
+///   não necessariamente o titular. Ver campo titularContratoId em Pagamento.
 model Customer {
   id             String  @id @default(uuid())
-  sqlServerId    Int?    @unique @map("sql_server_id") // CodCessionario — nulo até o primeiro sync
-  cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14) // apenas dígitos, sem máscara — login principal
+  sqlServerId    Int?    @unique @map("sql_server_id")
+  cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14)
   nome           String  @db.VarChar(160)
   email          String? @db.VarChar(120)
-  senhaHash      String? @map("senha_hash") // nulo até o primeiro acesso
+  senhaHash      String? @map("senha_hash")
   primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
   ativo          Boolean @default(true)
 
@@ -165,14 +204,24 @@ model Customer {
   telefones      CustomerPhone[]
   refreshTokens  CustomerRefreshToken[]
   contratos      Contrato[]
-  pagamentos     Pagamento[]
   notificacoes   Notificacao[]
   changeRequests ChangeRequest[]
 
+  /// Jazigos em que este Customer é o pagador direto (nível 1 da hierarquia).
   jazigosOndeResponsavelFinanceiro Jazigo[] @relation("JazigoResponsavelFinanceiro")
+
+  /// Pagamentos onde este Customer figura como PAGADOR EFETIVO (resolvido pela hierarquia).
+  pagamentosComoPagador Pagamento[] @relation("PagadorEfetivo")
+
+  /// Pagamentos onde este Customer é o TITULAR DO CONTRATO (pode diferir do pagador).
+  pagamentosComoTitular Pagamento[] @relation("TitularContrato")
+
+  /// Contratos financeiros legados onde este Customer é o responsável (nível 2/3 da hierarquia).
+  responsabilidadesFinanceiras ResponsavelFinanceiro[]
 
   @@index([cpfCnpj])
   @@index([email])
+  @@index([asaasCustomerId])
   @@map("customers")
 }
 
@@ -185,6 +234,7 @@ model Customer {
 /// O Asaas exige pelo menos logradouro, cidade e UF para gerar cobranças.
 model CustomerAddress {
   id              String       @id @default(uuid())
+  sqlServerId     Int?         @unique @map("sql_server_id")
   customerId      String       @map("customer_id")
   tipo            TipoEndereco @default(RESIDENCIAL)
   logradouro      String?      @db.VarChar(200)
@@ -194,7 +244,7 @@ model CustomerAddress {
   cidade          String?      @db.VarChar(120)
   uf              String?      @db.Char(2)
   cep             String?      @db.VarChar(10)
-  correspondencia Boolean      @default(false) // endereço principal para envio de boleto
+  correspondencia Boolean      @default(false)
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
@@ -212,12 +262,12 @@ model CustomerAddress {
 
 /// Telefones do cessionário — pode ter múltiplos por tipo.
 model CustomerPhone {
-  id         String       @id @default(uuid())
-  customerId String       @map("customer_id")
-  tipo       TipoTelefone
-  numero     String       @db.VarChar(20)
-  /// Notas internas sobre este contacto (ex.: horário, quem atende).
-  observacoes String?     @db.Text @map("observacoes")
+  id          String       @id @default(uuid())
+  sqlServerId Int?         @unique @map("sql_server_id")
+  customerId  String       @map("customer_id")
+  tipo        TipoTelefone
+  numero      String       @db.VarChar(20)
+  observacoes String?      @map("observacoes") @db.Text
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
@@ -237,6 +287,9 @@ model CustomerPhone {
 /// Permite revogar acesso imediatamente em caso de troca de senha
 /// ou suspeita de acesso indevido — sem depender da expiração do JWT.
 ///
+/// Metadados de dispositivo permitem exibir "sessões ativas" no portal
+/// e revogar individualmente (ex.: "Chrome · Windows · 189.x.x.x").
+///
 /// Job de limpeza recomendado:
 ///   DELETE FROM customer_refresh_tokens
 ///   WHERE expires_at < now() OR revogado = true
@@ -246,12 +299,18 @@ model CustomerRefreshToken {
   token      String   @unique
   expiresAt  DateTime @map("expires_at")
   revogado   Boolean  @default(false)
-  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Metadados de sessão — exibição no portal e auditoria de acesso indevido
+  userAgent       String? @map("user_agent") @db.VarChar(300)
+  ipOrigem        String? @map("ip_origem") @db.VarChar(45) // IPv4 ou IPv6
+  nomeDispositivo String? @map("nome_dispositivo") @db.VarChar(100) // ex: "Chrome · Windows"
+
+  createdAt DateTime @default(now()) @map("created_at")
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
-  @@index([expiresAt]) // índice para o job de limpeza de tokens expirados
+  @@index([expiresAt])
   @@map("customer_refresh_tokens")
 }
 
@@ -260,6 +319,9 @@ model CustomerRefreshToken {
 // =============================================================================
 
 /// Contrato de concessão de jazigo. sql_server_id = CodContrato original.
+///
+/// situacao: ATIVO/INATIVO/QUITADO vêm do SQL Server (A/I/Q).
+///           RESCINDIDO/SUSPENSO/TRANSFERIDO são estados nativos do portal.
 model Contrato {
   id             String           @id @default(uuid())
   sqlServerId    Int?             @unique @map("sql_server_id")
@@ -270,7 +332,7 @@ model Contrato {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   jazigos               Jazigo[]
-  pagamentos            Pagamento[] // atalho direto — evita join duplo em consultas financeiras
+  pagamentos            Pagamento[] // atalho direto — evita join duplo
   responsavelFinanceiro ResponsavelFinanceiro?
 
   syncedAt  DateTime @default(now()) @map("synced_at")
@@ -278,33 +340,46 @@ model Contrato {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
+  @@index([situacao])
   @@map("contratos")
 }
 
 // -----------------------------------------
-// 3a. Responsável Financeiro
+// 3a. Responsável Financeiro (legado SQL Server)
 // -----------------------------------------
 
 /// Responsável financeiro do contrato quando diferente do cessionário titular.
 /// Exemplo: filho que paga a manutenção do jazigo do pai.
 ///
+/// O responsável SEMPRE possui um Customer vinculado — o job de sync ETL cria
+/// o Customer automaticamente a partir do CPF do SQL Server caso ainda não exista.
+/// primeiroAcesso = true até que o responsável defina sua senha no portal.
+///
+/// HIERARQUIA DE PAGADOR:
+///   Este registro é sobreposto por Jazigo.responsavelFinanceiroCustomer (nível 1).
+///   Ver Customer para a hierarquia completa.
+///
 /// Vínculo 1:1 com Contrato — cada contrato tem no máximo um responsável financeiro.
-/// As cobranças no Asaas devem ser geradas em nome deste responsável, não do cessionário.
 model ResponsavelFinanceiro {
-  id         String  @id @default(uuid())
-  contratoId String  @unique @map("contrato_id")
-  nome       String  @db.VarChar(160)
-  cpf        String  @db.VarChar(14)
-  email      String? @db.VarChar(120)
-  telefone   String? @db.VarChar(20)
-  motivo     String? @db.Text // justificativa do vínculo (ex: "Filho responsável pelo pagamento")
+  id         String @id @default(uuid())
+  contratoId String @unique @map("contrato_id")
 
+  /// NOT NULL — o sync ETL garante a criação do Customer antes de inserir este registro.
+  /// Se a criação do Customer falhar, o ResponsavelFinanceiro NÃO deve ser inserido.
+  customerId String @map("customer_id")
+
+  /// Justificativa do vínculo sincronizada do SQL Server.
+  /// Exemplo: "Filho responsável pelo pagamento"
+  motivo String? @db.Text
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
   contrato Contrato @relation(fields: [contratoId], references: [id], onDelete: Cascade)
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([customerId])
   @@map("responsaveis_financeiros")
 }
 
@@ -320,6 +395,13 @@ model ResponsavelFinanceiro {
 /// IMPORTANTE: não altere valorMensalidade diretamente em produção após um reajuste
 /// tarifário. O snapshot histórico fica em Pagamento (gavetasNaEpoca / valorNaEpoca),
 /// que preserva o valor vigente no momento de cada emissão.
+/// Para consultar tarifas históricas sem varrer pagamentos, use TarifaJazigo.
+///
+/// RESPONSÁVEL FINANCEIRO POR JAZIGO:
+///   O responsável é resolvido no nível do jazigo (não do contrato), permitindo
+///   que jazigos do mesmo contrato tenham pagadores distintos.
+///   Precedência: responsavelFinanceiroCustomer (nível 1) > ResponsavelFinanceiro
+///   do contrato (nível 2/3) > titular do contrato (nível 4).
 model Jazigo {
   id          String  @id @default(uuid())
   sqlServerId Int?    @unique @map("sql_server_id")
@@ -334,6 +416,8 @@ model Jazigo {
   contratoId String   @map("contrato_id")
   contrato   Contrato @relation(fields: [contratoId], references: [id])
 
+  /// Nível 1 da hierarquia: Customer que paga este jazigo diretamente.
+  /// Quando preenchido, sobrepõe o ResponsavelFinanceiro do contrato.
   responsavelFinanceiroCustomerId String?   @map("responsavel_financeiro_customer_id")
   responsavelFinanceiroCustomer   Customer? @relation("JazigoResponsavelFinanceiro", fields: [responsavelFinanceiroCustomerId], references: [id], onDelete: SetNull)
 
@@ -349,10 +433,47 @@ model Jazigo {
 }
 
 // =============================================================================
-// 4. FINANCEIRO
+// 4. TARIFAS HISTÓRICAS (novo — reajustes tarifários)
+// =============================================================================
+
+/// Histórico de tarifas de manutenção por quantidade de gavetas.
+///
+/// Permite consultar "qual era a tarifa vigente em tal data" sem varrer
+/// a tabela de pagamentos. Deve ser populada manualmente a cada decreto.
+///
+/// Exemplo de registros iniciais (Decreto 4.332/2023):
+///   { gavetas: 3, valor: 180.00, vigenteDesde: 2023-01-01 }
+///   { gavetas: 6, valor: 360.00, vigenteDesde: 2023-01-01 }
+///
+/// Para encontrar a tarifa vigente em uma data D:
+///   SELECT * FROM tarifas_jazigo
+///   WHERE quantidade_gavetas = ? AND vigente_desde <= D
+///   ORDER BY vigente_desde DESC LIMIT 1
+model TarifaJazigo {
+  id                String   @id @default(uuid())
+  quantidadeGavetas Int      @map("quantidade_gavetas")
+  valorMensalidade  Decimal  @map("valor_mensalidade") @db.Decimal(10, 2)
+  vigenteDesde      DateTime @map("vigente_desde") @db.Date
+  decretoCriador    String?  @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
+  observacoes       String?  @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([quantidadeGavetas, vigenteDesde])
+  @@index([quantidadeGavetas, vigenteDesde])
+  @@map("tarifas_jazigo")
+}
+
+// =============================================================================
+// 5. FINANCEIRO
 // =============================================================================
 
 /// Pagamento de manutenção, aquisição ou taxa de serviço.
+///
+/// PAGADOR EFETIVO vs TITULAR DO CONTRATO:
+///   customerId      → QUEM PAGA (resolvido pela hierarquia de responsável financeiro)
+///   titularContratoId → titular do contrato (para rastreabilidade; pode ser o mesmo)
+///   A camada de serviço DEVE resolver a hierarquia antes de criar o Pagamento.
 ///
 /// Regras de negócio:
 ///   - jazigoId OBRIGATÓRIO para MANUTENCAO — validar na camada de serviço.
@@ -374,7 +495,7 @@ model Pagamento {
   // Valores
   valorTitulo  Decimal  @map("valor_titulo") @db.Decimal(10, 2)
   valorPago    Decimal? @map("valor_pago") @db.Decimal(10, 2)
-  valorLiquido Decimal? @map("valor_liquido") @db.Decimal(10, 2) // valor após taxa Asaas
+  valorLiquido Decimal? @map("valor_liquido") @db.Decimal(10, 2)
 
   // Snapshot histórico do jazigo na data de emissão
   gavetasNaEpoca Int?     @map("gavetas_na_epoca")
@@ -387,21 +508,28 @@ model Pagamento {
   // Classificação
   status          StatusPagamento  @default(PENDENTE)
   tipo            TipoPagamento    @default(MANUTENCAO)
-  metodoPagamento MetodoPagamento? @map("metodo_pagamento") // preenchido após confirmação
+  metodoPagamento MetodoPagamento? @map("metodo_pagamento")
 
   // Webhook Asaas
-  webhookData       Json?     @map("webhook_data") // payload bruto para auditoria
+  webhookData       Json?     @map("webhook_data")
   webhookRecebidoEm DateTime? @map("webhook_recebido_em")
 
-  // Relações
-  jazigoId String? @map("jazigo_id") // obrigatório para MANUTENCAO — validar no service
+  // Jazigo e contrato
+  jazigoId String? @map("jazigo_id")
   jazigo   Jazigo? @relation(fields: [jazigoId], references: [id])
 
-  contratoId String?   @map("contrato_id") // atalho direto
+  contratoId String?   @map("contrato_id")
   contrato   Contrato? @relation(fields: [contratoId], references: [id])
 
+  /// PAGADOR EFETIVO: Customer resolvido pela hierarquia de responsável financeiro.
+  /// Este é o Customer cujo asaasCustomerId deve ser usado na cobrança Asaas.
   customerId String   @map("customer_id")
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer @relation("PagadorEfetivo", fields: [customerId], references: [id])
+
+  /// TITULAR DO CONTRATO: pode ser diferente do pagador efetivo.
+  /// Nullable: nulo apenas para pagamentos migrados do legado sem titular identificado.
+  titularContratoId String?   @map("titular_contrato_id")
+  titularContrato   Customer? @relation("TitularContrato", fields: [titularContratoId], references: [id])
 
   notificacoes Notificacao[]
 
@@ -409,16 +537,19 @@ model Pagamento {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
+  @@index([titularContratoId])
   @@index([jazigoId])
   @@index([contratoId])
+  @@index([asaasId])
   @@index([nossoNumero])
   @@index([status])
+  @@index([tipo])
   @@index([dataVencimento])
   @@map("pagamentos")
 }
 
 // =============================================================================
-// 5. NOTIFICAÇÕES
+// 6. NOTIFICAÇÕES
 // =============================================================================
 
 /// Registro de cada notificação enviada ao cliente (email, WhatsApp, SMS).
@@ -429,6 +560,12 @@ model Pagamento {
 ///   D+3  → aviso de pagamento em atraso
 ///   D+N  → escalonamento conforme política interna
 ///
+/// IDEMPOTÊNCIA:
+///   chaveIdempotencia impede envios duplicados em caso de retry do job.
+///   Formato recomendado: "{pagamentoId}:{evento}:{canal}"
+///   Exemplo: "uuid-pagamento:D-5:WHATSAPP"
+///   O job de notificação deve verificar esta chave antes de enviar.
+///
 /// pagamentoId nullable: notificações nem sempre estão ligadas a um pagamento
 /// (ex.: confirmação de alteração cadastral aprovada).
 model Notificacao {
@@ -437,11 +574,17 @@ model Notificacao {
   pagamentoId String?           @map("pagamento_id")
   canal       CanalNotificacao
   status      StatusNotificacao @default(ENVIADA)
-  assunto     String?           @db.VarChar(200) // usado para email
+  assunto     String?           @db.VarChar(200)
   mensagem    String            @db.Text
   erroDetalhe String?           @map("erro_detalhe") @db.Text
-  enviadoEm   DateTime          @default(now()) @map("enviado_em")
-  entregueEm  DateTime?         @map("entregue_em")
+
+  /// Chave de idempotência — impede envios duplicados em retries.
+  /// Formato: "{pagamentoId}:{evento}:{canal}" ou "{customerId}:{tipo}:{data}"
+  /// Deve ser verificada pelo job antes de criar um novo registro.
+  chaveIdempotencia String? @unique @map("chave_idempotencia") @db.VarChar(150)
+
+  enviadoEm  DateTime  @default(now()) @map("enviado_em")
+  entregueEm DateTime? @map("entregue_em")
 
   customer  Customer   @relation(fields: [customerId], references: [id])
   pagamento Pagamento? @relation(fields: [pagamentoId], references: [id])
@@ -454,7 +597,7 @@ model Notificacao {
 }
 
 // =============================================================================
-// 6. SOLICITAÇÕES DE ALTERAÇÃO DE CADASTRO
+// 7. SOLICITAÇÕES DE ALTERAÇÃO DE CADASTRO
 // =============================================================================
 
 /// Solicitação feita pelo cliente no portal; revisada por um usuário admin.
@@ -462,9 +605,12 @@ model Notificacao {
 /// dadoAntigo: snapshot obrigatório dos dados antes da alteração.
 ///             Nunca deve ser null — sem ele a revisão perde contexto de auditoria.
 /// dadoNovo:   dados que o cliente deseja aplicar.
+/// dadoAplicado: o que foi EFETIVAMENTE gravado no banco após aprovação.
+///              Pode diferir de dadoNovo se o admin ajustou os dados durante a revisão.
+///              Nulo enquanto a solicitação não for aprovada.
 ///
 /// Fluxo:
-///   PENDENTE → APROVADA (admin aplica os dados + preenche notaRevisao opcional)
+///   PENDENTE → APROVADA (admin aplica os dados, preenche dadoAplicado + notaRevisao opcional)
 ///           → REJEITADA (admin explica o motivo em notaRevisao)
 model ChangeRequest {
   id            Int             @id @default(autoincrement())
@@ -472,8 +618,9 @@ model ChangeRequest {
   reviewedById  String?         @map("reviewed_by_id")
   tipo          TipoAlteracao
   status        StatusAlteracao @default(PENDENTE)
-  dadoAntigo    Json            @map("dado_antigo") // obrigatório — nunca null
-  dadoNovo      Json            @map("dado_novo")
+  dadoAntigo    Json            @map("dado_antigo") // obrigatório — snapshot antes da alteração
+  dadoNovo      Json            @map("dado_novo") // o que o cliente pediu
+  dadoAplicado  Json?           @map("dado_aplicado") // o que foi efetivamente gravado (fecha o ciclo de auditoria)
   justificativa String?         @db.Text
   notaRevisao   String?         @map("nota_revisao") @db.Text
   revisadoEm    DateTime?       @map("revisado_em")
@@ -485,11 +632,12 @@ model ChangeRequest {
 
   @@index([customerId])
   @@index([status])
+  @@index([tipo])
   @@map("change_requests")
 }
 
 // =============================================================================
-// 7. AUDITORIA DE SINCRONIZAÇÃO (ETL SQL Server → PostgreSQL)
+// 8. AUDITORIA DE SINCRONIZAÇÃO (ETL SQL Server → PostgreSQL)
 // =============================================================================
 
 /// Log de cada execução do job de sincronização.
@@ -508,7 +656,7 @@ model SyncLog {
   registrosNovos       Int        @default(0) @map("registros_novos")
   registrosAtualizados Int        @default(0) @map("registros_atualizados")
   falhas               Int        @default(0)
-  erroDetalhes         Json?      @map("erro_detalhes") // [{ entidade, sqlServerId, motivo }]
+  erroDetalhes         Json?      @map("erro_detalhes")
   dataInicio           DateTime   @default(now()) @map("data_inicio")
   dataFim              DateTime?  @map("data_fim")
 

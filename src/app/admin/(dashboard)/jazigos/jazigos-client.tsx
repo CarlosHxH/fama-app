@@ -160,7 +160,6 @@ export function JazigosClient() {
                     <th className="px-4 py-3 sm:px-5">Contrato</th>
                     <th className="px-4 py-3 sm:px-5">Titular</th>
                     <th className="px-4 py-3 sm:px-5">Pagador (Asaas)</th>
-                    <th className="px-4 py-3 text-right sm:px-5">Cobranças</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-jardim-border">
@@ -170,7 +169,17 @@ export function JazigosClient() {
                       className="transition-colors hover:bg-jardim-cream/50"
                     >
                       <td className="whitespace-nowrap px-4 py-3.5 font-mono text-sm font-medium tabular-nums text-jardim-green-dark sm:px-5">
-                        {j.codigo}
+                        <Link
+                          href={`/admin/jazigos/${j.id}`}
+                          title="Abrir detalhes do jazigo"
+                          className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                        >
+                          {j.codigo}
+                          <ArrowUpRight
+                            className="h-3 w-3 text-jardim-green-mid opacity-60 transition"
+                            aria-hidden
+                          />
+                        </Link>
                       </td>
                       <td className="px-4 py-3.5 text-jardim-text sm:px-5">
                         <span className="text-jardim-text-muted">
@@ -240,9 +249,6 @@ export function JazigosClient() {
                             </button>
                           ) : null}
                         </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-jardim-text sm:px-5">
-                        {j.pagamentosCount}
                       </td>
                     </tr>
                   ))}

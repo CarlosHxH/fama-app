@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { hash } from "bcrypt-ts";
-import type { Prisma } from "../../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
 import { createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
@@ -202,7 +202,8 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
-        cursor: z.string().uuid().optional(),
+        /** Cursor é o `codigo` do último jazigo retornado (string única, compatível com orderBy). */
+        cursor: z.string().optional(),
         search: z.string().max(200).optional(),
       }),
     )
@@ -262,7 +263,7 @@ export const adminRouter = createTRPCRouter({
       const items = await db.jazigo.findMany({
         where,
         take: input.limit + 1,
-        cursor: input.cursor ? { id: input.cursor } : undefined,
+        cursor: input.cursor ? { codigo: input.cursor } : undefined,
         orderBy: [{ codigo: "asc" }],
         include: {
           contrato: {
@@ -280,14 +281,13 @@ export const adminRouter = createTRPCRouter({
           responsavelFinanceiroCustomer: {
             select: { id: true, nome: true, cpfCnpj: true },
           },
-          _count: { select: { pagamentos: true } },
         },
       });
 
       let nextCursor: string | undefined;
       if (items.length > input.limit) {
         const next = items.pop();
-        nextCursor = next?.id;
+        nextCursor = next?.codigo;
       }
 
       const serialized = items.map((j) => {
@@ -317,7 +317,6 @@ export const adminRouter = createTRPCRouter({
           numeroContrato: j.contrato.numeroContrato,
           customerId: j.contrato.customer.id,
           titularNome: j.contrato.customer.nome,
-          pagamentosCount: j._count.pagamentos,
           responsavelFinanceiroCustomer: payer
             ? { id: payer.id, nome: payer.nome, cpfCnpj: payer.cpfCnpj }
             : null,
@@ -1314,4 +1313,198 @@ export const adminRouter = createTRPCRouter({
     const result = await runSync(db, env);
     return { ok: true as const, ...result };
   }),
+
+  /**
+   * Detalhes completos de um jazigo: localização, contrato, titular,
+   * responsável financeiro e agregados de pagamentos por status.
+   */
+  getJazigoById: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const jazigo = await db.jazigo.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          sqlServerId: true,
+          codigo: true,
+          quadra: true,
+          setor: true,
+          quantidadeGavetas: true,
+          valorMensalidade: true,
+          syncedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          contrato: {
+            select: {
+              id: true,
+              numeroContrato: true,
+              situacao: true,
+              customer: {
+                select: { id: true, nome: true, cpfCnpj: true, email: true },
+              },
+              responsavelFinanceiro: {
+                select: {
+                  motivo: true,
+                  customer: {
+                    select: { id: true, nome: true, cpfCnpj: true, email: true },
+                  },
+                },
+              },
+            },
+          },
+          responsavelFinanceiroCustomer: {
+            select: { id: true, nome: true, cpfCnpj: true, email: true },
+          },
+          _count: { select: { pagamentos: true } },
+        },
+      });
+
+      if (!jazigo) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Jazigo não encontrado.",
+        });
+      }
+
+      const paymentStats = await db.pagamento.groupBy({
+        by: ["status"],
+        where: { jazigoId: input.id },
+        _count: true,
+        _sum: { valorTitulo: true },
+      });
+
+      const byStatus = Object.fromEntries(
+        paymentStats.map((s) => [
+          s.status,
+          {
+            count: s._count,
+            valueCents: s._sum.valorTitulo
+              ? centsFromDecimal(s._sum.valorTitulo)
+              : 0,
+          },
+        ]),
+      );
+
+      return {
+        ...jazigo,
+        valorMensalidadeCents: centsFromDecimal(jazigo.valorMensalidade),
+        byStatus: byStatus as Partial<
+          Record<
+            "PENDENTE" | "PAGO" | "ATRASADO" | "CANCELADO" | "ESTORNADO",
+            { count: number; valueCents: number }
+          >
+        >,
+      };
+    }),
+
+  /**
+   * Lista paginada de pagamentos de um jazigo, com filtro opcional por status.
+   */
+  listJazigoPayments: adminProcedure
+    .input(
+      z.object({
+        jazigoId: z.string().uuid(),
+        limit: z.number().min(1).max(100).default(25),
+        cursor: z.string().uuid().optional(),
+        status: z
+          .enum(["PENDENTE", "PAGO", "ATRASADO", "CANCELADO", "ESTORNADO"])
+          .optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const where: Prisma.PagamentoWhereInput = {
+        jazigoId: input.jazigoId,
+        ...(input.status ? { status: input.status } : {}),
+      };
+
+      const items = await db.pagamento.findMany({
+        where,
+        take: input.limit + 1,
+        cursor: input.cursor ? { id: input.cursor } : undefined,
+        orderBy: { dataVencimento: "desc" },
+        select: {
+          id: true,
+          valorTitulo: true,
+          valorPago: true,
+          dataVencimento: true,
+          dataPagamento: true,
+          status: true,
+          tipo: true,
+          metodoPagamento: true,
+          nossoNumero: true,
+          asaasId: true,
+          invoiceUrl: true,
+          gavetasNaEpoca: true,
+          valorNaEpoca: true,
+          createdAt: true,
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      return {
+        items: items.map((p) => ({
+          ...p,
+          valorTituloCents: centsFromDecimal(p.valorTitulo),
+          valorPagoCents: p.valorPago ? centsFromDecimal(p.valorPago) : null,
+          valorNaEpocaCents: p.valorNaEpoca
+            ? centsFromDecimal(p.valorNaEpoca)
+            : null,
+        })),
+        nextCursor,
+      };
+    }),
+
+  /**
+   * Atualiza gavetas e/ou valor de mensalidade de um jazigo.
+   * Requer perfil FINANCEIRO ou ADMIN.
+   */
+  updateJazigo: adminFinanceProcedure
+    .input(
+      z
+        .object({
+          id: z.string().uuid(),
+          quantidadeGavetas: z.number().int().min(1).max(99).optional(),
+          /** Valor em reais (ex.: 180.00). */
+          valorMensalidade: z.number().positive().max(99_999).optional(),
+        })
+        .refine(
+          (d) =>
+            d.quantidadeGavetas !== undefined || d.valorMensalidade !== undefined,
+          { message: "Indique pelo menos um campo a alterar." },
+        ),
+    )
+    .mutation(async ({ input }) => {
+      const jazigo = await db.jazigo.findUnique({ where: { id: input.id } });
+      if (!jazigo) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Jazigo não encontrado.",
+        });
+      }
+
+      const data: Prisma.JazigoUpdateInput = {};
+      if (input.quantidadeGavetas !== undefined)
+        data.quantidadeGavetas = input.quantidadeGavetas;
+      if (input.valorMensalidade !== undefined)
+        data.valorMensalidade = new Prisma.Decimal(
+          input.valorMensalidade.toFixed(2),
+        );
+
+      return db.jazigo.update({
+        where: { id: input.id },
+        data,
+        select: {
+          id: true,
+          codigo: true,
+          quantidadeGavetas: true,
+          valorMensalidade: true,
+          updatedAt: true,
+        },
+      });
+    }),
 });

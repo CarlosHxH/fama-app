@@ -46,9 +46,9 @@ datasource db {
 // =============================================================================
 
 enum Role {
-  ADMIN
-  FINANCEIRO
   ATENDENTE
+  FINANCEIRO
+  ADMIN
 }
 
 enum TipoTelefone {

@@ -211,9 +211,9 @@ export type SyncLog = $Result.DefaultSelection<Prisma.$SyncLogPayload>
  */
 export namespace $Enums {
   export const Role: {
-  ADMIN: 'ADMIN',
+  ATENDENTE: 'ATENDENTE',
   FINANCEIRO: 'FINANCEIRO',
-  ATENDENTE: 'ATENDENTE'
+  ADMIN: 'ADMIN'
 };
 
 export type Role = (typeof Role)[keyof typeof Role]

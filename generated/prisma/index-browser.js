@@ -335,9 +335,9 @@ exports.Prisma.JsonNullValueFilter = {
   AnyNull: Prisma.AnyNull
 };
 exports.Role = exports.$Enums.Role = {
-  ADMIN: 'ADMIN',
+  ATENDENTE: 'ATENDENTE',
   FINANCEIRO: 'FINANCEIRO',
-  ATENDENTE: 'ATENDENTE'
+  ADMIN: 'ADMIN'
 };
 
 exports.TipoEndereco = exports.$Enums.TipoEndereco = {

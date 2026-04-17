@@ -46,9 +46,9 @@ datasource db {
 // =============================================================================
 
 enum Role {
-  ADMIN
-  FINANCEIRO
   ATENDENTE
+  FINANCEIRO
+  ADMIN
 }
 
 enum TipoTelefone {
@@ -64,12 +64,12 @@ enum TipoEndereco {
 
 /// Situações sincronizadas do SQL Server (A/I/Q) + estados nativos do portal.
 enum SituacaoContrato {
-  ATIVO        // A — sincronizado do SQL Server
-  INATIVO      // I — sincronizado do SQL Server
-  QUITADO      // Q — sincronizado do SQL Server
-  RESCINDIDO   // cancelado por inadimplência ou rescisão voluntária
-  SUSPENSO     // inadimplência temporária; pode retornar a ATIVO
-  TRANSFERIDO  // titularidade cedida a outro cessionário
+  ATIVO // A — sincronizado do SQL Server
+  INATIVO // I — sincronizado do SQL Server
+  QUITADO // Q — sincronizado do SQL Server
+  RESCINDIDO // cancelado por inadimplência ou rescisão voluntária
+  SUSPENSO // inadimplência temporária; pode retornar a ATIVO
+  TRANSFERIDO // titularidade cedida a outro cessionário
 }
 
 enum StatusPagamento {
@@ -134,14 +134,14 @@ model User {
   id    String  @id @default(uuid())
   email String  @unique @db.VarChar(120)
   nome  String  @db.VarChar(160)
-  senha String  // bcrypt hash
+  senha String // bcrypt hash
   role  Role    @default(ATENDENTE)
   ativo Boolean @default(true)
 
   changeRequests ChangeRequest[] @relation("ReviewedBy")
 
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt     @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("users")
 }
@@ -179,32 +179,32 @@ model User {
 ///   Pagamento.customerId DEVE refletir o pagador resolvido pela hierarquia,
 ///   não necessariamente o titular. Ver campo titularContratoId em Pagamento.
 model Customer {
-  id             String    @id @default(uuid())
-  sqlServerId    Int?      @unique @map("sql_server_id")
-  cpfCnpj        String    @unique @map("cpf_cnpj") @db.VarChar(14)
-  nome           String    @db.VarChar(160)
-  email          String?   @db.VarChar(120)
-  senhaHash      String?   @map("senha_hash")
-  primeiroAcesso Boolean   @default(true)  @map("primeiro_acesso")
-  ativo          Boolean   @default(true)
+  id             String  @id @default(uuid())
+  sqlServerId    Int?    @unique @map("sql_server_id")
+  cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14)
+  nome           String  @db.VarChar(160)
+  email          String? @db.VarChar(120)
+  senhaHash      String? @map("senha_hash")
+  primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
+  ativo          Boolean @default(true)
 
   // Segurança de login
-  tentativasLogin Int       @default(0)  @map("tentativas_login")
+  tentativasLogin Int       @default(0) @map("tentativas_login")
   bloqueadoAte    DateTime? @map("bloqueado_ate")
 
   // Integração Asaas
-  asaasCustomerId String?   @unique @map("asaas_customer_id") @db.VarChar(50)
+  asaasCustomerId String? @unique @map("asaas_customer_id") @db.VarChar(50)
 
   // Controle de sync
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  enderecos     CustomerAddress[]
-  telefones     CustomerPhone[]
-  refreshTokens CustomerRefreshToken[]
-  contratos     Contrato[]
-  notificacoes  Notificacao[]
+  enderecos      CustomerAddress[]
+  telefones      CustomerPhone[]
+  refreshTokens  CustomerRefreshToken[]
+  contratos      Contrato[]
+  notificacoes   Notificacao[]
   changeRequests ChangeRequest[]
 
   /// Jazigos em que este Customer é o pagador direto (nível 1 da hierarquia).
@@ -250,7 +250,7 @@ model CustomerAddress {
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
   @@map("customer_addresses")
@@ -267,13 +267,13 @@ model CustomerPhone {
   customerId  String       @map("customer_id")
   tipo        TipoTelefone
   numero      String       @db.VarChar(20)
-  observacoes String?      @db.Text @map("observacoes")
+  observacoes String?      @map("observacoes") @db.Text
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
   @@map("customer_phones")
@@ -301,9 +301,9 @@ model CustomerRefreshToken {
   revogado   Boolean  @default(false)
 
   // Metadados de sessão — exibição no portal e auditoria de acesso indevido
-  userAgent       String? @map("user_agent")       @db.VarChar(300)
-  ipOrigem        String? @map("ip_origem")         @db.VarChar(45)  // IPv4 ou IPv6
-  nomeDispositivo String? @map("nome_dispositivo")  @db.VarChar(100) // ex: "Chrome · Windows"
+  userAgent       String? @map("user_agent") @db.VarChar(300)
+  ipOrigem        String? @map("ip_origem") @db.VarChar(45) // IPv4 ou IPv6
+  nomeDispositivo String? @map("nome_dispositivo") @db.VarChar(100) // ex: "Chrome · Windows"
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -332,12 +332,12 @@ model Contrato {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   jazigos               Jazigo[]
-  pagamentos            Pagamento[]            // atalho direto — evita join duplo
+  pagamentos            Pagamento[] // atalho direto — evita join duplo
   responsavelFinanceiro ResponsavelFinanceiro?
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
   @@index([situacao])
@@ -361,12 +361,12 @@ model Contrato {
 ///
 /// Vínculo 1:1 com Contrato — cada contrato tem no máximo um responsável financeiro.
 model ResponsavelFinanceiro {
-  id         String  @id @default(uuid())
-  contratoId String  @unique @map("contrato_id")
+  id         String @id @default(uuid())
+  contratoId String @unique @map("contrato_id")
 
   /// NOT NULL — o sync ETL garante a criação do Customer antes de inserir este registro.
   /// Se a criação do Customer falhar, o ResponsavelFinanceiro NÃO deve ser inserido.
-  customerId String  @map("customer_id")
+  customerId String @map("customer_id")
 
   /// Justificativa do vínculo sincronizada do SQL Server.
   /// Exemplo: "Filho responsável pelo pagamento"
@@ -377,7 +377,7 @@ model ResponsavelFinanceiro {
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
   @@map("responsaveis_financeiros")
@@ -410,8 +410,8 @@ model Jazigo {
   setor       String? @db.VarChar(20)
 
   // Decreto 4.332/2023
-  quantidadeGavetas Int     @default(3)        @map("quantidade_gavetas")
-  valorMensalidade  Decimal @db.Decimal(10, 2) @map("valor_mensalidade")
+  quantidadeGavetas Int     @default(3) @map("quantidade_gavetas")
+  valorMensalidade  Decimal @map("valor_mensalidade") @db.Decimal(10, 2)
 
   contratoId String   @map("contrato_id")
   contrato   Contrato @relation(fields: [contratoId], references: [id])
@@ -425,7 +425,7 @@ model Jazigo {
 
   syncedAt  DateTime @default(now()) @map("synced_at")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([contratoId])
   @@index([responsavelFinanceiroCustomerId])
@@ -452,9 +452,9 @@ model Jazigo {
 model TarifaJazigo {
   id                String   @id @default(uuid())
   quantidadeGavetas Int      @map("quantidade_gavetas")
-  valorMensalidade  Decimal  @db.Decimal(10, 2) @map("valor_mensalidade")
+  valorMensalidade  Decimal  @map("valor_mensalidade") @db.Decimal(10, 2)
   vigenteDesde      DateTime @map("vigente_desde") @db.Date
-  decretoCriador    String?  @db.VarChar(100) @map("decreto_criador") // ex: "Decreto 4.332/2023"
+  decretoCriador    String?  @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
   observacoes       String?  @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -488,22 +488,22 @@ model Pagamento {
   sqlServerId Int?   @unique @map("sql_server_id")
 
   // Integração Asaas
-  asaasId      String? @unique @map("asaas_id")   @db.VarChar(100)
-  nossoNumero  String? @map("nosso_numero")        @db.VarChar(50)
-  invoiceUrl   String? @map("invoice_url")         @db.Text
+  asaasId     String? @unique @map("asaas_id") @db.VarChar(100)
+  nossoNumero String? @map("nosso_numero") @db.VarChar(50)
+  invoiceUrl  String? @map("invoice_url") @db.Text
 
   // Valores
-  valorTitulo  Decimal  @db.Decimal(10, 2) @map("valor_titulo")
-  valorPago    Decimal? @db.Decimal(10, 2) @map("valor_pago")
-  valorLiquido Decimal? @db.Decimal(10, 2) @map("valor_liquido")
+  valorTitulo  Decimal  @map("valor_titulo") @db.Decimal(10, 2)
+  valorPago    Decimal? @map("valor_pago") @db.Decimal(10, 2)
+  valorLiquido Decimal? @map("valor_liquido") @db.Decimal(10, 2)
 
   // Snapshot histórico do jazigo na data de emissão
   gavetasNaEpoca Int?     @map("gavetas_na_epoca")
-  valorNaEpoca   Decimal? @db.Decimal(10, 2) @map("valor_na_epoca")
+  valorNaEpoca   Decimal? @map("valor_na_epoca") @db.Decimal(10, 2)
 
   // Datas
   dataVencimento DateTime  @map("data_vencimento") @db.Date
-  dataPagamento  DateTime? @map("data_pagamento")  @db.Date
+  dataPagamento  DateTime? @map("data_pagamento") @db.Date
 
   // Classificação
   status          StatusPagamento  @default(PENDENTE)
@@ -515,8 +515,8 @@ model Pagamento {
   webhookRecebidoEm DateTime? @map("webhook_recebido_em")
 
   // Jazigo e contrato
-  jazigoId   String?   @map("jazigo_id")
-  jazigo     Jazigo?   @relation(fields: [jazigoId], references: [id])
+  jazigoId String? @map("jazigo_id")
+  jazigo   Jazigo? @relation(fields: [jazigoId], references: [id])
 
   contratoId String?   @map("contrato_id")
   contrato   Contrato? @relation(fields: [contratoId], references: [id])
@@ -534,7 +534,7 @@ model Pagamento {
   notificacoes Notificacao[]
 
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt      @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([customerId])
   @@index([titularContratoId])
@@ -618,14 +618,14 @@ model ChangeRequest {
   reviewedById  String?         @map("reviewed_by_id")
   tipo          TipoAlteracao
   status        StatusAlteracao @default(PENDENTE)
-  dadoAntigo    Json            @map("dado_antigo")   // obrigatório — snapshot antes da alteração
-  dadoNovo      Json            @map("dado_novo")     // o que o cliente pediu
+  dadoAntigo    Json            @map("dado_antigo") // obrigatório — snapshot antes da alteração
+  dadoNovo      Json            @map("dado_novo") // o que o cliente pediu
   dadoAplicado  Json?           @map("dado_aplicado") // o que foi efetivamente gravado (fecha o ciclo de auditoria)
   justificativa String?         @db.Text
   notaRevisao   String?         @map("nota_revisao") @db.Text
   revisadoEm    DateTime?       @map("revisado_em")
   createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt      @map("updated_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
 
   customer    Customer @relation(fields: [customerId], references: [id])
   revisadoPor User?    @relation("ReviewedBy", fields: [reviewedById], references: [id])

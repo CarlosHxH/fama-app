@@ -209,6 +209,8 @@ model CustomerPhone {
   customerId String       @map("customer_id")
   tipo       TipoTelefone
   numero     String       @db.VarChar(20)
+  /// Notas internas sobre este contacto (ex.: horário, quem atende).
+  observacoes String?     @db.Text @map("observacoes")
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 

@@ -246,77 +246,6 @@ export function AdminDashboard() {
           /> */}
         </section>
 
-        {/*stats.data?.lastSyncRuns && stats.data.lastSyncRuns.length > 0 ? (
-          <section
-            className="rounded-2xl border border-jardim-border bg-jardim-white p-5 shadow-sm sm:p-6"
-            aria-labelledby="sync-runs-title"
-          >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <RefreshCw
-                  className="h-4 w-4 text-jardim-green-mid"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <h2
-                  id="sync-runs-title"
-                  className="text-sm font-semibold text-jardim-green-dark"
-                >
-                  Últimas sincronizações (SQL Server → Postgres)
-                </h2>
-              </div>
-              <Link
-                href="/admin/sincronizacoes"
-                className="text-xs font-medium text-jardim-green-mid underline-offset-2 hover:underline"
-              >
-                Ver histórico completo
-              </Link>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[480px] text-left text-xs">
-                <thead>
-                  <tr className="border-b border-jardim-border text-jardim-text-muted">
-                    <th className="py-2 pr-3">Início</th>
-                    <th className="py-2 pr-3">Estado</th>
-                    <th className="py-2 pr-3 text-right">Lidas</th>
-                    <th className="py-2 text-right">Gravadas</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-jardim-border">
-                  {stats.data.lastSyncRuns.map((r) => (
-                    <tr key={r.id}>
-                      <td className="py-2 pr-3 whitespace-nowrap text-jardim-text">
-                        {new Date(r.startedAt).toLocaleString("pt-BR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </td>
-                      <td className="py-2 pr-3">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 font-medium ring-1 ring-inset",
-                            r.status === "SUCCESS"
-                              ? "bg-jardim-green-mid/12 text-jardim-green-dark ring-jardim-green-mid/25"
-                              : "bg-amber-50 text-amber-900 ring-amber-200",
-                          )}
-                        >
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {r.rowsRead}
-                      </td>
-                      <td className="py-2 text-right tabular-nums">
-                        {r.rowsWritten}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ) : null*/}
-
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           <section
             className="rounded-2xl border border-jardim-border bg-jardim-white p-5 shadow-sm sm:p-6"
@@ -603,12 +532,7 @@ export function AdminDashboard() {
                             </a>
                           ) : null}
                           <Link
-                            href={`/admin/clientes?search=${encodeURIComponent(
-                              p.user.email
-                                ?? p.user.name
-                                ?? p.user.cpfCnpj
-                                ?? "",
-                            )}`}
+                            href={`/admin/clientes/${p.customerId}`}
                             className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
                           >
                             <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />

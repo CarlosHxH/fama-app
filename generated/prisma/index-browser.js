@@ -171,6 +171,7 @@ exports.Prisma.CustomerPhoneScalarFieldEnum = {
   customerId: 'customerId',
   tipo: 'tipo',
   numero: 'numero',
+  observacoes: 'observacoes',
   syncedAt: 'syncedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

@@ -6004,6 +6004,7 @@ export namespace Prisma {
     customerId: string | null
     tipo: $Enums.TipoTelefone | null
     numero: string | null
+    observacoes: string | null
     syncedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6014,6 +6015,7 @@ export namespace Prisma {
     customerId: string | null
     tipo: $Enums.TipoTelefone | null
     numero: string | null
+    observacoes: string | null
     syncedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6024,6 +6026,7 @@ export namespace Prisma {
     customerId: number
     tipo: number
     numero: number
+    observacoes: number
     syncedAt: number
     createdAt: number
     updatedAt: number
@@ -6036,6 +6039,7 @@ export namespace Prisma {
     customerId?: true
     tipo?: true
     numero?: true
+    observacoes?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6046,6 +6050,7 @@ export namespace Prisma {
     customerId?: true
     tipo?: true
     numero?: true
+    observacoes?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6056,6 +6061,7 @@ export namespace Prisma {
     customerId?: true
     tipo?: true
     numero?: true
+    observacoes?: true
     syncedAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6139,6 +6145,7 @@ export namespace Prisma {
     customerId: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes: string | null
     syncedAt: Date
     createdAt: Date
     updatedAt: Date
@@ -6166,6 +6173,7 @@ export namespace Prisma {
     customerId?: boolean
     tipo?: boolean
     numero?: boolean
+    observacoes?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6177,6 +6185,7 @@ export namespace Prisma {
     customerId?: boolean
     tipo?: boolean
     numero?: boolean
+    observacoes?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6188,6 +6197,7 @@ export namespace Prisma {
     customerId?: boolean
     tipo?: boolean
     numero?: boolean
+    observacoes?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6199,12 +6209,13 @@ export namespace Prisma {
     customerId?: boolean
     tipo?: boolean
     numero?: boolean
+    observacoes?: boolean
     syncedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type CustomerPhoneOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customerId" | "tipo" | "numero" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["customerPhone"]>
+  export type CustomerPhoneOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customerId" | "tipo" | "numero" | "observacoes" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["customerPhone"]>
   export type CustomerPhoneInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
   }
@@ -6225,6 +6236,10 @@ export namespace Prisma {
       customerId: string
       tipo: $Enums.TipoTelefone
       numero: string
+      /**
+       * Notas internas sobre este contacto (ex.: horário, quem atende).
+       */
+      observacoes: string | null
       syncedAt: Date
       createdAt: Date
       updatedAt: Date
@@ -6656,6 +6671,7 @@ export namespace Prisma {
     readonly customerId: FieldRef<"CustomerPhone", 'String'>
     readonly tipo: FieldRef<"CustomerPhone", 'TipoTelefone'>
     readonly numero: FieldRef<"CustomerPhone", 'String'>
+    readonly observacoes: FieldRef<"CustomerPhone", 'String'>
     readonly syncedAt: FieldRef<"CustomerPhone", 'DateTime'>
     readonly createdAt: FieldRef<"CustomerPhone", 'DateTime'>
     readonly updatedAt: FieldRef<"CustomerPhone", 'DateTime'>
@@ -16610,6 +16626,7 @@ export namespace Prisma {
     customerId: 'customerId',
     tipo: 'tipo',
     numero: 'numero',
+    observacoes: 'observacoes',
     syncedAt: 'syncedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -17367,6 +17384,7 @@ export namespace Prisma {
     customerId?: StringFilter<"CustomerPhone"> | string
     tipo?: EnumTipoTelefoneFilter<"CustomerPhone"> | $Enums.TipoTelefone
     numero?: StringFilter<"CustomerPhone"> | string
+    observacoes?: StringNullableFilter<"CustomerPhone"> | string | null
     syncedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     createdAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
@@ -17378,6 +17396,7 @@ export namespace Prisma {
     customerId?: SortOrder
     tipo?: SortOrder
     numero?: SortOrder
+    observacoes?: SortOrderInput | SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17392,6 +17411,7 @@ export namespace Prisma {
     customerId?: StringFilter<"CustomerPhone"> | string
     tipo?: EnumTipoTelefoneFilter<"CustomerPhone"> | $Enums.TipoTelefone
     numero?: StringFilter<"CustomerPhone"> | string
+    observacoes?: StringNullableFilter<"CustomerPhone"> | string | null
     syncedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     createdAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
@@ -17403,6 +17423,7 @@ export namespace Prisma {
     customerId?: SortOrder
     tipo?: SortOrder
     numero?: SortOrder
+    observacoes?: SortOrderInput | SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17419,6 +17440,7 @@ export namespace Prisma {
     customerId?: StringWithAggregatesFilter<"CustomerPhone"> | string
     tipo?: EnumTipoTelefoneWithAggregatesFilter<"CustomerPhone"> | $Enums.TipoTelefone
     numero?: StringWithAggregatesFilter<"CustomerPhone"> | string
+    observacoes?: StringNullableWithAggregatesFilter<"CustomerPhone"> | string | null
     syncedAt?: DateTimeWithAggregatesFilter<"CustomerPhone"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"CustomerPhone"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CustomerPhone"> | Date | string
@@ -18488,6 +18510,7 @@ export namespace Prisma {
     id?: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18499,6 +18522,7 @@ export namespace Prisma {
     customerId: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18508,6 +18532,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18519,6 +18544,7 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18529,6 +18555,7 @@ export namespace Prisma {
     customerId: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18538,6 +18565,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18548,6 +18576,7 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19797,6 +19826,7 @@ export namespace Prisma {
     customerId?: SortOrder
     tipo?: SortOrder
     numero?: SortOrder
+    observacoes?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19807,6 +19837,7 @@ export namespace Prisma {
     customerId?: SortOrder
     tipo?: SortOrder
     numero?: SortOrder
+    observacoes?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19817,6 +19848,7 @@ export namespace Prisma {
     customerId?: SortOrder
     tipo?: SortOrder
     numero?: SortOrder
+    observacoes?: SortOrder
     syncedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -22011,6 +22043,7 @@ export namespace Prisma {
     id?: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22020,6 +22053,7 @@ export namespace Prisma {
     id?: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22288,6 +22322,7 @@ export namespace Prisma {
     customerId?: StringFilter<"CustomerPhone"> | string
     tipo?: EnumTipoTelefoneFilter<"CustomerPhone"> | $Enums.TipoTelefone
     numero?: StringFilter<"CustomerPhone"> | string
+    observacoes?: StringNullableFilter<"CustomerPhone"> | string | null
     syncedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     createdAt?: DateTimeFilter<"CustomerPhone"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerPhone"> | Date | string
@@ -24063,6 +24098,7 @@ export namespace Prisma {
     id?: string
     tipo: $Enums.TipoTelefone
     numero: string
+    observacoes?: string | null
     syncedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -24188,6 +24224,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24197,6 +24234,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24206,6 +24244,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoTelefoneFieldUpdateOperationsInput | $Enums.TipoTelefone
     numero?: StringFieldUpdateOperationsInput | string
+    observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     syncedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

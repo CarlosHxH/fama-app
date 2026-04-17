@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { ExternalLink, LayoutGrid, LogOut } from "lucide-react";
+import { ExternalLink, LogOut, PanelLeft } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 
@@ -12,13 +12,13 @@ const linkBtn =
 export function AdminHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-jardim-border bg-jardim-white/95 shadow-sm backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-full items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-jardim-green-dark text-jardim-white shadow-sm ring-1 ring-jardim-green-mid/30"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-jardim-green-mid/30"
             aria-hidden
           >
-            <LayoutGrid className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
+            <PanelLeft className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-jardim-green-dark sm:text-base">

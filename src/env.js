@@ -10,17 +10,12 @@ dotenvConfig({ path: ".env", override: false });
 
 export const env = createEnv({
   server: {
-    AUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string()
-        : z.string().optional(),
+    AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(),
     DATABASE_URL: z.string().url(),
-    NODE_ENV: z
-      .enum(["development", "test", "production"])
-      .default("development"),
+    NODE_ENV: z.enum(["development", "test", "production"]) .default("development"),
     ASAAS_API_KEY: z.string().min(1),
     ASAAS_API_URL: z.string().url(),
-    ASAAS_WEBHOOK_TOKEN: z.string().optional(),
+    ASAAS_WEBHOOK_TOKEN: z.string().optional()
   },
   client: {},
   runtimeEnv: {

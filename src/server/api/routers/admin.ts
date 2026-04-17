@@ -28,6 +28,8 @@ import {
 const phoneFields = z.object({
   number: z.string().trim().min(8).max(32),
   tipo: z.enum(["CELULAR", "FIXO", "WHATSAPP"]).optional(),
+  /** Texto livre; vazio não grava o campo na criação. */
+  observacoes: z.string().trim().max(2000).optional(),
 });
 
 /**
@@ -187,6 +189,120 @@ export const adminRouter = createTRPCRouter({
       return { items: mapped, nextCursor };
     }),
 
+  /**
+   * Ficha do titular (sem `senhaHash`) + contagens e últimas cobranças.
+   */
+  getCustomerById: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const c = await db.customer.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          cpfCnpj: true,
+          sqlServerId: true,
+          primeiroAcesso: true,
+          ativo: true,
+          tentativasLogin: true,
+          bloqueadoAte: true,
+          asaasCustomerId: true,
+          syncedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: {
+            select: {
+              pagamentos: true,
+              telefones: true,
+              enderecos: true,
+              contratos: true,
+            },
+          },
+        },
+      });
+      if (!c) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Cliente não encontrado.",
+        });
+      }
+
+      const recentPayments = await db.pagamento.findMany({
+        where: { customerId: input.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          valorTitulo: true,
+          status: true,
+          dataVencimento: true,
+          createdAt: true,
+          invoiceUrl: true,
+          metodoPagamento: true,
+        },
+      });
+
+      return {
+        ...c,
+        recentPayments: recentPayments.map((p) => ({
+          id: p.id,
+          status: p.status,
+          dataVencimento: p.dataVencimento,
+          createdAt: p.createdAt,
+          invoiceUrl: p.invoiceUrl,
+          metodoPagamento: p.metodoPagamento,
+          valueCents: centsFromDecimal(p.valorTitulo),
+        })),
+      };
+    }),
+
+  /**
+   * Atualiza dados cadastrais do titular (nome, e-mail, estado).
+   * Respeita `canEditCustomerContacts` (ADMIN / FINANCEIRO).
+   */
+  updateCustomer: adminOperationalProcedure
+    .input(
+      z
+        .object({
+          id: z.string().uuid(),
+          nome: z.string().min(1).max(160).optional(),
+          email: z.union([z.string().email().max(120), z.literal("")]).optional(),
+          ativo: z.boolean().optional(),
+        })
+        .refine(
+          (d) =>
+            d.nome !== undefined ||
+            d.email !== undefined ||
+            d.ativo !== undefined,
+          { message: "Indique pelo menos um campo a alterar." },
+        ),
+    )
+    .mutation(async ({ input }) => {
+      const { id, nome, email, ativo } = input;
+      await requireCustomer(id);
+
+      const data: Prisma.CustomerUpdateInput = {};
+      if (nome !== undefined) data.nome = nome.trim();
+      if (email !== undefined) {
+        data.email = email === "" ? null : email.trim().toLowerCase();
+      }
+      if (ativo !== undefined) data.ativo = ativo;
+
+      return db.customer.update({
+        where: { id },
+        data,
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          ativo: true,
+          cpfCnpj: true,
+          updatedAt: true,
+        },
+      });
+    }),
+
   paymentContextForUser: adminFinanceProcedure
     .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input }) => {
@@ -317,11 +433,14 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
       await requireCustomer(customerId);
+      const obs = input.observacoes?.trim();
       return db.customerPhone.create({
         data: {
           customerId,
           numero: input.number,
           tipo: input.tipo ?? "CELULAR",
+          observacoes:
+            obs && obs.length > 0 ? obs : null,
         },
       });
     }),
@@ -332,6 +451,8 @@ export const adminRouter = createTRPCRouter({
         id: z.string().uuid(),
         number: z.string().trim().min(8).max(32).optional(),
         tipo: z.enum(["CELULAR", "FIXO", "WHATSAPP"]).optional(),
+        /** `""` limpa observações; omitido não altera. */
+        observacoes: z.union([z.string().max(2000), z.literal("")]).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -347,9 +468,14 @@ export const adminRouter = createTRPCRouter({
       const data: {
         numero?: string;
         tipo?: "CELULAR" | "FIXO" | "WHATSAPP";
+        observacoes?: string | null;
       } = {};
       if (input.number !== undefined) data.numero = input.number;
       if (input.tipo !== undefined) data.tipo = input.tipo;
+      if (input.observacoes !== undefined) {
+        const t = input.observacoes.trim();
+        data.observacoes = t.length > 0 ? t : null;
+      }
       if (Object.keys(data).length === 0) {
         return row;
       }

@@ -1,14 +1,15 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronRight, Search, User } from "lucide-react";
+import { ArrowUpRight, Search, User } from "lucide-react";
 
-import { ClientePhonesPanel } from "./_components/cliente-phones-panel";
 import { api } from "~/trpc/react";
 
 /**
- * Listagem de titulares (clientes) com pesquisa.
+ * Listagem de titulares (clientes) com pesquisa — só leitura.
+ * Telefones e contactos editam-se na ficha do cliente.
  * Aceita `?search=` na URL (ex.: link a partir do dashboard de cobranças).
  */
 export function ClientesClient() {
@@ -19,7 +20,6 @@ export function ClientesClient() {
     const q = searchParams.get("search")?.trim();
     if (q) setSearch(q);
   }, [searchParams]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const query = api.admin.listUsers.useQuery({
     limit: 60,
@@ -34,7 +34,8 @@ export function ClientesClient() {
             Clientes
           </h1>
           <p className="mt-1 text-sm text-jardim-text-muted">
-            Titulares com conta no portal (exclui administradores).
+            Titulares com conta no portal (exclui administradores). Para telefones
+            e observações, abra a ficha do cliente.
           </p>
         </div>
         <div className="relative max-w-md flex-1">
@@ -55,10 +56,9 @@ export function ClientesClient() {
 
       <div className="overflow-hidden rounded-2xl border border-jardim-border bg-jardim-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-jardim-border bg-jardim-cream/80 text-[11px] font-semibold uppercase tracking-wider text-jardim-text-muted">
-                <th className="w-10 px-2 py-3 sm:px-3" aria-hidden />
                 <th className="px-4 py-3 sm:px-5">Titular</th>
                 <th className="px-4 py-3 sm:px-5">E-mail</th>
                 <th className="px-4 py-3 sm:px-5">CPF/CNPJ</th>
@@ -70,15 +70,21 @@ export function ClientesClient() {
             <tbody className="divide-y divide-jardim-border">
               {query.isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-jardim-text-muted">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-12 text-center text-jardim-text-muted"
+                  >
                     A carregar…
                   </td>
                 </tr>
               ) : query.data?.items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-14">
+                  <td colSpan={6} className="px-4 py-14">
                     <div className="flex flex-col items-center justify-center text-center">
-                      <User className="mb-2 h-10 w-10 text-jardim-border" aria-hidden />
+                      <User
+                        className="mb-2 h-10 w-10 text-jardim-border"
+                        aria-hidden
+                      />
                       <p className="font-medium text-jardim-text-muted">
                         Nenhum cliente encontrado
                       </p>
@@ -92,62 +98,47 @@ export function ClientesClient() {
                 </tr>
               ) : (
                 query.data?.items.map((u) => (
-                  <Fragment key={u.id}>
-                    <tr className="transition-colors hover:bg-jardim-cream/50">
-                      <td className="px-2 py-3.5 sm:px-3">
-                        <button
-                          type="button"
-                          className="rounded-lg p-1 text-jardim-green-mid hover:bg-jardim-cream"
-                          onClick={() =>
-                            setExpandedId((id) => (id === u.id ? null : u.id))
-                          }
-                          aria-expanded={expandedId === u.id}
-                          aria-label={
-                            expandedId === u.id
-                              ? "Fechar telefones"
-                              : "Ver e editar telefones"
-                          }
-                        >
-                          {expandedId === u.id ? (
-                            <ChevronDown className="h-4 w-4" aria-hidden />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" aria-hidden />
-                          )}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3.5 font-medium text-jardim-text sm:px-5">
-                        {u.name ?? "—"}
-                      </td>
-                      <td className="max-w-[200px] truncate px-4 py-3.5 text-jardim-text-muted sm:max-w-xs sm:px-5">
-                        {u.email ?? "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 tabular-nums text-jardim-text sm:px-5">
-                        {u.cpfCnpj ?? "—"}
-                      </td>
-                      <td className="px-4 py-3.5 text-xs text-jardim-text-muted sm:px-5">
-                        {u.asaasCustomerId ? (
-                          <span className="rounded-full bg-jardim-cream px-2 py-0.5 text-jardim-green-mid ring-1 ring-jardim-border">
-                            Ligado
-                          </span>
-                        ) : (
-                          <span className="text-jardim-text-light">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-jardim-text sm:px-5">
-                        {u._count.phones}
-                      </td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-jardim-green-dark sm:px-5">
-                        {u._count.billingPayments}
-                      </td>
-                    </tr>
-                    {expandedId === u.id ? (
-                      <tr className="bg-jardim-cream/30">
-                        <td colSpan={7} className="p-0">
-                          <ClientePhonesPanel userId={u.id} />
-                        </td>
-                      </tr>
-                    ) : null}
-                  </Fragment>
+                  <tr
+                    key={u.id}
+                    className="transition-colors hover:bg-jardim-cream/50"
+                  >
+                    <td className="px-4 py-3.5 font-medium text-jardim-text sm:px-5">
+                      <Link
+                        href={`/admin/clientes/${u.id}`}
+                        title="Abrir ficha do cliente"
+                        className="group inline-flex max-w-full items-center gap-1.5 text-jardim-green-dark"
+                      >
+                        <span className="min-w-0 truncate underline-offset-2 group-hover:underline">
+                          {u.name ?? "—"}
+                        </span>
+                        <ArrowUpRight
+                          className="h-3.5 w-3.5 shrink-0 text-jardim-green-mid opacity-70 transition group-hover:opacity-100"
+                          aria-hidden
+                        />
+                      </Link>
+                    </td>
+                    <td className="max-w-[200px] truncate px-4 py-3.5 text-jardim-text-muted sm:max-w-xs sm:px-5">
+                      {u.email ?? "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3.5 tabular-nums text-jardim-text sm:px-5">
+                      {u.cpfCnpj ?? "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-xs text-jardim-text-muted sm:px-5">
+                      {u.asaasCustomerId ? (
+                        <span className="rounded-full bg-jardim-cream px-2 py-0.5 text-jardim-green-mid ring-1 ring-jardim-border">
+                          Ligado
+                        </span>
+                      ) : (
+                        <span className="text-jardim-text-light">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-jardim-text sm:px-5">
+                      {u._count.phones}
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-jardim-green-dark sm:px-5">
+                      {u._count.billingPayments}
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>

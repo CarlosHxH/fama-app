@@ -189,7 +189,9 @@
   left: 0.9rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  color: var(--text-light);
   pointer-events: none;
 }
 
@@ -257,8 +259,8 @@
   color: #166534;
   font-weight: 500;
   margin-bottom: 1rem;
-  flex-direction: column;
-  gap: 0.3rem;
+  align-items: flex-start;
+  gap: 0.6rem;
 }
 
 .success-box.show {
@@ -311,21 +313,6 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}
-
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  display: none;
-  flex-shrink: 0;
-}
-
-.spinner.show {
-  display: inline-block;
 }
 
 @keyframes spin {

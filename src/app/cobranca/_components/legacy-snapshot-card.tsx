@@ -1,5 +1,7 @@
 "use client";
 
+import { Database } from "lucide-react";
+
 import { api } from "~/trpc/react";
 
 /**
@@ -14,7 +16,7 @@ export function LegacySnapshotCard() {
     return (
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <div className="card-header">
-          <span className="icon">📥</span> Dados do sistema legado
+          <Database size={16} style={{ flexShrink: 0 }} /> Dados do sistema legado
         </div>
         <div className="card-body">
           <p style={{ fontSize: "0.85rem", color: "var(--text-mid)" }}>
@@ -29,7 +31,7 @@ export function LegacySnapshotCard() {
     return (
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <div className="card-header">
-          <span className="icon">📥</span> Dados do sistema legado
+          <Database size={16} style={{ flexShrink: 0 }} /> Dados do sistema legado
         </div>
         <div className="card-body">
           <p style={{ fontSize: "0.85rem", color: "#b91c1c" }}>
@@ -53,7 +55,7 @@ export function LegacySnapshotCard() {
   return (
     <div className="card" style={{ marginBottom: "1.5rem" }}>
       <div className="card-header">
-        <span className="icon">📥</span> Dados sincronizados (legado)
+        <Database size={16} style={{ flexShrink: 0 }} /> Dados sincronizados (legado)
       </div>
       <div className="card-body">
         {!hasData ? (

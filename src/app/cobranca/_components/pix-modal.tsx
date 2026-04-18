@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { CheckCircle2, Loader2, Zap } from "lucide-react";
 
 import type { BillingListItem } from "./parcelas-list";
 import { isBillingPaid } from "~/lib/billing-status";
@@ -59,7 +60,7 @@ export function PixModal({
       >
         {!paid ? (
           <div id="pix-waiting-state">
-            <div style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>⚡</div>
+            <div style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}><Zap size={32} color="var(--green-mid)" /></div>
             <h3
               id="pix-modal-title"
               style={{
@@ -154,7 +155,7 @@ export function PixModal({
                 void navigator.clipboard.writeText(payment.pixCopyPaste)
               }
             >
-              📋 Copiar Chave Pix
+              Copiar Chave Pix
             </button>
             <div
               style={{
@@ -166,7 +167,7 @@ export function PixModal({
                 fontSize: "0.75rem",
               }}
             >
-              <span className="spinner-small">⏳</span> Verificando pagamento em
+              <Loader2 size={14} className="animate-spin" style={{ display: "inline" }} /> Verificando pagamento em
               tempo real...
             </div>
             <button
@@ -180,7 +181,7 @@ export function PixModal({
           </div>
         ) : (
           <div id="pix-success-state">
-            <div className="checkmark">✅</div>
+            <div className="checkmark" style={{ display: "flex", justifyContent: "center" }}><CheckCircle2 size={48} color="var(--green-mid)" /></div>
             <h3
               id="pix-modal-title"
               style={{ color: "var(--green-dark)" }}

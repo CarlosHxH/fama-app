@@ -3,6 +3,15 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import {
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 
 import { digitsOnly, formatCpfCnpjDisplay } from "~/lib/format-cpf-cnpj";
 import { safeCallbackUrl } from "~/lib/safe-callback-url";
@@ -20,9 +29,6 @@ const SUPPORT_WHATSAPP_LABEL =
 
 const REDIRECT_DELAY_MS = 400;
 
-/**
- * Formulário de entrada (CPF/CNPJ), markup e textos alinhados a PaginaCobranca/login.html.
- */
 export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = safeCallbackUrl(
@@ -41,9 +47,7 @@ export function LoginForm() {
     setSuccess(false);
     const normalized = digitsOnly(cpfCnpjDisplay);
     if (normalized.length !== 11 && normalized.length !== 14) {
-      setError(
-        "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.",
-      );
+      setError("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.");
       return;
     }
 
@@ -68,7 +72,6 @@ export function LoginForm() {
         setSuccess(true);
         setLoading(false);
         await new Promise((r) => setTimeout(r, REDIRECT_DELAY_MS));
-        // Não usar res.url: sem AUTH_URL o Auth.js pode devolver http://localhost:3000/...
         window.location.assign(callbackUrl);
         return;
       }
@@ -82,15 +85,18 @@ export function LoginForm() {
       <div className="step-badge">Etapa 1 — Identificação do Titular</div>
 
       <div className={`error-box ${error ? "show" : ""}`} role="alert" aria-live="polite">
-        <span aria-hidden>❌</span>
+        <XCircle size={16} aria-hidden style={{ flexShrink: 0 }} />
         <span id="error-msg">{error}</span>
       </div>
 
       <div className={`success-box ${success ? "show" : ""}`} role="status">
-        <div>✅ Titular identificado com sucesso!</div>
-        <div className="s-name" id="success-name" />
-        <div style={{ fontSize: "0.78rem", color: "var(--text-light)" }}>
-          Redirecionando para o portal...
+        <CheckCircle2 size={16} aria-hidden style={{ flexShrink: 0 }} />
+        <div>
+          <div>Titular identificado com sucesso!</div>
+          <div className="s-name" id="success-name" />
+          <div style={{ fontSize: "0.78rem", color: "var(--text-light)" }}>
+            Redirecionando para o portal...
+          </div>
         </div>
       </div>
 
@@ -98,7 +104,7 @@ export function LoginForm() {
         <label htmlFor="doc-input">CPF ou CNPJ do Titular</label>
         <div className="input-wrap">
           <span className="input-icon" aria-hidden>
-            🪪
+            <CreditCard size={18} />
           </span>
           <input
             type="text"
@@ -123,20 +129,31 @@ export function LoginForm() {
       </div>
 
       <button type="submit" className="btn-entrar" id="btn-entrar" disabled={loading || success}>
-        <span className={`spinner ${loading ? "show" : ""}`} id="spinner" aria-hidden />
+        {loading ? (
+          <Loader2 size={18} className="animate-spin" aria-hidden style={{ flexShrink: 0 }} />
+        ) : null}
         <span id="btn-text">{loading ? "Verificando..." : "ACESSAR PORTAL"}</span>
       </button>
 
       <div className="security-note">
-        <span aria-hidden>🔒</span>
+        <ShieldCheck size={14} aria-hidden style={{ flexShrink: 0 }} />
         <span>Conexão segura — seus dados estão protegidos</span>
       </div>
 
       <div className="divider">Dúvidas?</div>
 
       <div className="help-box" style={{ textAlign: "center", background: "#fdfaf5" }}>
-        <strong style={{ display: "block", marginBottom: "0.6rem", color: "var(--green-dark)" }}>
-          📞 Precisa de ajuda com o acesso?
+        <strong
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.4rem",
+            marginBottom: "0.6rem",
+            color: "var(--green-dark)",
+          }}
+        >
+          <Phone size={15} aria-hidden /> Precisa de ajuda com o acesso?
         </strong>
         <p style={{ fontSize: "0.8rem", color: "var(--text-mid)", marginBottom: "0.8rem" }}>
           Fale com nossa equipe administrativa:
@@ -149,8 +166,18 @@ export function LoginForm() {
             alignItems: "center",
           }}
         >
-          <div style={{ fontWeight: 700, color: "var(--green-dark)", fontSize: "1rem" }}>
-            📞 {SUPPORT_PHONE_DISPLAY}{" "}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              fontWeight: 700,
+              color: "var(--green-dark)",
+              fontSize: "1rem",
+            }}
+          >
+            <Phone size={15} aria-hidden />
+            {SUPPORT_PHONE_DISPLAY}{" "}
             <span style={{ fontWeight: 400, fontSize: "0.7rem", color: "var(--text-light)" }}>
               (Fixo)
             </span>
@@ -161,7 +188,7 @@ export function LoginForm() {
             rel="noopener noreferrer"
             className="help-wa"
           >
-            💬 WhatsApp: {SUPPORT_WHATSAPP_LABEL}
+            <MessageCircle size={15} aria-hidden /> WhatsApp: {SUPPORT_WHATSAPP_LABEL}
           </a>
         </div>
       </div>

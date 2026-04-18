@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil, Plus, User } from "lucide-react";
 
 type SessionUser = {
   name?: string | null;
@@ -31,7 +32,7 @@ export function TitularCard({
     <div className="card" id="titular-card" style={{ marginBottom: "1.5rem" }}>
       <div className="card-header" style={{ justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span className="icon">👤</span>
+          <User size={16} style={{ flexShrink: 0 }} />
           <span className="hide-on-mobile">
             Dados do Titular (Cessionário) / Pagador
           </span>
@@ -56,7 +57,7 @@ export function TitularCard({
             }}
             onClick={() => setExpanded((e) => !e)}
           >
-            {expanded ? "⬆️ Recolher" : "🔍 Ver Detalhes"}
+            {expanded ? "Recolher" : "Ver Detalhes"}
           </button>
           <button
             type="button"
@@ -70,7 +71,7 @@ export function TitularCard({
             }}
             onClick={() => onOpenEditTitular?.()}
           >
-            ✏️ Editar
+            <Pencil size={12} style={{ display: "inline", marginRight: 4 }} />Editar
           </button>
         </div>
       </div>
@@ -194,7 +195,7 @@ export function TitularCard({
             }}
             onClick={() => onOpenResp?.()}
           >
-            ➕ ADICIONAR RESPONSÁVEL FINANCEIRO
+            <Plus size={14} style={{ display: "inline", marginRight: 4 }} />ADICIONAR RESPONSÁVEL FINANCEIRO
           </button>
           <p
             style={{

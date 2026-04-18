@@ -1,5 +1,7 @@
 "use client";
 
+import { CreditCard, FileText, Lock, Loader2, Zap } from "lucide-react";
+
 import type { BillingListItem } from "./parcelas-list";
 import { isBillingPaid, isBillingPendingPayment } from "~/lib/billing-status";
 
@@ -30,6 +32,8 @@ export type CheckoutPanelProps = {
   onConfirmPayment: () => void;
   confirmDisabled: boolean;
   listLoading: boolean;
+  initiatePending?: boolean;
+  initiateError?: string | null;
 };
 
 /**
@@ -46,6 +50,8 @@ export function CheckoutPanel({
   onConfirmPayment,
   confirmDisabled,
   listLoading,
+  initiatePending,
+  initiateError,
 }: CheckoutPanelProps) {
   const total = selected ? centsToBrl(selected.valueCents) : "R$ 0,00";
   const billingType = selected?.asaasBillingType ?? null;
@@ -201,7 +207,7 @@ export function CheckoutPanel({
               <div className="pay-info">
                 <div className="pay-name">PIX</div>
               </div>
-              <div className="pay-icons">⚡</div>
+              <div className="pay-icons"><Zap size={16} /></div>
             </button>
 
             <button
@@ -215,7 +221,7 @@ export function CheckoutPanel({
               <div className="pay-info">
                 <div className="pay-name">Cartão de Crédito</div>
               </div>
-              <div className="pay-icons">💳</div>
+              <div className="pay-icons"><CreditCard size={16} /></div>
             </button>
 
             <button
@@ -229,7 +235,7 @@ export function CheckoutPanel({
               <div className="pay-info">
                 <div className="pay-name">Boleto Bancário</div>
               </div>
-              <div className="pay-icons">📄</div>
+              <div className="pay-icons"><FileText size={16} /></div>
             </button>
           </div>
 
@@ -247,9 +253,25 @@ export function CheckoutPanel({
                 : undefined
             }
           >
-            🔒 Confirmar Pagamento
+            {initiatePending ? (
+              <><Loader2 size={15} className="animate-spin" style={{ display: "inline", marginRight: 6 }} />A gerar cobrança…</>
+            ) : (
+              <><Lock size={15} style={{ display: "inline", marginRight: 6 }} />Confirmar Pagamento</>
+            )}
           </button>
-          {confirmHint && (confirmDisabled || !canConfirm) ? (
+          {initiateError ? (
+            <p
+              role="alert"
+              style={{
+                fontSize: "0.78rem",
+                color: "#b91c1c",
+                textAlign: "center",
+                marginTop: "0.65rem",
+              }}
+            >
+              {initiateError}
+            </p>
+          ) : confirmHint && (confirmDisabled || !canConfirm) ? (
             <p
               id="checkout-confirm-hint"
               style={{
@@ -264,7 +286,7 @@ export function CheckoutPanel({
             </p>
           ) : null}
 
-          <div className="security-strip">🔒 Ambiente 100% Seguro</div>
+          <div className="security-strip" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}><Lock size={13} /> Ambiente 100% Seguro</div>
         </div>
       </div>
     </div>

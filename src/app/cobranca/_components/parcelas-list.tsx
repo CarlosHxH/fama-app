@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertTriangle, Banknote, CheckCircle2, ClipboardList, Eye, EyeOff } from "lucide-react";
+
 import type { RouterOutputs } from "~/trpc/react";
 
 import {
@@ -133,9 +135,7 @@ export function ParcelasList(props: ParcelasListProps) {
     <div className="card" id="card-parcelas" style={{ marginBottom: "1.5rem" }}>
       <div className="card-header" style={{ justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span className="icon" aria-hidden>
-            💵
-          </span>
+          <Banknote size={16} aria-hidden style={{ flexShrink: 0 }} />
           <span>Parcelas</span>
         </div>
         <div id="anuidades-filter-controls">
@@ -158,7 +158,7 @@ export function ParcelasList(props: ParcelasListProps) {
                 : "Ocultar cobranças já quitadas"
             }
           >
-            {hidePaid ? "👁️ MOSTRAR TUDO" : "🙈 OCULTAR PAGAS"}
+            {hidePaid ? <><Eye size={12} style={{ display: "inline", marginRight: 4 }} />MOSTRAR TUDO</> : <><EyeOff size={12} style={{ display: "inline", marginRight: 4 }} />OCULTAR PAGAS</>}
           </button>
         </div>
       </div>
@@ -166,7 +166,7 @@ export function ParcelasList(props: ParcelasListProps) {
       <div id="anuidades-consolidadas" style={{ background: "white" }}>
         {listError ? (
           <div className="cobranca-alert cobranca-alert--error" role="alert" style={{ margin: "1rem" }}>
-            <span aria-hidden>⚠️</span>
+            <AlertTriangle size={16} aria-hidden style={{ flexShrink: 0 }} />
             <span>
               Não foi possível carregar as cobranças. {listError} Tente atualizar
               a página.
@@ -197,7 +197,7 @@ export function ParcelasList(props: ParcelasListProps) {
 
         {!listLoading && !listError && emptyDatabase ? (
           <div className="cobranca-alert cobranca-alert--muted" style={{ margin: "1.25rem" }}>
-            <span aria-hidden>📋</span>
+            <ClipboardList size={16} aria-hidden style={{ flexShrink: 0 }} />
             <div>
               <strong style={{ display: "block", marginBottom: "0.35rem" }}>
                 Ainda não há cobranças
@@ -214,7 +214,7 @@ export function ParcelasList(props: ParcelasListProps) {
         !emptyDatabase &&
         allPaidHidden ? (
           <div className="cobranca-alert cobranca-alert--success" style={{ margin: "1.25rem" }}>
-            <span aria-hidden>✅</span>
+            <CheckCircle2 size={16} aria-hidden style={{ flexShrink: 0 }} />
             <div>
               <strong style={{ display: "block", marginBottom: "0.35rem" }}>
                 Tudo quitado
@@ -238,7 +238,7 @@ export function ParcelasList(props: ParcelasListProps) {
                 lineHeight: 1.4,
               }}
             >
-              <span>📋 Cobranças do portal (Asaas)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><ClipboardList size={14} /> Cobranças do portal (Asaas)</span>
             </div>
             <div className="table-scroll-wrap">
               <table className="debitos-table">
@@ -278,19 +278,19 @@ export function ParcelasList(props: ParcelasListProps) {
                             />
                           )}
                         </td>
-                        <td style={{ fontWeight: 700, color: "var(--text-dark)" }}>
-                          {refLabel}
-                          {p.description ? (
-                            <span
-                              style={{
-                                fontWeight: 500,
-                                fontSize: "0.75rem",
-                                color: "var(--text-light)",
-                              }}
-                            >
-                              {" "}
-                              · {p.description}
-                            </span>
+                        <td style={{ fontWeight: 700, color: "var(--text-dark)", lineHeight: 1.4 }}>
+                          <div>{refLabel}{p.description ? <span style={{ fontWeight: 500, fontSize: "0.75rem", color: "var(--text-light)" }}> · {p.description}</span> : null}</div>
+                          {"contratoNumero" in p && (p.contratoNumero ?? p.jazigoCodigo) ? (
+                            <div style={{ fontWeight: 400, fontSize: "0.7rem", color: "var(--text-light)", marginTop: "0.15rem" }}>
+                              {p.contratoNumero ? `Contrato ${p.contratoNumero}` : null}
+                              {"jazigoCodigo" in p && p.jazigoCodigo ? (
+                                <span>
+                                  {p.contratoNumero ? " · " : ""}
+                                  {"jazigoQuadra" in p && p.jazigoQuadra ? `Quadra ${p.jazigoQuadra} · ` : ""}
+                                  {`Jazigo ${p.jazigoCodigo}`}
+                                </span>
+                              ) : null}
+                            </div>
                           ) : null}
                         </td>
                         <td>
@@ -333,7 +333,7 @@ export function ParcelasList(props: ParcelasListProps) {
           Nova cobrança: escolha o meio (PIX, boleto ou cartão) na coluna{" "}
           <strong>Resumo do pagamento</strong> à direita antes de gerar.
         </p>
-        {/* <form onSubmit={onCreateSubmit}>
+        <form onSubmit={onCreateSubmit}>
           <div
             style={{
               display: "grid",
@@ -470,7 +470,7 @@ export function ParcelasList(props: ParcelasListProps) {
           >
             {createPending ? "A gerar…" : "Gerar cobrança"}
           </button>
-        </form> */}
+        </form>
       </div>
     </div>
   );

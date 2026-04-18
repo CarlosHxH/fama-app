@@ -20,6 +20,7 @@ type PaymentMeta = {
   pixCopyPaste: string | null;
   pixQrCodeBase64: string | null;
   boletoDigitableLine: string | null;
+  description: string | null;
 };
 
 function mapMetodoToUi(
@@ -61,6 +62,7 @@ export function readPaymentMeta(webhookData: PagamentoLike["webhookData"]): Paym
       pixCopyPaste: null,
       pixQrCodeBase64: null,
       boletoDigitableLine: null,
+      description: null,
     };
   }
   const meta = webhookData as Record<string, unknown>;
@@ -69,20 +71,20 @@ export function readPaymentMeta(webhookData: PagamentoLike["webhookData"]): Paym
     pixQrCodeBase64: typeof meta.encodedImage === "string" ? meta.encodedImage : null,
     boletoDigitableLine:
       typeof meta.identificationField === "string" ? meta.identificationField : null,
+    description: typeof meta.description === "string" ? meta.description : null,
   };
 }
 
 export function serializePortalPayment(row: PagamentoLike) {
-  const { pixCopyPaste, pixQrCodeBase64, boletoDigitableLine } = readPaymentMeta(
-    row.webhookData,
-  );
+  const { pixCopyPaste, pixQrCodeBase64, boletoDigitableLine, description } =
+    readPaymentMeta(row.webhookData);
 
   return {
     ...row,
     status: mapStatusToBillingUi(row.status),
     valueCents: centsFromDecimal(row.valorTitulo),
     asaasBillingType: mapMetodoToUi(row.metodoPagamento),
-    description: null as string | null,
+    description,
     checkoutUrl: row.invoiceUrl ?? null,
     boletoDigitableLine,
     pixQrCodeBase64,

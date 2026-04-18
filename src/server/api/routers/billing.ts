@@ -5,18 +5,19 @@ import { db } from "~/server/db";
 import {
   createAsaasChargeForCustomer,
   createPixChargeForCustomer,
+  attachAsaasChargeToPayment,
 } from "~/server/asaas/billing-service";
 import { serializePortalPayment } from "~/server/billing/serialize-portal-payment";
+import { centsFromDecimal } from "~/server/billing/money";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
-const createChargeInput = z.object({
-  valueCents: z.number().int().min(100).max(1_000_000_000),
-  description: z.string().max(500).optional(),
-  dueDate: z.coerce.date(),
-  cpfCnpj: z.string().max(22).optional(),
-  email: z.string().email().max(320).optional(),
-  billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
-});
+/** Returns a due date 3 days from now at noon UTC. */
+function defaultDueDate(): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  d.setUTCHours(12, 0, 0, 0);
+  return d;
+}
 
 function requirePortalSession(
   ctx: { session: { user: { accountKind: string; id: string } } },
@@ -29,6 +30,14 @@ function requirePortalSession(
   }
 }
 
+function capacidadeLabel(gavetas: number): string {
+  if (gavetas === 1) return "Simples";
+  if (gavetas === 2) return "Duplo";
+  if (gavetas === 3) return "Triplo";
+  if (gavetas === 6) return "Sextuplo";
+  return `${gavetas} gavetas`;
+}
+
 /**
  * API de cobrança para o cliente autenticado (Asaas: PIX, boleto, cartão).
  */
@@ -39,8 +48,17 @@ export const billingRouter = createTRPCRouter({
     const rows = await db.pagamento.findMany({
       where: { customerId },
       orderBy: { createdAt: "desc" },
+      include: {
+        jazigo: { select: { codigo: true, quadra: true } },
+        contrato: { select: { numeroContrato: true } },
+      },
     });
-    return rows.map(serializePortalPayment);
+    return rows.map((row) => ({
+      ...serializePortalPayment(row),
+      jazigoCodigo: row.jazigo?.codigo ?? null,
+      jazigoQuadra: row.jazigo?.quadra ?? null,
+      contratoNumero: row.contrato?.numeroContrato ?? null,
+    }));
   }),
 
   getById: protectedProcedure
@@ -57,70 +75,148 @@ export const billingRouter = createTRPCRouter({
       return serializePortalPayment(row);
     }),
 
-  createPix: protectedProcedure
+  /** Jazigos onde o cliente autenticado é titular ou responsável financeiro. */
+  listMyJazigos: protectedProcedure.query(async ({ ctx }) => {
+    requirePortalSession(ctx);
+    const customerId = ctx.session.user.id;
+
+    const jazigos = await db.jazigo.findMany({
+      where: {
+        OR: [
+          { contrato: { customerId } },
+          { responsavelFinanceiroCustomerId: customerId },
+          { contrato: { responsavelFinanceiro: { customerId } } },
+        ],
+      },
+      include: {
+        contrato: {
+          select: {
+            id: true,
+            numeroContrato: true,
+            situacao: true,
+          },
+        },
+      },
+      orderBy: { codigo: "asc" },
+    });
+
+    return jazigos.map((j) => ({
+      id: j.id,
+      codigo: j.codigo,
+      quadra: j.quadra ?? "—",
+      setor: j.setor ?? "—",
+      quantidadeGavetas: j.quantidadeGavetas,
+      capacidadeLabel: capacidadeLabel(j.quantidadeGavetas),
+      valorMensalidadeCents: centsFromDecimal(j.valorMensalidade),
+      contrato: {
+        id: j.contrato.id,
+        numeroContrato: j.contrato.numeroContrato,
+        situacao: j.contrato.situacao,
+      },
+    }));
+  }),
+
+  /**
+   * Inicia ou recupera a cobrança Asaas para um pagamento existente no banco.
+   * CPF e e-mail são sempre lidos do registo do cliente — o cliente não os envia.
+   */
+  initiatePayment: protectedProcedure
     .input(
       z.object({
-        valueCents: z.number().int().min(100).max(1_000_000_000),
-        description: z.string().max(500).optional(),
-        dueDate: z.coerce.date(),
-        cpfCnpj: z.string().max(22).optional(),
-        email: z.string().email().max(320).optional(),
+        paymentId: z.string().uuid(),
+        billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       requirePortalSession(ctx);
-      const customer = await db.customer.findUnique({
-        where: { id: ctx.session.user.id },
+      const customerId = ctx.session.user.id;
+
+      const payment = await db.pagamento.findFirst({
+        where: { id: input.paymentId, customerId },
       });
-      if (!customer) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (payment.asaasId) {
+        return serializePortalPayment(payment);
       }
 
-      const created = await createPixChargeForCustomer({
+      const customer = await db.customer.findUnique({ where: { id: customerId } });
+      if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const updated = await attachAsaasChargeToPayment({
+        pagamentoId: payment.id,
+        valorTitulo: payment.valorTitulo,
+        dataVencimento: payment.dataVencimento,
         customer,
-        valueCents: input.valueCents,
-        description: input.description,
-        dueDate: input.dueDate,
-        cpfCnpj: input.cpfCnpj,
-        email: input.email,
+        billingType: input.billingType,
       });
-      return serializePortalPayment(created);
+      return serializePortalPayment(updated);
     }),
 
+  /**
+   * Cria uma nova cobrança para o cliente autenticado a partir de um jazigo.
+   * Valor, CPF e data de vencimento derivados do servidor — o cliente só escolhe
+   * o jazigo, o método de pagamento e uma descrição opcional.
+   */
   createCharge: protectedProcedure
-    .input(createChargeInput)
+    .input(
+      z.object({
+        jazigoId: z.string().uuid(),
+        billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
+        description: z.string().max(500).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       requirePortalSession(ctx);
-      const customer = await db.customer.findUnique({
-        where: { id: ctx.session.user.id },
+      const customerId = ctx.session.user.id;
+
+      const jazigo = await db.jazigo.findFirst({
+        where: {
+          id: input.jazigoId,
+          OR: [
+            { contrato: { customerId } },
+            { responsavelFinanceiroCustomerId: customerId },
+            { contrato: { responsavelFinanceiro: { customerId } } },
+          ],
+        },
+        include: {
+          contrato: { select: { id: true, numeroContrato: true } },
+        },
       });
-      if (!customer) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+      if (!jazigo) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Jazigo não encontrado ou sem permissão de acesso.",
+        });
       }
+
+      const customer = await db.customer.findUnique({ where: { id: customerId } });
+      if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const valueCents = centsFromDecimal(jazigo.valorMensalidade);
+      const dueDate = defaultDueDate();
 
       if (input.billingType === "PIX") {
         const created = await createPixChargeForCustomer({
           customer,
-          valueCents: input.valueCents,
+          valueCents,
           description: input.description,
-          dueDate: input.dueDate,
-          cpfCnpj: input.cpfCnpj,
-          email: input.email,
+          dueDate,
+          jazigoId: jazigo.id,
+          contratoId: jazigo.contrato.id,
         });
         return serializePortalPayment(created);
       }
 
       const created = await createAsaasChargeForCustomer({
         customer,
-        valueCents: input.valueCents,
+        valueCents,
         description: input.description,
-        dueDate: input.dueDate,
-        cpfCnpj: input.cpfCnpj,
-        email: input.email,
+        dueDate,
         billingType: input.billingType,
-        tipoPagamento: "TAXA_SERVICO",
-        contratoId: undefined,
-        jazigoId: undefined,
+        tipoPagamento: "MENSALIDADE",
+        contratoId: jazigo.contrato.id,
+        jazigoId: jazigo.id,
         responsavelFinanceiro: null,
       });
       return serializePortalPayment(created);

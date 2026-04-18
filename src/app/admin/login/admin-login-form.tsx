@@ -3,14 +3,19 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 
 import { safeCallbackUrl } from "~/lib/safe-callback-url";
 
 const REDIRECT_DELAY_MS = 400;
 
-/**
- * Formulário de entrada administrativa (e-mail + palavra-passe).
- */
 export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: string }) {
   const searchParams = useSearchParams();
   const callbackUrl = safeCallbackUrl(
@@ -74,14 +79,17 @@ export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: str
         role="alert"
         aria-live="polite"
       >
-        <span aria-hidden>❌</span>
+        <XCircle size={16} aria-hidden style={{ flexShrink: 0 }} />
         <span>{error ?? ""}</span>
       </div>
 
       <div className={`success-box ${success ? "show" : ""}`} role="status">
-        <div>✅ Acesso autorizado</div>
-        <div style={{ fontSize: "0.78rem", color: "var(--text-light)" }}>
-          A redirecionar para o painel…
+        <CheckCircle2 size={16} aria-hidden style={{ flexShrink: 0 }} />
+        <div>
+          <div>Acesso autorizado</div>
+          <div style={{ fontSize: "0.78rem", color: "var(--text-light)" }}>
+            A redirecionar para o painel…
+          </div>
         </div>
       </div>
 
@@ -89,7 +97,7 @@ export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: str
         <label htmlFor="admin-email">E-mail</label>
         <div className="input-wrap">
           <span className="input-icon" aria-hidden>
-            ✉️
+            <Mail size={18} />
           </span>
           <input
             id="admin-email"
@@ -113,7 +121,7 @@ export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: str
         <label htmlFor="admin-password">Palavra-passe</label>
         <div className="input-wrap">
           <span className="input-icon" aria-hidden>
-            🔒
+            <Lock size={18} />
           </span>
           <input
             id="admin-password"
@@ -138,12 +146,14 @@ export function AdminLoginForm({ defaultCallbackUrl }: { defaultCallbackUrl: str
         className="btn-entrar"
         disabled={loading || success}
       >
-        <span className={`spinner ${loading ? "show" : ""}`} aria-hidden />
+        {loading ? (
+          <Loader2 size={18} className="animate-spin" aria-hidden style={{ flexShrink: 0 }} />
+        ) : null}
         <span id="admin-btn-text">{loading ? "A entrar…" : "Entrar"}</span>
       </button>
 
       <div className="security-note">
-        <span aria-hidden>🔒</span>
+        <ShieldCheck size={14} aria-hidden style={{ flexShrink: 0 }} />
         <span>Acesso restrito a perfis administrativos</span>
       </div>
     </form>

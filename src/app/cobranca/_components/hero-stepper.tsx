@@ -1,3 +1,5 @@
+import { Check } from "lucide-react";
+
 const STEPS = [
   { id: 1, label: "Identificação" },
   { id: 2, label: "Seleção & Débitos" },
@@ -29,7 +31,7 @@ export function HeroStepper({ currentStep }: HeroStepperProps) {
                 aria-current={isActive ? "step" : undefined}
               >
                 <div className="hero-step-circle" aria-hidden="true">
-                  {isDone ? "✓" : s.id}
+                  {isDone ? <Check size={12} strokeWidth={3} /> : s.id}
                 </div>
                 {s.label}
               </div>

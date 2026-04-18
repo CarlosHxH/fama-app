@@ -73,12 +73,31 @@ export function CobrancaClient() {
   }, [session?.user?.email]);
 
   useEffect(() => {
+    const c = session?.user?.cpfCnpj;
+    if (c) setCpfCnpj(c);
+  }, [session?.user?.cpfCnpj]);
+
+  useEffect(() => {
     if (selected?.asaasBillingType) {
       setPayMethod(billingTypeToPayMethod(selected.asaasBillingType));
     }
   }, [selected?.id, selected?.asaasBillingType]);
 
   const createCharge = api.billing.createCharge.useMutation({
+    onSuccess: async (row) => {
+      await utils.billing.listMine.invalidate();
+      setSelectedId(row.id);
+      if (row.asaasBillingType === "PIX") {
+        setPixModalOpen(true);
+      } else if (row.asaasBillingType === "BOLETO") {
+        setOpenBoleto(true);
+      } else {
+        setOpenCard(true);
+      }
+    },
+  });
+
+  const initiatePayment = api.billing.initiatePayment.useMutation({
     onSuccess: async (row) => {
       await utils.billing.listMine.invalidate();
       setSelectedId(row.id);
@@ -131,16 +150,31 @@ export function CobrancaClient() {
 
   function onConfirmPayment() {
     if (!selected || !isBillingPendingPayment(selected.status)) return;
-    const method = billingTypeToPayMethod(selected.asaasBillingType);
-    if (method === "pix") {
-      setPixModalOpen(true);
+
+    // Se o pagamento já tem cobrança Asaas, abrir modal com as informações existentes
+    if (selected.asaasBillingType) {
+      const method = billingTypeToPayMethod(selected.asaasBillingType);
+      if (method === "pix") {
+        setPixModalOpen(true);
+        return;
+      }
+      if (method === "card") {
+        setOpenCard(true);
+        return;
+      }
+      setOpenBoleto(true);
       return;
     }
-    if (method === "card") {
-      setOpenCard(true);
-      return;
-    }
-    setOpenBoleto(true);
+
+    // Pagamento sem cobrança Asaas: criar agora com o método selecionado
+    const billingType =
+      payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
+    initiatePayment.mutate({
+      paymentId: selected.id,
+      billingType,
+      email: emailBilling.trim() || undefined,
+      cpfCnpj: cpfCnpj.replace(/\D/g, "") || undefined,
+    });
   }
 
   const payerName =
@@ -210,8 +244,10 @@ export function CobrancaClient() {
             payMethod={payMethod}
             onPayMethod={setPayMethod}
             onConfirmPayment={onConfirmPayment}
-            confirmDisabled={listLoading}
+            confirmDisabled={listLoading || initiatePayment.isPending}
             listLoading={listLoading}
+            initiatePending={initiatePayment.isPending}
+            initiateError={initiatePayment.error?.message ?? null}
           />
         </div>
       </main>

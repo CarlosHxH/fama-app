@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-
-const HEADER_BADGE =
-  process.env.NEXT_PUBLIC_COBRANCA_HEADER_BADGE ?? "⚠️ Jazigos com Pendências";
+import { AlertTriangle, LogOut } from "lucide-react";
 
 type CobrancaHeaderProps = {
   isAdmin: boolean;
@@ -28,7 +26,8 @@ export function CobrancaHeader({ isAdmin, onSignOut }: CobrancaHeaderProps) {
       </Link>
       <div className="flex flex-wrap items-center justify-end gap-2">
         <div className="header-badge" id="header-warning">
-          {HEADER_BADGE}
+          <AlertTriangle size={14} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+          Jazigos com Pendências
         </div>
         {isAdmin ? (
           <Link
@@ -39,8 +38,13 @@ export function CobrancaHeader({ isAdmin, onSignOut }: CobrancaHeaderProps) {
             Admin
           </Link>
         ) : null}
-        <button type="button" className="border-green-800 cursor-pointer" onClick={onSignOut}>
-          Sair
+        <button
+          type="button"
+          className="border-green-800 cursor-pointer"
+          style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+          onClick={onSignOut}
+        >
+          <LogOut size={14} /> Sair
         </button>
       </div>
     </header>

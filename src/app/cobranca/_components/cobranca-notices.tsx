@@ -1,14 +1,16 @@
+import { FileText, Info, Scale } from "lucide-react";
+
 const LEGAL_URL =
   process.env.NEXT_PUBLIC_COBRANCA_LEGAL_URL ??
   "https://www.goiania.go.gov.br/html/gabinete_civil/sileg/dados/legis/2023/dc_20230915_000004332.html";
 
 /**
- * Aviso “sem juros” + base legal (markup alinhado ao HTML estático).
+ * Aviso "sem juros" + base legal (markup alinhado ao HTML estático).
  */
 export function CobrancaNoticeBox() {
   return (
     <div className="notice-box">
-      <span className="ni">ℹ️</span>
+      <Info size={16} className="ni" style={{ flexShrink: 0 }} />
       <p>
         <strong>Sem juros e sem multas:</strong> No Jardim das Palmeiras, a
         regularização é facilitada. Você paga apenas o valor nominal das
@@ -43,7 +45,7 @@ export function CobrancaLegalBox() {
           fontWeight: 700,
         }}
       >
-        <span style={{ fontSize: "1.1rem" }}>⚖️</span> Base Legal da Cobrança
+        <Scale size={16} style={{ flexShrink: 0 }} /> Base Legal da Cobrança
       </div>
       <p style={{ marginBottom: "0.8rem" }}>
         As tarifas de manutenção do Cemitério Jardim das Palmeiras são amparadas
@@ -75,7 +77,7 @@ export function CobrancaLegalBox() {
           transition: "background 0.2s, color 0.2s",
         }}
       >
-        📄 CONSULTAR DECRETO MUNICIPAL (LEGIS)
+        <FileText size={14} /> CONSULTAR DECRETO MUNICIPAL (LEGIS)
       </a>
     </div>
   );

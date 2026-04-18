@@ -75,28 +75,21 @@ export async function ensureAsaasCustomer(
     customer.email,
     options?.emailOverride,
   );
-  if (!emailRaw) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        "É necessário um e-mail para criar cobranças. Indique no formulário abaixo ou registe o e-mail no perfil.",
-    });
-  }
 
   const cpfCnpj = options?.cpfCnpjOverride ?? customer.cpfCnpj;
   if (!cpfCnpj?.trim()) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
-        "Informe CPF ou CNPJ (defina no perfil ou envie ao criar a cobrança).",
+        "CPF ou CNPJ não encontrado. Contacte o suporte.",
     });
   }
 
-  const body = {
-    name: options?.nameOverride ?? customer.nome ?? emailRaw.split("@")[0] ?? "Cliente",
-    email: emailRaw,
+  const body: Record<string, string> = {
+    name: options?.nameOverride ?? customer.nome ?? cpfCnpj.replace(/\D/g, ""),
     cpfCnpj: cpfCnpj.replace(/\D/g, ""),
   };
+  if (emailRaw) body.email = emailRaw;
 
   try {
     const created = await asaasFetch<AsaasCustomer>("/customers", {
@@ -104,7 +97,7 @@ export async function ensureAsaasCustomer(
       body: JSON.stringify(body),
     });
 
-    const persistEmail = !customer.email?.trim() && emailRaw.length > 0;
+    const persistEmail = !customer.email?.trim() && !!emailRaw;
     const digitsCpf = body.cpfCnpj;
 
     try {
@@ -310,6 +303,81 @@ export async function createAsaasChargeForCustomer(input: {
       jazigoId: jazigo?.id ?? jazigoId ?? null,
       gavetasNaEpoca: jazigo?.quantidadeGavetas ?? null,
       valorNaEpoca: jazigo?.valorMensalidade ?? null,
+      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookRecebidoEm: new Date(),
+    },
+  });
+}
+
+/**
+ * Associa uma cobrança Asaas a um registro `Pagamento` já existente no banco
+ * que ainda não possui `asaasId`.  Útil para pagamentos importados do legado.
+ */
+export async function attachAsaasChargeToPayment(input: {
+  pagamentoId: string;
+  valorTitulo: Prisma.Decimal;
+  dataVencimento: Date;
+  customer: Customer;
+  billingType: AsaasBillingType;
+  description?: string;
+  cpfCnpj?: string;
+  email?: string;
+}) {
+  const {
+    pagamentoId,
+    valorTitulo,
+    dataVencimento,
+    customer,
+    billingType,
+    description,
+    cpfCnpj,
+    email,
+  } = input;
+
+  const valueCents = Math.round(Number(valorTitulo.toString()) * 100);
+  if (valueCents < 100) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Valor mínimo: R$ 1,00 (100 centavos).",
+    });
+  }
+
+  const asaasCustomerId = await ensureAsaasCustomer(customer, {
+    cpfCnpjOverride: cpfCnpj,
+    emailOverride: email,
+  });
+
+  const payload = {
+    customer: asaasCustomerId,
+    billingType,
+    value: reaisFromCents(valueCents),
+    dueDate: formatDueDate(dataVencimento),
+    description: description ?? `Cobrança ${billingType}`,
+  };
+
+  let payment: AsaasPaymentCreateResponse;
+  try {
+    payment = await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    if (e instanceof AsaasApiError) {
+      throw new TRPCError({
+        code: "BAD_GATEWAY",
+        message: `Asaas (cobrança): ${e.message}`,
+      });
+    }
+    throw e;
+  }
+
+  return db.pagamento.update({
+    where: { id: pagamentoId },
+    data: {
+      asaasId: payment.id,
+      invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
+      metodoPagamento: metodoFromBillingType(billingType),
+      status: mapAsaasToStatusPagamento(payment.status),
       webhookData: payment as unknown as Prisma.InputJsonValue,
       webhookRecebidoEm: new Date(),
     },

@@ -1,5 +1,7 @@
 "use client";
 
+import { CreditCard, FileText, Pencil, User } from "lucide-react";
+
 import type { BillingListItem } from "./parcelas-list";
 
 type SessionUser = {
@@ -66,7 +68,7 @@ export function CobrancaStaticModals({
               fontSize: "1.2rem",
             }}
           >
-            <span className="icon">✏️</span> Atualizar Dados do Titular
+            <Pencil size={18} style={{ flexShrink: 0 }} /> Atualizar Dados do Titular
           </h3>
           <p
             style={{
@@ -167,7 +169,7 @@ export function CobrancaStaticModals({
               fontSize: "1.2rem",
             }}
           >
-            <span className="icon">👤</span> Novo Responsável Financeiro
+            <User size={18} style={{ flexShrink: 0 }} /> Novo Responsável Financeiro
           </h3>
           <p
             style={{
@@ -215,7 +217,7 @@ export function CobrancaStaticModals({
               fontSize: "1.2rem",
             }}
           >
-            <span className="icon">💳</span> Pagamento com cartão
+            <CreditCard size={18} style={{ flexShrink: 0 }} /> Pagamento com cartão
           </h3>
           <p style={{ fontSize: "0.85rem", color: "var(--text-mid)" }}>
             {payment?.checkoutUrl
@@ -308,12 +310,12 @@ export function CobrancaStaticModals({
           <div id="boleto-generating-state">
             <div
               style={{
-                fontSize: "2rem",
                 marginBottom: "1rem",
-                display: "block",
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              📄
+              <FileText size={40} color="var(--green-mid)" />
             </div>
             <h3 style={{ color: "var(--green-dark)" }}>Boleto bancário</h3>
             <p

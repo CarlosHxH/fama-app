@@ -135,27 +135,46 @@ export const adminRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(40),
         cursor: z.string().uuid().optional(),
         search: z.string().max(200).optional(),
+        /** true = conta ativa, false = inativa */
+        ativo: z.boolean().optional(),
+        /** true = nunca configurou acesso, false = acesso configurado */
+        primeiroAcesso: z.boolean().optional(),
+        /** true = tem asaasCustomerId, false = sem integração */
+        comAsaas: z.boolean().optional(),
       }),
     )
     .query(async ({ input }) => {
       const search = input.search?.trim();
       const digits = search?.replace(/\D/g, "") ?? "";
 
-      const where: Prisma.CustomerWhereInput = {
-        ...(search && search.length > 0
-          ? {
-              OR: [
-                { email: { contains: search, mode: "insensitive" as const } },
-                {
-                  nome: { contains: search, mode: "insensitive" as const },
-                },
-                ...(digits.length >= 3
-                  ? [{ cpfCnpj: { contains: digits } }]
-                  : []),
-              ],
-            }
-          : {}),
-      };
+      const clauses: Prisma.CustomerWhereInput[] = [];
+
+      if (search && search.length > 0) {
+        clauses.push({
+          OR: [
+            { email: { contains: search, mode: "insensitive" } },
+            { nome: { contains: search, mode: "insensitive" } },
+            ...(digits.length >= 3 ? [{ cpfCnpj: { contains: digits } }] : []),
+          ],
+        });
+      }
+
+      if (input.ativo !== undefined) {
+        clauses.push({ ativo: input.ativo });
+      }
+
+      if (input.primeiroAcesso !== undefined) {
+        clauses.push({ primeiroAcesso: input.primeiroAcesso });
+      }
+
+      if (input.comAsaas === true) {
+        clauses.push({ asaasCustomerId: { not: null } });
+      } else if (input.comAsaas === false) {
+        clauses.push({ asaasCustomerId: null });
+      }
+
+      const where: Prisma.CustomerWhereInput =
+        clauses.length === 0 ? {} : clauses.length === 1 ? (clauses[0] ?? {}) : { AND: clauses };
 
       const items = await db.customer.findMany({
         where,
@@ -167,6 +186,9 @@ export const adminRouter = createTRPCRouter({
           nome: true,
           email: true,
           cpfCnpj: true,
+          ativo: true,
+          primeiroAcesso: true,
+          bloqueadoAte: true,
           asaasCustomerId: true,
           _count: {
             select: { pagamentosComoPagador: true, telefones: true },
@@ -185,6 +207,9 @@ export const adminRouter = createTRPCRouter({
         name: u.nome,
         email: u.email,
         cpfCnpj: u.cpfCnpj,
+        ativo: u.ativo,
+        primeiroAcesso: u.primeiroAcesso,
+        bloqueado: u.bloqueadoAte ? u.bloqueadoAte > new Date() : false,
         asaasCustomerId: u.asaasCustomerId,
         _count: {
           billingPayments: u._count.pagamentosComoPagador,
@@ -202,63 +227,70 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(50),
-        /** Cursor é o `codigo` do último jazigo retornado (string única, compatível com orderBy). */
         cursor: z.string().optional(),
         search: z.string().max(200).optional(),
+        /** Filtra pela situação do contrato vinculado. */
+        situacaoContrato: z
+          .enum(["ATIVO", "INATIVO", "QUITADO", "RESCINDIDO", "SUSPENSO", "TRANSFERIDO"])
+          .optional(),
+        /** Filtra pela origem do responsável financeiro (pagador). */
+        responsavelFonte: z.enum(["customer", "contrato", "titular"]).optional(),
+        /** Filtra pelo número de gavetas. */
+        gavetas: z.number().int().min(1).max(99).optional(),
       }),
     )
     .query(async ({ input }) => {
       const search = input.search?.trim();
       const digits = search?.replace(/\D/g, "") ?? "";
 
+      const clauses: Prisma.JazigoWhereInput[] = [];
+
+      if (search && search.length > 0) {
+        clauses.push({
+          OR: [
+            { codigo: { contains: search, mode: "insensitive" } },
+            { quadra: { contains: search, mode: "insensitive" } },
+            { setor: { contains: search, mode: "insensitive" } },
+            {
+              contrato: {
+                OR: [
+                  { numeroContrato: { contains: search, mode: "insensitive" } },
+                  { customer: { nome: { contains: search, mode: "insensitive" } } },
+                ],
+              },
+            },
+            { responsavelFinanceiroCustomer: { nome: { contains: search, mode: "insensitive" } } },
+            ...(digits.length >= 3
+              ? [{ responsavelFinanceiroCustomer: { cpfCnpj: { contains: digits } } } as const]
+              : []),
+          ],
+        });
+      }
+
+      if (input.situacaoContrato) {
+        clauses.push({ contrato: { situacao: input.situacaoContrato } });
+      }
+
+      if (input.gavetas !== undefined) {
+        clauses.push({ quantidadeGavetas: input.gavetas });
+      }
+
+      if (input.responsavelFonte === "customer") {
+        clauses.push({ responsavelFinanceiroCustomerId: { not: null } });
+      } else if (input.responsavelFonte === "contrato") {
+        clauses.push({
+          responsavelFinanceiroCustomerId: null,
+          contrato: { responsavelFinanceiro: { isNot: null } },
+        });
+      } else if (input.responsavelFonte === "titular") {
+        clauses.push({
+          responsavelFinanceiroCustomerId: null,
+          contrato: { responsavelFinanceiro: null },
+        });
+      }
+
       const where: Prisma.JazigoWhereInput =
-        search && search.length > 0
-          ? {
-              OR: [
-                { codigo: { contains: search, mode: "insensitive" } },
-                {
-                  quadra: { contains: search, mode: "insensitive" },
-                },
-                {
-                  setor: { contains: search, mode: "insensitive" },
-                },
-                {
-                  contrato: {
-                    OR: [
-                      {
-                        numeroContrato: {
-                          contains: search,
-                          mode: "insensitive",
-                        },
-                      },
-                      {
-                        customer: {
-                          nome: {
-                            contains: search,
-                            mode: "insensitive",
-                          },
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  responsavelFinanceiroCustomer: {
-                    nome: { contains: search, mode: "insensitive" },
-                  },
-                },
-                ...(digits.length >= 3
-                  ? [
-                      {
-                        responsavelFinanceiroCustomer: {
-                          cpfCnpj: { contains: digits },
-                        },
-                      } as const,
-                    ]
-                  : []),
-              ],
-            }
-          : {};
+        clauses.length === 0 ? {} : clauses.length === 1 ? (clauses[0] ?? {}) : { AND: clauses };
 
       const items = await db.jazigo.findMany({
         where,
@@ -270,6 +302,7 @@ export const adminRouter = createTRPCRouter({
             select: {
               id: true,
               numeroContrato: true,
+              situacao: true,
               customer: {
                 select: { id: true, nome: true },
               },
@@ -315,6 +348,7 @@ export const adminRouter = createTRPCRouter({
           valorMensalidadeCents: centsFromDecimal(j.valorMensalidade),
           contratoId: j.contrato.id,
           numeroContrato: j.contrato.numeroContrato,
+          situacaoContrato: j.contrato.situacao,
           customerId: j.contrato.customer.id,
           titularNome: j.contrato.customer.nome,
           responsavelFinanceiroCustomer: payer

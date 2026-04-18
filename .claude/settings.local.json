@@ -6,7 +6,11 @@
       "Bash(sort -t: -k1 -n)",
       "Bash(cat /c/Users/carlo/Desktop/facilmova/fama-app/.eslintrc*)",
       "Bash(cat /c/Users/carlo/Desktop/facilmova/fama-app/eslint.config*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wait)",
+      "Read(//c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/700a092f-5263-407c-a3b2-2c79498472f7/tasks/**)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c \" import sys with open\\('/c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/700a092f-5263-407c-a3b2-2c79498472f7/tasks/blg047wlc.output', 'rb'\\) as f: data = f.read\\(\\).decode\\('utf-8', errors='replace'\\) for line in data.splitlines\\(\\): if any\\(k in line for k in ['compiled','Compiled','Error','Route','Linting','Generating','✓','✗','Warning']\\): print\\(line\\) \")"
     ]
   }
 }

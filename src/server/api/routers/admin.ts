@@ -363,6 +363,104 @@ export const adminRouter = createTRPCRouter({
     }),
 
   /**
+   * Lista paginada de contratos com titular, responsável financeiro e contagem de jazigos.
+   */
+  listContratos: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(40),
+        cursor: z.string().optional(),
+        search: z.string().max(200).optional(),
+        situacao: z
+          .enum(["ATIVO", "INATIVO", "QUITADO", "RESCINDIDO", "SUSPENSO", "TRANSFERIDO"])
+          .optional(),
+        /** true = tem responsável financeiro diferente do titular; false = não tem */
+        comResponsavel: z.boolean().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const search = input.search?.trim();
+
+      const clauses: Prisma.ContratoWhereInput[] = [];
+
+      if (search && search.length > 0) {
+        const digits = search.replace(/\D/g, "");
+        clauses.push({
+          OR: [
+            { numeroContrato: { contains: search, mode: "insensitive" } },
+            { customer: { nome: { contains: search, mode: "insensitive" } } },
+            ...(digits.length >= 3
+              ? [{ customer: { cpfCnpj: { contains: digits } } } as const]
+              : []),
+          ],
+        });
+      }
+
+      if (input.situacao) {
+        clauses.push({ situacao: input.situacao });
+      }
+
+      if (input.comResponsavel === true) {
+        clauses.push({ responsavelFinanceiro: { isNot: null } });
+      } else if (input.comResponsavel === false) {
+        clauses.push({ responsavelFinanceiro: null });
+      }
+
+      const where: Prisma.ContratoWhereInput =
+        clauses.length === 0 ? {} : clauses.length === 1 ? (clauses[0] ?? {}) : { AND: clauses };
+
+      const items = await db.contrato.findMany({
+        where,
+        take: input.limit + 1,
+        cursor: input.cursor ? { numeroContrato: input.cursor } : undefined,
+        orderBy: { numeroContrato: "asc" },
+        select: {
+          id: true,
+          numeroContrato: true,
+          situacao: true,
+          syncedAt: true,
+          customer: {
+            select: { id: true, nome: true, cpfCnpj: true, email: true },
+          },
+          responsavelFinanceiro: {
+            select: { customer: { select: { nome: true, cpfCnpj: true } } },
+          },
+          _count: { select: { jazigos: true, pagamentos: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.numeroContrato;
+      }
+
+      return {
+        items: items.map((c) => ({
+          id: c.id,
+          numeroContrato: c.numeroContrato,
+          situacao: c.situacao,
+          syncedAt: c.syncedAt,
+          titular: {
+            id: c.customer.id,
+            nome: c.customer.nome,
+            cpfCnpj: c.customer.cpfCnpj,
+            email: c.customer.email,
+          },
+          responsavelFinanceiro: c.responsavelFinanceiro
+            ? {
+                nome: c.responsavelFinanceiro.customer.nome,
+                cpfCnpj: c.responsavelFinanceiro.customer.cpfCnpj,
+              }
+            : null,
+          jazigosCount: c._count.jazigos,
+          pagamentosCount: c._count.pagamentos,
+        })),
+        nextCursor,
+      };
+    }),
+
+  /**
    * Define o pagador (outro `Customer`) para um jazigo, ou remove (`null`) para voltar ao fallback contrato/titular.
    */
   setJazigoResponsavelFinanceiro: adminFinanceProcedure

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import {
   CreditCard,
+  FileText,
   History,
   LayoutDashboard,
   MapPin,
@@ -29,6 +30,7 @@ const NAV_BASE = [
     icon: History,
   },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/contratos", label: "Contratos", icon: FileText },
   { href: "/admin/jazigos", label: "Jazigos", icon: MapPin },
   { href: "/admin/funcionarios", label: "Funcionários", icon: UserCog },
   {
@@ -82,6 +84,7 @@ export function AdminAside() {
         NAV_BASE[3],
         NAV_BASE[4],
         NAV_BASE[5],
+        NAV_BASE[6],
       ] as const)
     : [...NAV_BASE];
 

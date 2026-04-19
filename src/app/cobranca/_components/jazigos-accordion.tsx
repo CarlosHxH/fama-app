@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Building2, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { AlertTriangle, Building2, ChevronDown, ChevronUp, CheckCircle2, Search } from "lucide-react";
 
 import { api } from "~/trpc/react";
 
@@ -31,7 +31,12 @@ function JazigoSkeleton() {
   );
 }
 
-export function JazigosAccordion() {
+type JazigosAccordionProps = {
+  selectedJazigoId?: string;
+  onSelectJazigo?: (id: string) => void;
+};
+
+export function JazigosAccordion({ selectedJazigoId, onSelectJazigo }: JazigosAccordionProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const { data: jazigos, isLoading, isError } = api.billing.listMyJazigos.useQuery();
 
@@ -132,7 +137,7 @@ export function JazigosAccordion() {
                           display: "grid",
                           gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
                           gap: "1rem",
-                          marginBottom: "1.5rem",
+                          marginBottom: "1rem",
                           background: "#f9f9f9",
                           padding: "1rem",
                           borderRadius: "6px",
@@ -154,11 +159,34 @@ export function JazigosAccordion() {
                           <label>Mensalidade</label>
                           <div className="val">{brl.format(j.valorMensalidadeCents / 100)}</div>
                         </div>
-                        {/* <div className="detail-box">
-                          <label>Situação</label>
-                          <div className="val">{j.contrato.situacao}</div>
-                        </div> */}
                       </div>
+
+                      {onSelectJazigo ? (
+                        <button
+                          type="button"
+                          onClick={() => onSelectJazigo(j.id)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            width: "100%",
+                            padding: "0.65rem 1rem",
+                            borderRadius: "6px",
+                            border: selectedJazigoId === j.id
+                              ? "2px solid var(--green-light)"
+                              : "2px solid var(--border)",
+                            background: selectedJazigoId === j.id ? "#f0fdf4" : "white",
+                            color: selectedJazigoId === j.id ? "var(--green-dark)" : "var(--text-mid)",
+                            fontWeight: 700,
+                            fontSize: "0.82rem",
+                            cursor: "pointer",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckCircle2 size={15} />
+                          {selectedJazigoId === j.id ? "Jazigo selecionado para cobrança" : "Selecionar para nova cobrança"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>

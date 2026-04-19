@@ -34,6 +34,10 @@ export type CheckoutPanelProps = {
   listLoading: boolean;
   initiatePending?: boolean;
   initiateError?: string | null;
+  /** A jazigo was selected in the accordion for a new charge. */
+  jazigoSelected?: boolean;
+  createPending?: boolean;
+  createError?: string | null;
 };
 
 /**
@@ -52,31 +56,26 @@ export function CheckoutPanel({
   listLoading,
   initiatePending,
   initiateError,
+  jazigoSelected,
+  createPending,
+  createError,
 }: CheckoutPanelProps) {
   const total = selected ? centsToBrl(selected.valueCents) : "R$ 0,00";
   const billingType = selected?.asaasBillingType ?? null;
-  const methodMismatch =
-    selected &&
-    isBillingPendingPayment(selected.status) &&
-    billingType &&
-    ((billingType === "PIX" && payMethod !== "pix") ||
-      (billingType === "BOLETO" && payMethod !== "boleto") ||
-      (billingType === "CREDIT_CARD" && payMethod !== "card"));
 
   const canConfirm =
     Boolean(selected) &&
-    isBillingPendingPayment(selected!.status) &&
-    !methodMismatch;
+    isBillingPendingPayment(selected!.status);
+
+  const canCreate = jazigoSelected && !selected;
 
   const confirmHint = listLoading
     ? "A carregar as suas cobranças…"
-    : !selected
-      ? "Selecione uma parcela em aberto na lista ou gere uma nova cobrança (PIX, boleto ou cartão)."
-      : isBillingPaid(selected.status)
+    : !selected && !jazigoSelected
+      ? "Selecione um jazigo em Consultar Jazigos ou escolha uma parcela em aberto na lista."
+      : selected && isBillingPaid(selected.status)
         ? "Esta cobrança já foi paga. Escolha outra em aberto."
-        : methodMismatch
-          ? "Selecione a forma de pagamento igual à desta cobrança (veja o tipo na lista)."
-          : null;
+        : null;
 
   const showItem =
     selected &&
@@ -219,7 +218,7 @@ export function CheckoutPanel({
             >
               <div className="pay-radio" />
               <div className="pay-info">
-                <div className="pay-name">Cartão de Crédito</div>
+                <div className="pay-name">Cartão de Crédito / Débito</div>
               </div>
               <div className="pay-icons"><CreditCard size={16} /></div>
             </button>
@@ -246,20 +245,20 @@ export function CheckoutPanel({
             className="btn-primary"
             id="btn-pagar"
             onClick={onConfirmPayment}
-            disabled={confirmDisabled || !canConfirm}
+            disabled={confirmDisabled || createPending || (!canConfirm && !canCreate)}
             aria-describedby={
-              confirmHint && (confirmDisabled || !canConfirm)
-                ? "checkout-confirm-hint"
-                : undefined
+              confirmHint ? "checkout-confirm-hint" : undefined
             }
           >
-            {initiatePending ? (
+            {initiatePending || createPending ? (
               <><Loader2 size={15} className="animate-spin" style={{ display: "inline", marginRight: 6 }} />A gerar cobrança…</>
+            ) : canCreate ? (
+              <><Zap size={15} style={{ display: "inline", marginRight: 6 }} />Gerar cobrança</>
             ) : (
               <><Lock size={15} style={{ display: "inline", marginRight: 6 }} />Confirmar Pagamento</>
             )}
           </button>
-          {initiateError ? (
+          {(initiateError ?? createError) ? (
             <p
               role="alert"
               style={{
@@ -269,9 +268,9 @@ export function CheckoutPanel({
                 marginTop: "0.65rem",
               }}
             >
-              {initiateError}
+              {initiateError ?? createError}
             </p>
-          ) : confirmHint && (confirmDisabled || !canConfirm) ? (
+          ) : confirmHint ? (
             <p
               id="checkout-confirm-hint"
               style={{

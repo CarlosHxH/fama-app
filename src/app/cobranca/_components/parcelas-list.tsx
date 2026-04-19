@@ -12,14 +12,6 @@ import {
 
 export type BillingListItem = RouterOutputs["billing"]["listMine"][number];
 
-export type JazigoOption = {
-  id: string;
-  codigo: string;
-  quadra: string;
-  valorMensalidadeCents: number;
-  contrato: { numeroContrato: string };
-};
-
 export type ParcelasListProps = {
   payments: BillingListItem[] | undefined;
   listLoading: boolean;
@@ -29,14 +21,6 @@ export type ParcelasListProps = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   centsToBrl: (cents: number) => string;
-  jazigos: JazigoOption[];
-  selectedJazigoId: string;
-  onSelectedJazigoIdChange: (id: string) => void;
-  description: string;
-  onDescriptionChange: (v: string) => void;
-  onCreateSubmit: (e: React.FormEvent) => void;
-  createPending: boolean;
-  createError: string | null;
 };
 
 function statusPillClass(status: BillingPaymentStatus): string {
@@ -108,17 +92,7 @@ export function ParcelasList(props: ParcelasListProps) {
     selectedId,
     onSelect,
     centsToBrl,
-    jazigos,
-    selectedJazigoId,
-    onSelectedJazigoIdChange,
-    description,
-    onDescriptionChange,
-    onCreateSubmit,
-    createPending,
-    createError,
   } = props;
-
-  const selectedJazigo = jazigos.find((j) => j.id === selectedJazigoId) ?? null;
 
   const visible = (payments ?? []).filter(
     (p) => !hidePaid || !isBillingPaid(p.status),
@@ -316,135 +290,6 @@ export function ParcelasList(props: ParcelasListProps) {
         ) : null}
       </div>
 
-      <div
-        style={{
-          padding: "1rem 1.25rem 1.25rem",
-          borderTop: "1px solid var(--border)",
-          background: "var(--cream)",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "0.72rem",
-            color: "var(--text-mid)",
-            marginBottom: "0.75rem",
-            lineHeight: 1.45,
-          }}
-        >
-          Nova cobrança: selecione o jazigo, escolha o meio (PIX, boleto ou cartão) na coluna{" "}
-          <strong>Resumo do pagamento</strong> à direita e clique em <strong>Gerar cobrança</strong>.
-        </p>
-        <form onSubmit={onCreateSubmit}>
-          <div style={{ display: "grid", gap: "0.9rem" }}>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.65rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  color: "var(--text-light)",
-                }}
-              >
-                Jazigo
-              </label>
-              <select
-                required
-                value={selectedJazigoId}
-                onChange={(e) => onSelectedJazigoIdChange(e.target.value)}
-                style={{
-                  width: "100%",
-                  marginTop: "0.35rem",
-                  padding: "0.65rem",
-                  borderRadius: "6px",
-                  border: "2px solid var(--border)",
-                  fontSize: "0.9rem",
-                  background: "white",
-                  color: "var(--text-dark)",
-                }}
-              >
-                <option value="">Selecione um jazigo…</option>
-                {jazigos.map((j) => (
-                  <option key={j.id} value={j.id}>
-                    Jazigo {j.codigo} · Quadra {j.quadra} · Contrato {j.contrato.numeroContrato}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {selectedJazigo ? (
-              <div
-                style={{
-                  padding: "0.6rem 0.85rem",
-                  borderRadius: "6px",
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  fontSize: "0.82rem",
-                  color: "#166534",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span>Valor da mensalidade</span>
-                <strong style={{ fontSize: "1rem" }}>
-                  {centsToBrl(selectedJazigo.valorMensalidadeCents)}
-                </strong>
-              </div>
-            ) : null}
-
-            <div>
-              <label
-                style={{
-                  fontSize: "0.65rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  color: "var(--text-light)",
-                }}
-              >
-                Descrição (opcional)
-              </label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => onDescriptionChange(e.target.value)}
-                style={{
-                  width: "100%",
-                  marginTop: "0.35rem",
-                  padding: "0.65rem",
-                  borderRadius: "6px",
-                  border: "2px solid var(--border)",
-                  fontSize: "0.9rem",
-                }}
-              />
-            </div>
-          </div>
-          {createError ? (
-            <p
-              role="alert"
-              style={{
-                marginTop: "0.75rem",
-                fontSize: "0.8rem",
-                color: "#b91c1c",
-              }}
-            >
-              {createError}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={createPending || listLoading || !selectedJazigoId}
-            style={{
-              width: "100%",
-              marginTop: "1rem",
-              padding: "0.85rem",
-              fontWeight: 800,
-            }}
-          >
-            {createPending ? "A gerar…" : "Gerar cobrança"}
-          </button>
-        </form>
-      </div>
     </div>
   );
 }

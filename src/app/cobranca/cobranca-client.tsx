@@ -44,7 +44,6 @@ export function CobrancaClient() {
   const [pixModalOpen, setPixModalOpen] = useState(false);
   const [itemsOpen, setItemsOpen] = useState(true);
   const [selectedJazigoId, setSelectedJazigoId] = useState<string>("");
-  const [description, setDescription] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
   const [openTitular, setOpenTitular] = useState(false);
   const [openResp, setOpenResp] = useState(false);
@@ -52,7 +51,6 @@ export function CobrancaClient() {
   const [openBoleto, setOpenBoleto] = useState(false);
 
   const utils = api.useUtils();
-  const jazigosQuery = api.billing.listMyJazigos.useQuery();
   const listQuery = api.billing.listMine.useQuery(undefined, {
     refetchInterval: (query) => {
       const rows = query.state.data;
@@ -75,6 +73,7 @@ export function CobrancaClient() {
   const createCharge = api.billing.createCharge.useMutation({
     onSuccess: async (row) => {
       await utils.billing.listMine.invalidate();
+      setSelectedJazigoId("");
       setSelectedId(row.id);
       if (row.asaasBillingType === "PIX") {
         setPixModalOpen(true);
@@ -106,23 +105,15 @@ export function CobrancaClient() {
     return 2;
   }, [selected, pixModalOpen]);
 
-  function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedJazigoId) return;
-    const billingType =
-      payMethod === "pix"
-        ? "PIX"
-        : payMethod === "boleto"
-          ? "BOLETO"
-          : "CREDIT_CARD";
-    createCharge.mutate({
-      jazigoId: selectedJazigoId,
-      description: description || undefined,
-      billingType,
-    });
-  }
-
   function onConfirmPayment() {
+    // New charge from jazigo (no existing payment selected)
+    if (!selected && selectedJazigoId) {
+      const billingType =
+        payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
+      createCharge.mutate({ jazigoId: selectedJazigoId, billingType });
+      return;
+    }
+
     if (!selected || !isBillingPendingPayment(selected.status)) return;
 
     // Se o pagamento já tem cobrança Asaas, abrir modal com as informações existentes
@@ -189,16 +180,11 @@ export function CobrancaClient() {
               selectedId={selectedId}
               onSelect={setSelectedId}
               centsToBrl={centsToBrl}
-              jazigos={jazigosQuery.data ?? []}
-              selectedJazigoId={selectedJazigoId}
-              onSelectedJazigoIdChange={setSelectedJazigoId}
-              description={description}
-              onDescriptionChange={setDescription}
-              onCreateSubmit={onCreate}
-              createPending={createCharge.isPending}
-              createError={createCharge.error?.message ?? null}
             />
-            <JazigosAccordion />
+            <JazigosAccordion
+              selectedJazigoId={selectedJazigoId}
+              onSelectJazigo={setSelectedJazigoId}
+            />
             <CobrancaNoticeBox />
             <CobrancaLegalBox />
           </div>
@@ -212,10 +198,13 @@ export function CobrancaClient() {
             payMethod={payMethod}
             onPayMethod={setPayMethod}
             onConfirmPayment={onConfirmPayment}
-            confirmDisabled={listLoading || initiatePayment.isPending}
+            confirmDisabled={listLoading || initiatePayment.isPending || createCharge.isPending}
             listLoading={listLoading}
             initiatePending={initiatePayment.isPending}
             initiateError={initiatePayment.error?.message ?? null}
+            jazigoSelected={!!selectedJazigoId && !selected}
+            createPending={createCharge.isPending}
+            createError={createCharge.error?.message ?? null}
           />
         </div>
       </main>

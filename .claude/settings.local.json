@@ -1,14 +1,4 @@
 {
-  "agentModels": {
-      "gemini-3-flash-preview": {
-        "base_url": "https://generativelanguage.googleapis.com/v1",
-        "api_key": "AIzaSyDTqj4ZyqZ-D974MfEJ_0Lp2YWk5iFd6gE"
-      }
-    },
-  "agentRouting": {
-    "general-purpose": "gemini-3-flash-preview",
-    "default": "gemini-3-flash-preview"
-  },
   "permissions": {
     "allow": [
       "Bash(npm run:*)",

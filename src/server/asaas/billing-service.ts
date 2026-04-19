@@ -145,8 +145,10 @@ export async function createPixChargeForCustomer(input: {
   dueDate: Date;
   cpfCnpj?: string;
   email?: string;
+  jazigoId?: string;
+  contratoId?: string;
 }) {
-  const { customer, valueCents, description, dueDate, cpfCnpj, email } = input;
+  const { customer, valueCents, description, dueDate, cpfCnpj, email, jazigoId, contratoId } = input;
 
   if (valueCents < 100) {
     throw new TRPCError({
@@ -184,16 +186,27 @@ export async function createPixChargeForCustomer(input: {
     throw e;
   }
 
+  const jazigo = jazigoId
+    ? await db.jazigo.findUnique({
+        where: { id: jazigoId },
+        select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
+      })
+    : null;
+
   return db.pagamento.create({
     data: {
       customerId: customer.id,
       valorTitulo: decimalFromCents(valueCents),
       dataVencimento: utcNoonDate(dueDate),
-      tipo: "TAXA_SERVICO",
+      tipo: jazigoId ? "MANUTENCAO" : "TAXA_SERVICO",
       status: mapAsaasToStatusPagamento(payment.status),
       asaasId: payment.id,
       invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
       metodoPagamento: "PIX",
+      contratoId: contratoId ?? null,
+      jazigoId: jazigo?.id ?? jazigoId ?? null,
+      gavetasNaEpoca: jazigo?.quantidadeGavetas ?? null,
+      valorNaEpoca: jazigo?.valorMensalidade ?? null,
       webhookData: payment as unknown as Prisma.InputJsonValue,
       webhookRecebidoEm: new Date(),
     },

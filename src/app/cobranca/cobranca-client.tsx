@@ -43,10 +43,8 @@ export function CobrancaClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pixModalOpen, setPixModalOpen] = useState(false);
   const [itemsOpen, setItemsOpen] = useState(true);
-  const [valueReais, setValueReais] = useState("10,00");
+  const [selectedJazigoId, setSelectedJazigoId] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [cpfCnpj, setCpfCnpj] = useState("");
-  const [emailBilling, setEmailBilling] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
   const [openTitular, setOpenTitular] = useState(false);
   const [openResp, setOpenResp] = useState(false);
@@ -54,6 +52,7 @@ export function CobrancaClient() {
   const [openBoleto, setOpenBoleto] = useState(false);
 
   const utils = api.useUtils();
+  const jazigosQuery = api.billing.listMyJazigos.useQuery();
   const listQuery = api.billing.listMine.useQuery(undefined, {
     refetchInterval: (query) => {
       const rows = query.state.data;
@@ -66,16 +65,6 @@ export function CobrancaClient() {
     () => listQuery.data?.find((p) => p.id === selectedId) ?? null,
     [listQuery.data, selectedId],
   );
-
-  useEffect(() => {
-    const s = session?.user?.email;
-    if (s) setEmailBilling(s);
-  }, [session?.user?.email]);
-
-  useEffect(() => {
-    const c = session?.user?.cpfCnpj;
-    if (c) setCpfCnpj(c);
-  }, [session?.user?.cpfCnpj]);
 
   useEffect(() => {
     if (selected?.asaasBillingType) {
@@ -117,21 +106,9 @@ export function CobrancaClient() {
     return 2;
   }, [selected, pixModalOpen]);
 
-  function parseValueToCents(input: string): number {
-    const n = Number.parseFloat(input.replace(/\./g, "").replace(",", "."));
-    if (Number.isNaN(n)) return 0;
-    return Math.round(n * 100);
-  }
-
-  const dueDate = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 3);
-    return d;
-  }, []);
-
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
-    const cents = parseValueToCents(valueReais);
+    if (!selectedJazigoId) return;
     const billingType =
       payMethod === "pix"
         ? "PIX"
@@ -139,11 +116,8 @@ export function CobrancaClient() {
           ? "BOLETO"
           : "CREDIT_CARD";
     createCharge.mutate({
-      valueCents: cents,
+      jazigoId: selectedJazigoId,
       description: description || undefined,
-      dueDate,
-      cpfCnpj: cpfCnpj.replace(/\D/g, "") || undefined,
-      email: emailBilling.trim() || undefined,
       billingType,
     });
   }
@@ -172,8 +146,6 @@ export function CobrancaClient() {
     initiatePayment.mutate({
       paymentId: selected.id,
       billingType,
-      email: emailBilling.trim() || undefined,
-      cpfCnpj: cpfCnpj.replace(/\D/g, "") || undefined,
     });
   }
 
@@ -217,15 +189,11 @@ export function CobrancaClient() {
               selectedId={selectedId}
               onSelect={setSelectedId}
               centsToBrl={centsToBrl}
-              valueReais={valueReais}
-              onValueReaisChange={setValueReais}
+              jazigos={jazigosQuery.data ?? []}
+              selectedJazigoId={selectedJazigoId}
+              onSelectedJazigoIdChange={setSelectedJazigoId}
               description={description}
               onDescriptionChange={setDescription}
-              cpfCnpj={cpfCnpj}
-              onCpfCnpjChange={setCpfCnpj}
-              emailBilling={emailBilling}
-              onEmailBillingChange={setEmailBilling}
-              emailRequired={!session?.user?.email}
               onCreateSubmit={onCreate}
               createPending={createCharge.isPending}
               createError={createCharge.error?.message ?? null}

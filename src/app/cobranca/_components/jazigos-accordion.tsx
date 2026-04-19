@@ -115,6 +115,7 @@ export function JazigosAccordion() {
                         gap: "0.3rem",
                       }}
                     >
+                      <span style={{ color: j.contrato.situacao === "ATIVO" ? "var(--green-dark)" : "var(--red-dark)", height: 14, width: 14, borderRadius: "50%", display: "inline-block", }}></span>
                       <span>{isExpanded ? "Recolher" : "Ver Detalhes"}</span>
                       {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </div>

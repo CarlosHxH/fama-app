@@ -1,4 +1,14 @@
 {
+  "agentModels": {
+      "gemini-3-flash-preview": {
+        "base_url": "https://generativelanguage.googleapis.com/v1",
+        "api_key": "AIzaSyDTqj4ZyqZ-D974MfEJ_0Lp2YWk5iFd6gE"
+      }
+    },
+  "agentRouting": {
+    "general-purpose": "gemini-3-flash-preview",
+    "default": "gemini-3-flash-preview"
+  },
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
@@ -10,7 +20,10 @@
       "Bash(wait)",
       "Read(//c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/700a092f-5263-407c-a3b2-2c79498472f7/tasks/**)",
       "Bash(npx tsc:*)",
-      "Bash(python3 -c \" import sys with open\\('/c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/700a092f-5263-407c-a3b2-2c79498472f7/tasks/blg047wlc.output', 'rb'\\) as f: data = f.read\\(\\).decode\\('utf-8', errors='replace'\\) for line in data.splitlines\\(\\): if any\\(k in line for k in ['compiled','Compiled','Error','Route','Linting','Generating','✓','✗','Warning']\\): print\\(line\\) \")"
+      "Bash(python3 -c \" import sys with open\\('/c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/700a092f-5263-407c-a3b2-2c79498472f7/tasks/blg047wlc.output', 'rb'\\) as f: data = f.read\\(\\).decode\\('utf-8', errors='replace'\\) for line in data.splitlines\\(\\): if any\\(k in line for k in ['compiled','Compiled','Error','Route','Linting','Generating','✓','✗','Warning']\\): print\\(line\\) \")",
+      "Read(//c/Users/carlo/AppData/Local/Temp/claude/C--Users-carlo-Desktop-facilmova-fama-app/c1ccb682-ba37-4b62-ac2c-73f88d5daee5/tasks/**)",
+      "Bash(sed -n '185,200p' /c/Users/carlo/Desktop/facilmova/fama-app/src/app/login/login.css)",
+      "Bash(sed -n '314,335p' /c/Users/carlo/Desktop/facilmova/fama-app/src/app/login/login.css)"
     ]
   }
 }

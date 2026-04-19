@@ -214,7 +214,7 @@ export const billingRouter = createTRPCRouter({
         description: input.description,
         dueDate,
         billingType: input.billingType,
-        tipoPagamento: "MENSALIDADE",
+        tipoPagamento: "MANUTENCAO",
         contratoId: jazigo.contrato.id,
         jazigoId: jazigo.id,
         responsavelFinanceiro: null,

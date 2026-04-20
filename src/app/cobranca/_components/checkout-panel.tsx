@@ -287,7 +287,7 @@ export function CheckoutPanel({
             className="btn-primary"
             id="btn-pagar"
             onClick={onConfirmPayment}
-            disabled={confirmDisabled || createPending || (!canConfirm && !canCreate)}
+            disabled={confirmDisabled || !!createPending || (!canConfirm && !canCreate)}
             aria-describedby={
               confirmHint ? "checkout-confirm-hint" : undefined
             }

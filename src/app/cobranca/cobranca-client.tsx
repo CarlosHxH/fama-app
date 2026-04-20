@@ -20,7 +20,6 @@ import {
 import { CobrancaStaticModals } from "./_components/cobranca-static-modals";
 import { HeroStepper } from "./_components/hero-stepper";
 import { JazigosAccordion } from "./_components/jazigos-accordion";
-import { LegacySnapshotCard } from "./_components/legacy-snapshot-card";
 import { ParcelasList } from "./_components/parcelas-list";
 import { PixModal } from "./_components/pix-modal";
 import { TitularCard } from "./_components/titular-card";

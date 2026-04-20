@@ -41,7 +41,7 @@ import sql from 'mssql'
 import { Pool } from 'pg'
 import type { PoolClient } from 'pg'
 import { v4 as uuidv4 } from 'uuid'
-import { writeFileSync } from 'fs'
+import { mkdirSync, writeFileSync } from 'fs'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -146,13 +146,15 @@ function mapSituacaoContrato(sit: string | null | undefined): string {
   return m[(sit ?? '').trim()] ?? 'INATIVO'
 }
 
-function mapStatusBoleto(sit: string | null | undefined): string {
+function mapStatusBoleto(sit: string | null | undefined, dataVencimento?: Date | null): string {
   switch ((sit ?? '').trim().toUpperCase()) {
     case 'QUITADO':
     case 'LIQUIDADO':  return 'PAGO'
     case 'CANCELADO':  return 'CANCELADO'
     case 'ESTORNADO':  return 'ESTORNADO'
-    default:           return 'PENDENTE'
+    default:
+      if (dataVencimento && dataVencimento < new Date()) return 'ATRASADO'
+      return 'PENDENTE'
   }
 }
 
@@ -179,9 +181,10 @@ function banner(text: string) {
 // Mantidos em memória para resolver FKs sem SELECTs extras por registro.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const cessionarioUuid = new Map<number, string>() // CodCessionario → uuid
-const contratoUuid    = new Map<number, string>() // CodContrato    → uuid
-const jazigoUuid      = new Map<number, string>() // CodJazigo      → uuid
+const cessionarioUuid  = new Map<number, string>() // CodCessionario → uuid
+const contratoUuid     = new Map<number, string>() // CodContrato    → uuid
+const jazigoUuid       = new Map<number, string>() // CodJazigo      → uuid
+const gavetasPorJazigo = new Map<number, number>() // CodJazigo      → quantidade de gavetas
 
 // syncMap é usada apenas para jazigoUuid (sql_server_id é confiável lá).
 // Para cessionarioUuid e contratoUuid usamos recargas por chave de negócio
@@ -404,6 +407,8 @@ async function seedTarifasJazigo(): Promise<StepResult> {
   ]
   const now  = new Date()
   const rows: unknown[][] = [
+    [uuidv4(), 1,  60.00, '2023-01-01', 'Decreto 4.332/2023', now],
+    [uuidv4(), 2, 120.00, '2023-01-01', 'Decreto 4.332/2023', now],
     [uuidv4(), 3, 180.00, '2023-01-01', 'Decreto 4.332/2023', now],
     [uuidv4(), 6, 360.00, '2023-01-01', 'Decreto 4.332/2023', now],
   ]
@@ -735,7 +740,7 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
     `),
   ])
 
-  const gavetasPorJazigo = new Map<number, number>()
+  gavetasPorJazigo.clear()
   for (const r of gavetasRes.recordset as Record<string, unknown>[])
     gavetasPorJazigo.set(r['CodJazigo'] as number, Number(r['QtdGavetas']))
 
@@ -944,6 +949,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
     'valor_titulo', 'valor_pago', 'valor_liquido',
     'data_vencimento', 'data_pagamento',
     'status', 'tipo',
+    'gavetas_na_epoca', 'valor_na_epoca',
     'customer_id', 'titular_contrato_id',
     'jazigo_id', 'contrato_id',
     'created_at', 'updated_at',
@@ -989,6 +995,10 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
     const valorTar = Number(r['ValorTarifa']   ?? 0)
     const valorLiq = valorRec > 0 ? parseFloat((valorRec - valorTar).toFixed(2)) : null
 
+    const codJazigo0  = jazigos[0]
+    const qtdGavetas  = codJazigo0 !== undefined ? (gavetasPorJazigo.get(codJazigo0) ?? null) : null
+    const valorEpoca  = qtdGavetas !== null ? valorPorGavetas(qtdGavetas) : null
+
     rowsBoletos.push([
       uuidv4(),
       r['CodBoleto'],
@@ -998,8 +1008,10 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
       valorLiq,
       dataVenc,
       dataPag,
-      mapStatusBoleto(r['Situacao'] as string),
+      mapStatusBoleto(r['Situacao'] as string, dataVenc),
       'MANUTENCAO',
+      qtdGavetas,
+      valorEpoca,
       customerId,
       customerId, // titular = pagador; service resolve hierarquia se houver responsável distinto
       jazigoId,
@@ -1049,6 +1061,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
       dataVenc, null,
       'PAGO',       // parcelas de aquisição já quitadas no SQL Server
       'AQUISICAO',
+      null, null,   // gavetas_na_epoca / valor_na_epoca: N/A para aquisição
       customerId, customerId,
       null, contratoId,
       nowAq, nowAq,
@@ -1329,6 +1342,7 @@ async function main() {
     const recon = await reconcile(mssql)
     const ts    = new Date().toISOString().replace(/[:.]/g, '-')
     const file  = `reports/migration_report_${ts}.json`
+    mkdirSync('reports', { recursive: true })
     writeFileSync(file, JSON.stringify({ reconcile: recon }, null, 2))
     log('main', `Relatório salvo em ${file}`)
     await mssql.close()
@@ -1407,6 +1421,7 @@ async function main() {
   // Relatório JSON
   const ts   = new Date().toISOString().replace(/[:.]/g, '-')
   const file = `reports/migration_report_${ts}.json`
+  mkdirSync('reports', { recursive: true })
   writeFileSync(file, JSON.stringify({
     status,
     elapsed_s:  parseFloat(elapsed),

@@ -63,6 +63,14 @@ export const authConfig = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
+  logger: {
+    error(error: Error) {
+      // CredentialsSignin é esperado quando o utilizador erra credenciais.
+      // O authorize já regista o motivo específico via console.warn — suprimir aqui evita duplicação ruidosa.
+      if (error.name === "CredentialsSignin") return;
+      console.error("[auth][error]", error);
+    },
+  },
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -75,6 +83,7 @@ export const authConfig = {
           typeof credentials?.cpfCnpj === "string" ? credentials.cpfCnpj : "";
         const cpfCnpj = normalizeCpfCnpjDigits(cpfCnpjRaw);
         if (!isValidCpfCnpjLength(cpfCnpj)) {
+          console.warn("[auth][portal] CPF/CNPJ inválido (comprimento):", cpfCnpj.length, "dígitos");
           return null;
         }
 
@@ -86,7 +95,7 @@ export const authConfig = {
         } catch (err) {
           if (isPrismaConnectionError(err)) {
             console.error(
-              "[auth] Base de dados indisponível ou credenciais inválidas em DATABASE_URL:",
+              "[auth][portal] Base de dados indisponível (DATABASE_URL):",
               err,
             );
             throw new DatabaseUnavailableSignin();
@@ -94,7 +103,20 @@ export const authConfig = {
           throw err;
         }
 
-        if (!customer) return null;
+        if (!customer) {
+          console.warn("[auth][portal] CPF/CNPJ não encontrado:", cpfCnpj.slice(0, 3) + "***");
+          return null;
+        }
+
+        if (!customer.ativo) {
+          console.warn("[auth][portal] Conta inativa — id:", customer.id);
+          return null;
+        }
+
+        if (customer.bloqueadoAte && customer.bloqueadoAte > new Date()) {
+          console.warn("[auth][portal] Conta bloqueada até:", customer.bloqueadoAte, "— id:", customer.id);
+          return null;
+        }
 
         return {
           id: customer.id,
@@ -143,7 +165,11 @@ export const authConfig = {
           throw err;
         }
 
-        if (!user) return null;
+        if (!user) {
+          console.warn("[auth][admin] E-mail não encontrado:", email);
+          return null;
+        }
+
         if (
           shouldRejectAdminLoginBeforeVerify({
             role: user.role,
@@ -151,11 +177,15 @@ export const authConfig = {
             active: user.ativo,
           })
         ) {
+          console.warn("[auth][admin] Login rejeitado antes de verificar senha — inativo ou sem hash:", email);
           return null;
         }
 
         const ok = await compare(passwordRaw, user.senha);
-        if (!ok) return null;
+        if (!ok) {
+          console.warn("[auth][admin] Palavra-passe incorreta para:", email);
+          return null;
+        }
 
         return {
           id: user.id,

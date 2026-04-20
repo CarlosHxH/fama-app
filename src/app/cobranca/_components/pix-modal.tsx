@@ -24,9 +24,9 @@ function usePixCountdown(open: boolean, expirationDate: string | null | undefine
   useEffect(() => {
     if (!open) { setSecsLeft(null); return; }
 
-    const deadline = expirationDate
-      ? new Date(expirationDate).getTime()
-      : Date.now() + PIX_TIMEOUT_MS;
+    const maxDeadline = Date.now() + PIX_TIMEOUT_MS;
+    const parsed = expirationDate ? new Date(expirationDate).getTime() : NaN;
+    const deadline = !isNaN(parsed) ? Math.min(parsed, maxDeadline) : maxDeadline;
 
     function tick() {
       const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));

@@ -1,11 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { Prisma } from "../../../../generated/prisma/client";
 
 import { db } from "~/server/db";
 import {
   createAsaasChargeForCustomer,
   createPixChargeForCustomer,
   attachAsaasChargeToPayment,
+  cancelAsaasCharge,
 } from "~/server/asaas/billing-service";
 import { serializePortalPayment } from "~/server/billing/serialize-portal-payment";
 import { centsFromDecimal } from "~/server/billing/money";
@@ -149,6 +151,44 @@ export const billingRouter = createTRPCRouter({
         dataVencimento: payment.dataVencimento,
         customer,
         billingType: input.billingType,
+      });
+      return serializePortalPayment(updated);
+    }),
+
+  /**
+   * Cancela uma cobrança Asaas pendente para que o cliente possa escolher outro método.
+   */
+  cancelCharge: protectedProcedure
+    .input(z.object({ paymentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      requirePortalSession(ctx);
+      const customerId = ctx.session.user.id;
+
+      const payment = await db.pagamento.findFirst({
+        where: { id: input.paymentId, customerId },
+      });
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+      if (payment.status === "PAGO") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Esta parcela já foi paga e não pode ser cancelada.",
+        });
+      }
+
+      if (payment.asaasId) {
+        await cancelAsaasCharge(payment.asaasId);
+      }
+
+      // Cancela apenas a cobrança no Asaas; a parcela continua PENDENTE
+      // para que o cliente possa escolher outro método e pagar.
+      const updated = await db.pagamento.update({
+        where: { id: payment.id },
+        data: {
+          asaasId: null,
+          metodoPagamento: null,
+          invoiceUrl: null,
+          webhookData: Prisma.DbNull,
+        },
       });
       return serializePortalPayment(updated);
     }),

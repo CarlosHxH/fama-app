@@ -29,6 +29,41 @@ type AsaasPaymentCreateResponse = {
   identificationField?: string;
 };
 
+type AsaasPixQrCodeResponse = {
+  encodedImage: string;
+  payload: string;
+  expirationDate?: string | null;
+};
+
+/** Busca QR Code PIX após criação do pagamento (endpoint separado no Asaas). */
+async function fetchPixQrCode(paymentId: string): Promise<AsaasPixQrCodeResponse | null> {
+  try {
+    return await asaasFetch<AsaasPixQrCodeResponse>(`/payments/${paymentId}/pixQrCode`);
+  } catch {
+    return null;
+  }
+}
+
+/** Busca detalhes completos do pagamento (inclui identificationField, invoiceUrl, bankSlipUrl). */
+async function fetchPaymentDetails(paymentId: string): Promise<AsaasPaymentCreateResponse | null> {
+  try {
+    return await asaasFetch<AsaasPaymentCreateResponse>(`/payments/${paymentId}`);
+  } catch {
+    return null;
+  }
+}
+
+/** Cancela um pagamento Asaas (soft-delete). Não lança se já cancelado. */
+export async function cancelAsaasCharge(asaasId: string): Promise<void> {
+  try {
+    await asaasFetch(`/payments/${asaasId}`, { method: "DELETE" });
+  } catch (e) {
+    if (e instanceof AsaasApiError && (e.status === 404 || e.status === 409)) return;
+    if (e instanceof TRPCError) return;
+    throw e;
+  }
+}
+
 /** Tipos de cobrança suportados na API Asaas (admin). */
 export type AsaasBillingType = "PIX" | "BOLETO" | "CREDIT_CARD";
 
@@ -186,12 +221,20 @@ export async function createPixChargeForCustomer(input: {
     throw e;
   }
 
-  const jazigo = jazigoId
-    ? await db.jazigo.findUnique({
-        where: { id: jazigoId },
-        select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
-      })
-    : null;
+  const [jazigo, pixQr] = await Promise.all([
+    jazigoId
+      ? db.jazigo.findUnique({
+          where: { id: jazigoId },
+          select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
+        })
+      : Promise.resolve(null),
+    fetchPixQrCode(payment.id),
+  ]);
+
+  const webhookData = {
+    ...payment,
+    ...(pixQr ? { encodedImage: pixQr.encodedImage, pixCopiaECola: pixQr.payload } : {}),
+  };
 
   return db.pagamento.create({
     data: {
@@ -207,7 +250,7 @@ export async function createPixChargeForCustomer(input: {
       jazigoId: jazigo?.id ?? jazigoId ?? null,
       gavetasNaEpoca: jazigo?.quantidadeGavetas ?? null,
       valorNaEpoca: jazigo?.valorMensalidade ?? null,
-      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookData: webhookData as unknown as Prisma.InputJsonValue,
       webhookRecebidoEm: new Date(),
     },
   });
@@ -293,14 +336,23 @@ export async function createAsaasChargeForCustomer(input: {
     throw e;
   }
 
-  const checkoutUrl = payment.invoiceUrl ?? payment.bankSlipUrl ?? undefined;
+  const [jazigo, fullDetails, pixQr] = await Promise.all([
+    jazigoId
+      ? db.jazigo.findUnique({
+          where: { id: jazigoId },
+          select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
+        })
+      : Promise.resolve(null),
+    fetchPaymentDetails(payment.id),
+    billingType === "PIX" ? fetchPixQrCode(payment.id) : Promise.resolve(null),
+  ]);
 
-  const jazigo = jazigoId
-    ? await db.jazigo.findUnique({
-        where: { id: jazigoId },
-        select: { id: true, quantidadeGavetas: true, valorMensalidade: true },
-      })
-    : null;
+  const merged = { ...payment, ...(fullDetails ?? {}) };
+  const webhookData = {
+    ...merged,
+    ...(pixQr ? { encodedImage: pixQr.encodedImage, pixCopiaECola: pixQr.payload, expirationDate: pixQr.expirationDate } : {}),
+  };
+  const checkoutUrl = merged.invoiceUrl ?? merged.bankSlipUrl ?? null;
 
   return db.pagamento.create({
     data: {
@@ -310,13 +362,13 @@ export async function createAsaasChargeForCustomer(input: {
       tipo: tipoPagamento,
       status: mapAsaasToStatusPagamento(payment.status),
       asaasId: payment.id,
-      invoiceUrl: checkoutUrl ?? payment.invoiceUrl ?? null,
+      invoiceUrl: checkoutUrl,
       metodoPagamento: metodoFromBillingType(billingType),
       contratoId: contratoId ?? null,
       jazigoId: jazigo?.id ?? jazigoId ?? null,
       gavetasNaEpoca: jazigo?.quantidadeGavetas ?? null,
       valorNaEpoca: jazigo?.valorMensalidade ?? null,
-      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookData: webhookData as unknown as Prisma.InputJsonValue,
       webhookRecebidoEm: new Date(),
     },
   });
@@ -360,11 +412,18 @@ export async function attachAsaasChargeToPayment(input: {
     emailOverride: email,
   });
 
+  // Asaas rejects past due dates — forward legacy overdue payments to today+3.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const effectiveDueDate = dataVencimento < today
+    ? (() => { const d = new Date(); d.setDate(d.getDate() + 3); d.setUTCHours(12, 0, 0, 0); return d; })()
+    : dataVencimento;
+
   const payload = {
     customer: asaasCustomerId,
     billingType,
     value: reaisFromCents(valueCents),
-    dueDate: formatDueDate(dataVencimento),
+    dueDate: formatDueDate(effectiveDueDate),
     description: description ?? `Cobrança ${billingType}`,
   };
 
@@ -384,14 +443,26 @@ export async function attachAsaasChargeToPayment(input: {
     throw e;
   }
 
+  const [pixQr, fullDetails] = await Promise.all([
+    billingType === "PIX" ? fetchPixQrCode(payment.id) : Promise.resolve(null),
+    billingType !== "PIX" ? fetchPaymentDetails(payment.id) : Promise.resolve(null),
+  ]);
+
+  const merged = { ...payment, ...(fullDetails ?? {}) };
+  const webhookData = {
+    ...merged,
+    ...(pixQr ? { encodedImage: pixQr.encodedImage, pixCopiaECola: pixQr.payload, expirationDate: pixQr.expirationDate } : {}),
+  };
+  const checkoutUrl = merged.invoiceUrl ?? merged.bankSlipUrl ?? null;
+
   return db.pagamento.update({
     where: { id: pagamentoId },
     data: {
       asaasId: payment.id,
-      invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
+      invoiceUrl: checkoutUrl,
       metodoPagamento: metodoFromBillingType(billingType),
       status: mapAsaasToStatusPagamento(payment.status),
-      webhookData: payment as unknown as Prisma.InputJsonValue,
+      webhookData: webhookData as unknown as Prisma.InputJsonValue,
       webhookRecebidoEm: new Date(),
     },
   });

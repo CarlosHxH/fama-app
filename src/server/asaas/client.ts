@@ -1,5 +1,6 @@
 import "server-only";
 
+import { TRPCError } from "@trpc/server";
 import { env } from "~/env";
 
 /**
@@ -63,7 +64,10 @@ export async function asaasFetch<T>(
 ): Promise<T> {
   const key = env.ASAAS_API_KEY;
   if (!key) {
-    throw new Error("ASAAS_API_KEY não configurada");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Integração Asaas não configurada. Defina ASAAS_API_KEY no ficheiro .env com a chave do painel sandbox.asaas.com.",
+    });
   }
 
   const base = env.ASAAS_API_URL.replace(/\/$/, "");

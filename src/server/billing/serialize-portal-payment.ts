@@ -19,6 +19,7 @@ type PagamentoLike = {
 type PaymentMeta = {
   pixCopyPaste: string | null;
   pixQrCodeBase64: string | null;
+  pixExpirationDate: string | null;
   boletoDigitableLine: string | null;
   description: string | null;
 };
@@ -61,6 +62,7 @@ export function readPaymentMeta(webhookData: PagamentoLike["webhookData"]): Paym
     return {
       pixCopyPaste: null,
       pixQrCodeBase64: null,
+      pixExpirationDate: null,
       boletoDigitableLine: null,
       description: null,
     };
@@ -69,6 +71,7 @@ export function readPaymentMeta(webhookData: PagamentoLike["webhookData"]): Paym
   return {
     pixCopyPaste: typeof meta.pixCopiaECola === "string" ? meta.pixCopiaECola : null,
     pixQrCodeBase64: typeof meta.encodedImage === "string" ? meta.encodedImage : null,
+    pixExpirationDate: typeof meta.expirationDate === "string" ? meta.expirationDate : null,
     boletoDigitableLine:
       typeof meta.identificationField === "string" ? meta.identificationField : null,
     description: typeof meta.description === "string" ? meta.description : null,
@@ -76,7 +79,7 @@ export function readPaymentMeta(webhookData: PagamentoLike["webhookData"]): Paym
 }
 
 export function serializePortalPayment(row: PagamentoLike) {
-  const { pixCopyPaste, pixQrCodeBase64, boletoDigitableLine, description } =
+  const { pixCopyPaste, pixQrCodeBase64, pixExpirationDate, boletoDigitableLine, description } =
     readPaymentMeta(row.webhookData);
 
   return {
@@ -89,5 +92,6 @@ export function serializePortalPayment(row: PagamentoLike) {
     boletoDigitableLine,
     pixQrCodeBase64,
     pixCopyPaste,
+    pixExpirationDate,
   };
 }

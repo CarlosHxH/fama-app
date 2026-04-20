@@ -32,8 +32,8 @@
 // =============================================================================
 
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
   previewFeatures = ["views"]
 }
 
@@ -91,7 +91,7 @@ enum MetodoPagamento {
   PIX
   BOLETO
   CARTAO_CREDITO
-  CARTAO_DEBITO // legado — importações do SQL Server; novas cobranças usam CARTAO_CREDITO
+  CARTAO_DEBITO
 }
 
 enum TipoAlteracao {
@@ -184,7 +184,7 @@ model Customer {
   sqlServerId    Int?    @unique @map("sql_server_id")
   cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14)
   nome           String  @db.VarChar(160)
-  email          String? @db.VarChar(120) // não-único: clientes podem partilhar email (enforçado na camada de serviço)
+  email          String? @db.VarChar(120)
   senhaHash      String? @map("senha_hash")
   primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
   ativo          Boolean @default(true)
@@ -312,7 +312,6 @@ model CustomerRefreshToken {
 
   @@index([customerId])
   @@index([expiresAt])
-  @@index([customerId, revogado, expiresAt])
   @@map("customer_refresh_tokens")
 }
 
@@ -412,7 +411,7 @@ model Jazigo {
   setor       String? @db.VarChar(20)
 
   // Decreto 4.332/2023
-  quantidadeGavetas Int     @map("quantidade_gavetas")
+  quantidadeGavetas Int     @default(3) @map("quantidade_gavetas")
   valorMensalidade  Decimal @map("valor_mensalidade") @db.Decimal(10, 2)
 
   contratoId String   @map("contrato_id")
@@ -452,14 +451,12 @@ model Jazigo {
 ///   WHERE quantidade_gavetas = ? AND vigente_desde <= D
 ///   ORDER BY vigente_desde DESC LIMIT 1
 model TarifaJazigo {
-  id                String    @id @default(uuid())
-  quantidadeGavetas Int       @map("quantidade_gavetas")
-  valorMensalidade  Decimal   @map("valor_mensalidade") @db.Decimal(10, 2)
-  vigenteDesde      DateTime  @map("vigente_desde") @db.Date
-  /// Preencher ao cadastrar o próximo reajuste para fechar o período desta tarifa.
-  vigenteAte        DateTime? @map("vigente_ate") @db.Date
-  decretoCriador    String?   @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
-  observacoes       String?   @db.Text
+  id                String   @id @default(uuid())
+  quantidadeGavetas Int      @map("quantidade_gavetas")
+  valorMensalidade  Decimal  @map("valor_mensalidade") @db.Decimal(10, 2)
+  vigenteDesde      DateTime @map("vigente_desde") @db.Date
+  decretoCriador    String?  @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
+  observacoes       String?  @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -549,10 +546,6 @@ model Pagamento {
   @@index([status])
   @@index([tipo])
   @@index([dataVencimento])
-  // Compostos para queries frequentes
-  @@index([customerId, status])
-  @@index([dataVencimento, status])
-  @@index([jazigoId, status])
   @@map("pagamentos")
 }
 
@@ -621,7 +614,7 @@ model Notificacao {
 ///   PENDENTE → APROVADA (admin aplica os dados, preenche dadoAplicado + notaRevisao opcional)
 ///           → REJEITADA (admin explica o motivo em notaRevisao)
 model ChangeRequest {
-  id            String          @id @default(uuid())
+  id            Int             @id @default(autoincrement())
   customerId    String          @map("customer_id")
   reviewedById  String?         @map("reviewed_by_id")
   tipo          TipoAlteracao
@@ -659,7 +652,6 @@ model ChangeRequest {
 /// Permite reprocessar registros específicos sem re-sincronizar a entidade inteira.
 model SyncLog {
   id                   String     @id @default(uuid())
-  /// Valor atual: "sync-sqlserver-to-postgres" (ver SYNC_SQLSERVER_JOB_NAME em sync-constants.ts)
   jobName              String     @map("job_name") @db.VarChar(60)
   status               SyncStatus @default(PROCESSANDO)
   registrosNovos       Int        @default(0) @map("registros_novos")
@@ -675,33 +667,33 @@ model SyncLog {
 }
 
 view vw_responsaveis_financeiros {
-  responsavel_id String  @unique
-  motivo         String?
+  responsavel_id            String   @unique
+  motivo                    String?
 
-  customer_id          String
-  responsavel_nome     String
-  responsavel_cpf      String
-  responsavel_email    String?
-  responsavel_ativo    Boolean
-  primeiro_acesso      Boolean
-  responsavel_telefone String?
+  customer_id               String
+  responsavel_nome          String
+  responsavel_cpf           String
+  responsavel_email         String?
+  responsavel_ativo         Boolean
+  primeiro_acesso           Boolean
+  responsavel_telefone      String?
 
-  contrato_id       String
-  numero_contrato   String
-  contrato_situacao String
+  contrato_id               String
+  numero_contrato           String
+  contrato_situacao         String
 
-  titular_id   String
-  titular_nome String
-  titular_cpf  String
+  titular_id                String
+  titular_nome              String
+  titular_cpf               String
 
-  total_jazigos           BigInt
-  valor_total_mensalidade Decimal @db.Decimal(10, 2)
-  pagamentos_atrasados    BigInt
-  pagamentos_pendentes    BigInt
+  total_jazigos             BigInt
+  valor_total_mensalidade   Decimal  @db.Decimal(10, 2)
+  pagamentos_atrasados      BigInt
+  pagamentos_pendentes      BigInt
 
-  synced_at  DateTime
-  created_at DateTime
-  updated_at DateTime
+  synced_at                 DateTime
+  created_at                DateTime
+  updated_at                DateTime
 
   @@map("vw_responsaveis_financeiros")
 }
@@ -710,26 +702,26 @@ view vw_responsaveis_financeiros {
 // 2. vw_inadimplentes
 // -----------------------------------------------------------------------------
 view vw_inadimplentes {
-  customer_id String
-  nome        String
-  cpf_cnpj    String
-  email       String?
-  telefone    String?
+  customer_id               String
+  nome                      String
+  cpf_cnpj                  String
+  email                     String?
+  telefone                  String?
 
-  contrato_id       String
-  numero_contrato   String
-  contrato_situacao String
+  contrato_id               String
+  numero_contrato           String
+  contrato_situacao         String
 
-  pagamento_id    String   @unique
-  data_vencimento DateTime @db.Date
-  valor_titulo    Decimal  @db.Decimal(10, 2)
-  nosso_numero    String?
-  tipo_pagamento  String
-  dias_atraso     Int
+  pagamento_id              String   @unique
+  data_vencimento           DateTime @db.Date
+  valor_titulo              Decimal  @db.Decimal(10, 2)
+  nosso_numero              String?
+  tipo_pagamento            String
+  dias_atraso               Int
 
-  jazigo_codigo      String?
-  jazigo_quadra      String?
-  quantidade_gavetas Int?
+  jazigo_codigo             String?
+  jazigo_quadra             String?
+  quantidade_gavetas        Int?
 
   @@map("vw_inadimplentes")
 }
@@ -738,30 +730,30 @@ view vw_inadimplentes {
 // 3. vw_extrato_cliente
 // -----------------------------------------------------------------------------
 view vw_extrato_cliente {
-  customer_id String
-  nome        String
-  cpf_cnpj    String
+  customer_id               String
+  nome                      String
+  cpf_cnpj                  String
 
-  numero_contrato   String
-  contrato_situacao String
+  numero_contrato           String
+  contrato_situacao         String
 
-  jazigo_codigo      String?
-  quadra             String?
-  quantidade_gavetas Int?
-  valor_mensalidade  Decimal? @db.Decimal(10, 2)
+  jazigo_codigo             String?
+  quadra                    String?
+  quantidade_gavetas        Int?
+  valor_mensalidade         Decimal? @db.Decimal(10, 2)
 
-  pagamento_id     String    @unique
-  tipo_pagamento   String
-  status           String
-  data_vencimento  DateTime  @db.Date
-  data_pagamento   DateTime? @db.Date
-  valor_titulo     Decimal   @db.Decimal(10, 2)
-  valor_pago       Decimal?  @db.Decimal(10, 2)
-  valor_liquido    Decimal?  @db.Decimal(10, 2)
-  nosso_numero     String?
-  metodo_pagamento String?
-  invoice_url      String?
-  dias_atraso      Int
+  pagamento_id              String   @unique
+  tipo_pagamento            String
+  status                    String
+  data_vencimento           DateTime @db.Date
+  data_pagamento            DateTime? @db.Date
+  valor_titulo              Decimal  @db.Decimal(10, 2)
+  valor_pago                Decimal? @db.Decimal(10, 2)
+  valor_liquido             Decimal? @db.Decimal(10, 2)
+  nosso_numero              String?
+  metodo_pagamento          String?
+  invoice_url               String?
+  dias_atraso               Int
 
   @@map("vw_extrato_cliente")
 }
@@ -770,22 +762,22 @@ view vw_extrato_cliente {
 // 4. vw_dashboard_financeiro
 // -----------------------------------------------------------------------------
 view vw_dashboard_financeiro {
-  total_pagos      BigInt
-  total_pendentes  BigInt
-  total_atrasados  BigInt
-  total_cancelados BigInt
+  total_pagos               BigInt
+  total_pendentes           BigInt
+  total_atrasados           BigInt
+  total_cancelados          BigInt
 
-  valor_recebido  Decimal @db.Decimal(10, 2)
-  valor_a_receber Decimal @db.Decimal(10, 2)
-  valor_em_atraso Decimal @db.Decimal(10, 2)
+  valor_recebido            Decimal  @db.Decimal(10, 2)
+  valor_a_receber           Decimal  @db.Decimal(10, 2)
+  valor_em_atraso           Decimal  @db.Decimal(10, 2)
 
-  pagos_mes_atual          BigInt
-  valor_recebido_mes_atual Decimal @db.Decimal(10, 2)
+  pagos_mes_atual           BigInt
+  valor_recebido_mes_atual  Decimal  @db.Decimal(10, 2)
 
   // Views de agregação sem PK precisam de @unique num campo calculado.
   // Como esta view tem uma única linha, use um campo constante como âncora:
   // Adicione ao SQL da view: 1::int AS id
-  id Int @unique
+  id                        Int      @unique
 
   @@map("vw_dashboard_financeiro")
 }
@@ -794,25 +786,25 @@ view vw_dashboard_financeiro {
 // 5. vw_jazigos_por_contrato
 // -----------------------------------------------------------------------------
 view vw_jazigos_por_contrato {
-  jazigo_id String @unique
+  jazigo_id                 String   @unique
 
-  contrato_id       String
-  numero_contrato   String
-  contrato_situacao String
+  contrato_id               String
+  numero_contrato           String
+  contrato_situacao         String
 
-  customer_id  String
-  titular_nome String
-  titular_cpf  String
+  customer_id               String
+  titular_nome              String
+  titular_cpf               String
 
-  responsavel_nome String?
-  responsavel_cpf  String?
+  responsavel_nome          String?
+  responsavel_cpf           String?
 
-  codigo             String
-  quadra             String?
-  setor              String?
-  quantidade_gavetas Int
-  valor_mensalidade  Decimal @db.Decimal(10, 2)
-  status_financeiro  String
+  codigo                    String
+  quadra                    String?
+  setor                     String?
+  quantidade_gavetas        Int
+  valor_mensalidade         Decimal  @db.Decimal(10, 2)
+  status_financeiro         String
 
   @@map("vw_jazigos_por_contrato")
 }

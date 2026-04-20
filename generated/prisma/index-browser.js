@@ -232,6 +232,7 @@ exports.Prisma.TarifaJazigoScalarFieldEnum = {
   quantidadeGavetas: 'quantidadeGavetas',
   valorMensalidade: 'valorMensalidade',
   vigenteDesde: 'vigenteDesde',
+  vigenteAte: 'vigenteAte',
   decretoCriador: 'decretoCriador',
   observacoes: 'observacoes',
   createdAt: 'createdAt'

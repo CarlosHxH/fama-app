@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { CheckCircle2, Loader2, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
 
 import type { BillingListItem } from "./parcelas-list";
 import { isBillingPaid } from "~/lib/billing-status";
@@ -16,6 +16,37 @@ type PixModalProps = {
 /**
  * Modal PIX — estrutura próxima a `#modal-pix` do HTML estático.
  */
+const PIX_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+function usePixCountdown(open: boolean, expirationDate: string | null | undefined) {
+  const [secsLeft, setSecsLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!open) { setSecsLeft(null); return; }
+
+    const deadline = expirationDate
+      ? new Date(expirationDate).getTime()
+      : Date.now() + PIX_TIMEOUT_MS;
+
+    function tick() {
+      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      setSecsLeft(remaining);
+    }
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [open, expirationDate]);
+
+  return secsLeft;
+}
+
+function formatCountdown(secs: number): string {
+  const m = Math.floor(secs / 60).toString().padStart(2, "0");
+  const s = (secs % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
 export function PixModal({
   open,
   payment,
@@ -23,6 +54,8 @@ export function PixModal({
   centsToBrl,
 }: PixModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const secsLeft = usePixCountdown(open, payment?.pixExpirationDate);
+  const expired = secsLeft !== null && secsLeft <= 0;
 
   useEffect(() => {
     if (open) {
@@ -60,28 +93,67 @@ export function PixModal({
       >
         {!paid ? (
           <div id="pix-waiting-state">
-            <div style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}><Zap size={32} color="var(--green-mid)" /></div>
+            <div style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
+              <Zap size={32} color="var(--green-mid)" />
+            </div>
             <h3
               id="pix-modal-title"
-              style={{
-                color: "var(--green-dark)",
-                marginBottom: "0.5rem",
-              }}
+              style={{ color: "var(--green-dark)", marginBottom: "0.5rem" }}
             >
-              Aguardando Pagamento
+              {expired ? "Código PIX expirado" : "Aguardando Pagamento"}
             </h3>
-            <p
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--text-mid)",
-                marginBottom: "1.5rem",
-              }}
-            >
-              Escaneie o QR Code abaixo ou copie a chave Pix para realizar o
-              pagamento no seu aplicativo bancário. Valor:{" "}
-              <strong>{centsToBrl(payment.valueCents)}</strong>
-            </p>
-            {qrSrc ? (
+
+            {/* Countdown timer */}
+            {secsLeft !== null && !expired ? (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  background: secsLeft <= 60 ? "#fef2f2" : "#f0fdf4",
+                  border: `1px solid ${secsLeft <= 60 ? "#fca5a5" : "#bbf7d0"}`,
+                  borderRadius: "999px",
+                  padding: "0.3rem 0.85rem",
+                  fontSize: "0.95rem",
+                  fontWeight: 700,
+                  color: secsLeft <= 60 ? "#b91c1c" : "#166534",
+                  marginBottom: "1rem",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                <Clock size={14} />
+                {formatCountdown(secsLeft)}
+              </div>
+            ) : null}
+
+            {expired ? (
+              <div
+                style={{
+                  background: "#fef2f2",
+                  border: "1px solid #fca5a5",
+                  borderRadius: "8px",
+                  padding: "1rem",
+                  marginBottom: "1rem",
+                  fontSize: "0.85rem",
+                  color: "#b91c1c",
+                }}
+              >
+                O código PIX expirou. Feche este modal e gere uma nova cobrança.
+              </div>
+            ) : (
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "var(--text-mid)",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                Escaneie o QR Code abaixo ou copie a chave Pix para realizar o
+                pagamento no seu aplicativo bancário. Valor:{" "}
+                <strong>{centsToBrl(payment.valueCents)}</strong>
+              </p>
+            )}
+            {!expired && qrSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={qrSrc}
@@ -99,7 +171,7 @@ export function PixModal({
                   background: "white",
                 }}
               />
-            ) : (
+            ) : !expired ? (
               <p
                 style={{
                   fontSize: "0.75rem",
@@ -109,8 +181,9 @@ export function PixModal({
               >
                 QR Code ainda não disponível; use o código copia e cola.
               </p>
-            )}
-            {payment.pixCopyPaste ? (
+            ) : null}
+
+            {!expired && payment.pixCopyPaste ? (
               <div
                 style={{
                   background: "#f8faf9",
@@ -146,37 +219,44 @@ export function PixModal({
                 </div>
               </div>
             ) : null}
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ background: "var(--green-mid)", marginBottom: "0.5rem" }}
-              onClick={() =>
-                payment.pixCopyPaste &&
-                void navigator.clipboard.writeText(payment.pixCopyPaste)
-              }
-            >
-              Copiar Chave Pix
-            </button>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-                color: "var(--text-light)",
-                fontSize: "0.75rem",
-              }}
-            >
-              <Loader2 size={14} className="animate-spin" style={{ display: "inline" }} /> Verificando pagamento em
-              tempo real...
-            </div>
+
+            {!expired ? (
+              <>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ background: "var(--green-mid)", marginBottom: "0.5rem" }}
+                  disabled={!payment.pixCopyPaste}
+                  onClick={() =>
+                    payment.pixCopyPaste &&
+                    void navigator.clipboard.writeText(payment.pixCopyPaste)
+                  }
+                >
+                  Copiar Chave Pix
+                </button>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    color: "var(--text-light)",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <Loader2 size={14} className="animate-spin" style={{ display: "inline" }} /> Verificando pagamento em
+                  tempo real...
+                </div>
+              </>
+            ) : null}
+
             <button
               type="button"
               className="btn-secondary"
               style={{ marginTop: "1rem", width: "100%" }}
               onClick={onClose}
             >
-              Fechar (continua em aberto)
+              {expired ? "Fechar" : "Fechar (continua em aberto)"}
             </button>
           </div>
         ) : (

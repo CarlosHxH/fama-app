@@ -99,6 +99,13 @@ export function CobrancaClient() {
     },
   });
 
+  const cancelCharge = api.billing.cancelCharge.useMutation({
+    onSuccess: async () => {
+      await utils.billing.listMine.invalidate();
+      setSelectedId(null);
+    },
+  });
+
   const currentStep = useMemo((): 1 | 2 | 3 | 4 => {
     if (selected && isBillingPaid(selected.status)) return 4;
     if (pixModalOpen) return 3;
@@ -116,17 +123,10 @@ export function CobrancaClient() {
 
     if (!selected || !isBillingPendingPayment(selected.status)) return;
 
-    // Se o pagamento já tem cobrança Asaas, abrir modal com as informações existentes
+    // Se o pagamento já tem cobrança Asaas, abrir modal correspondente
     if (selected.asaasBillingType) {
-      const method = billingTypeToPayMethod(selected.asaasBillingType);
-      if (method === "pix") {
-        setPixModalOpen(true);
-        return;
-      }
-      if (method === "card") {
-        setOpenCard(true);
-        return;
-      }
+      if (payMethod === "pix") { setPixModalOpen(true); return; }
+      if (payMethod === "card") { setOpenCard(true); return; }
       setOpenBoleto(true);
       return;
     }
@@ -134,10 +134,7 @@ export function CobrancaClient() {
     // Pagamento sem cobrança Asaas: criar agora com o método selecionado
     const billingType =
       payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
-    initiatePayment.mutate({
-      paymentId: selected.id,
-      billingType,
-    });
+    initiatePayment.mutate({ paymentId: selected.id, billingType });
   }
 
   const payerName =
@@ -163,7 +160,6 @@ export function CobrancaClient() {
       />
       <main id="main-cobranca" tabIndex={-1} aria-labelledby="cobranca-page-title">
         <HeroStepper currentStep={currentStep} />
-
         <div className="page-wrapper">
           <div className="left-col">
             <TitularCard
@@ -205,6 +201,8 @@ export function CobrancaClient() {
             jazigoSelected={!!selectedJazigoId && !selected}
             createPending={createCharge.isPending}
             createError={createCharge.error?.message ?? null}
+            onCancelCharge={selected?.asaasBillingType ? () => cancelCharge.mutate({ paymentId: selected.id }) : undefined}
+            cancelPending={cancelCharge.isPending}
           />
         </div>
       </main>

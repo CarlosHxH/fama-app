@@ -213,7 +213,7 @@ export function ParcelasList(props: ParcelasListProps) {
                 lineHeight: 1.4,
               }}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><ClipboardList size={14} /> Cobranças do portal (Asaas)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><ClipboardList size={14} /> Cobranças do portal</span>
             </div>
             <div className="table-scroll-wrap">
               <table className="debitos-table">
@@ -223,6 +223,7 @@ export function ParcelasList(props: ParcelasListProps) {
                     const pending = isBillingPendingPayment(p.status);
                     const active = selectedId === p.id;
                     const refLabel = new Date(p.createdAt).getFullYear().toString();
+                    console.log({p})
                     return (
                       <tr
                         key={p.id}

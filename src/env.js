@@ -5,10 +5,11 @@ import { z } from "zod";
 // Garante carregamento de `.env.local`/`.env` quando o processo não vem
 // com variáveis já injetadas (ex.: scripts Node / alguns ambientes de deploy).
 // Next.js normalmente faz isso, mas este fallback evita crash em boot quando não faz.
-dotenvConfig({ path: ".env.local", override: false });
-dotenvConfig({ path: ".env", override: false });
+// dotenvConfig({ path: ".env.local", override: false });
+// dotenvConfig({ path: ".env", override: false });
 
 export const env = createEnv({
+  client: {},
   server: {
     AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(),
     DATABASE_URL: z.string().url(),
@@ -17,14 +18,13 @@ export const env = createEnv({
     ASAAS_API_URL: z.string().url(),
     ASAAS_WEBHOOK_TOKEN: z.string().optional()
   },
-  client: {},
   runtimeEnv: {
-    AUTH_SECRET: process.env.AUTH_SECRET || "bXVkZS1lc3RhLWNoYXZlLXNlY3JldGEtZW0tcHJvZHVjYW8tdXNlLTI1NmJpdHMhIQ==",
-    DATABASE_URL: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/fama_app",
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV || "development",
-    ASAAS_API_KEY: process.env.ASAAS_API_KEY || "pay_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OmJhMTA5ZTE2LTg0MDgtNDc1My1hM2ZmLWVhMWZmODFhMzkxZjo6JGFhY2hfMDEwNjZiNTQtNzdkZi00NTU0LTkwYmMtMTQ1ZDAyMzRmYjcy",
-    ASAAS_API_URL: process.env.ASAAS_API_URL || "https://sandbox.asaas.com/api/v3",
-    ASAAS_WEBHOOK_TOKEN: process.env.ASAAS_WEBHOOK_TOKEN || "token-secreto-webhook",
+    ASAAS_API_KEY: process.env.ASAAS_API_KEY,
+    ASAAS_API_URL: process.env.ASAAS_API_URL,
+    ASAAS_WEBHOOK_TOKEN: process.env.ASAAS_WEBHOOK_TOKEN,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

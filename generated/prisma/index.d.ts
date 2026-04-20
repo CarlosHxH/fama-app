@@ -12431,6 +12431,7 @@ export namespace Prisma {
     quantidadeGavetas: number | null
     valorMensalidade: Decimal | null
     vigenteDesde: Date | null
+    vigenteAte: Date | null
     decretoCriador: string | null
     observacoes: string | null
     createdAt: Date | null
@@ -12441,6 +12442,7 @@ export namespace Prisma {
     quantidadeGavetas: number | null
     valorMensalidade: Decimal | null
     vigenteDesde: Date | null
+    vigenteAte: Date | null
     decretoCriador: string | null
     observacoes: string | null
     createdAt: Date | null
@@ -12451,6 +12453,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: number
     vigenteDesde: number
+    vigenteAte: number
     decretoCriador: number
     observacoes: number
     createdAt: number
@@ -12473,6 +12476,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     vigenteDesde?: true
+    vigenteAte?: true
     decretoCriador?: true
     observacoes?: true
     createdAt?: true
@@ -12483,6 +12487,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     vigenteDesde?: true
+    vigenteAte?: true
     decretoCriador?: true
     observacoes?: true
     createdAt?: true
@@ -12493,6 +12498,7 @@ export namespace Prisma {
     quantidadeGavetas?: true
     valorMensalidade?: true
     vigenteDesde?: true
+    vigenteAte?: true
     decretoCriador?: true
     observacoes?: true
     createdAt?: true
@@ -12590,6 +12596,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: Decimal
     vigenteDesde: Date
+    vigenteAte: Date | null
     decretoCriador: string | null
     observacoes: string | null
     createdAt: Date
@@ -12619,6 +12626,7 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     vigenteDesde?: boolean
+    vigenteAte?: boolean
     decretoCriador?: boolean
     observacoes?: boolean
     createdAt?: boolean
@@ -12629,6 +12637,7 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     vigenteDesde?: boolean
+    vigenteAte?: boolean
     decretoCriador?: boolean
     observacoes?: boolean
     createdAt?: boolean
@@ -12639,6 +12648,7 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     vigenteDesde?: boolean
+    vigenteAte?: boolean
     decretoCriador?: boolean
     observacoes?: boolean
     createdAt?: boolean
@@ -12649,12 +12659,13 @@ export namespace Prisma {
     quantidadeGavetas?: boolean
     valorMensalidade?: boolean
     vigenteDesde?: boolean
+    vigenteAte?: boolean
     decretoCriador?: boolean
     observacoes?: boolean
     createdAt?: boolean
   }
 
-  export type TarifaJazigoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quantidadeGavetas" | "valorMensalidade" | "vigenteDesde" | "decretoCriador" | "observacoes" | "createdAt", ExtArgs["result"]["tarifaJazigo"]>
+  export type TarifaJazigoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quantidadeGavetas" | "valorMensalidade" | "vigenteDesde" | "vigenteAte" | "decretoCriador" | "observacoes" | "createdAt", ExtArgs["result"]["tarifaJazigo"]>
 
   export type $TarifaJazigoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "TarifaJazigo"
@@ -12664,6 +12675,10 @@ export namespace Prisma {
       quantidadeGavetas: number
       valorMensalidade: Prisma.Decimal
       vigenteDesde: Date
+      /**
+       * Preencher ao cadastrar o próximo reajuste para fechar o período desta tarifa.
+       */
+      vigenteAte: Date | null
       decretoCriador: string | null
       observacoes: string | null
       createdAt: Date
@@ -13094,6 +13109,7 @@ export namespace Prisma {
     readonly quantidadeGavetas: FieldRef<"TarifaJazigo", 'Int'>
     readonly valorMensalidade: FieldRef<"TarifaJazigo", 'Decimal'>
     readonly vigenteDesde: FieldRef<"TarifaJazigo", 'DateTime'>
+    readonly vigenteAte: FieldRef<"TarifaJazigo", 'DateTime'>
     readonly decretoCriador: FieldRef<"TarifaJazigo", 'String'>
     readonly observacoes: FieldRef<"TarifaJazigo", 'String'>
     readonly createdAt: FieldRef<"TarifaJazigo", 'DateTime'>
@@ -16098,22 +16114,12 @@ export namespace Prisma {
 
   export type AggregateChangeRequest = {
     _count: ChangeRequestCountAggregateOutputType | null
-    _avg: ChangeRequestAvgAggregateOutputType | null
-    _sum: ChangeRequestSumAggregateOutputType | null
     _min: ChangeRequestMinAggregateOutputType | null
     _max: ChangeRequestMaxAggregateOutputType | null
   }
 
-  export type ChangeRequestAvgAggregateOutputType = {
-    id: number | null
-  }
-
-  export type ChangeRequestSumAggregateOutputType = {
-    id: number | null
-  }
-
   export type ChangeRequestMinAggregateOutputType = {
-    id: number | null
+    id: string | null
     customerId: string | null
     reviewedById: string | null
     tipo: $Enums.TipoAlteracao | null
@@ -16126,7 +16132,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestMaxAggregateOutputType = {
-    id: number | null
+    id: string | null
     customerId: string | null
     reviewedById: string | null
     tipo: $Enums.TipoAlteracao | null
@@ -16155,14 +16161,6 @@ export namespace Prisma {
     _all: number
   }
 
-
-  export type ChangeRequestAvgAggregateInputType = {
-    id?: true
-  }
-
-  export type ChangeRequestSumAggregateInputType = {
-    id?: true
-  }
 
   export type ChangeRequestMinAggregateInputType = {
     id?: true
@@ -16245,18 +16243,6 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Select which fields to average
-    **/
-    _avg?: ChangeRequestAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: ChangeRequestSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
      * Select which fields to find the minimum value
     **/
     _min?: ChangeRequestMinAggregateInputType
@@ -16287,14 +16273,12 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ChangeRequestCountAggregateInputType | true
-    _avg?: ChangeRequestAvgAggregateInputType
-    _sum?: ChangeRequestSumAggregateInputType
     _min?: ChangeRequestMinAggregateInputType
     _max?: ChangeRequestMaxAggregateInputType
   }
 
   export type ChangeRequestGroupByOutputType = {
-    id: number
+    id: string
     customerId: string
     reviewedById: string | null
     tipo: $Enums.TipoAlteracao
@@ -16308,8 +16292,6 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     _count: ChangeRequestCountAggregateOutputType | null
-    _avg: ChangeRequestAvgAggregateOutputType | null
-    _sum: ChangeRequestSumAggregateOutputType | null
     _min: ChangeRequestMinAggregateOutputType | null
     _max: ChangeRequestMaxAggregateOutputType | null
   }
@@ -16419,7 +16401,7 @@ export namespace Prisma {
       revisadoPor: Prisma.$UserPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
-      id: number
+      id: string
       customerId: string
       reviewedById: string | null
       tipo: $Enums.TipoAlteracao
@@ -16857,7 +16839,7 @@ export namespace Prisma {
    * Fields of the ChangeRequest model
    */
   interface ChangeRequestFieldRefs {
-    readonly id: FieldRef<"ChangeRequest", 'Int'>
+    readonly id: FieldRef<"ChangeRequest", 'String'>
     readonly customerId: FieldRef<"ChangeRequest", 'String'>
     readonly reviewedById: FieldRef<"ChangeRequest", 'String'>
     readonly tipo: FieldRef<"ChangeRequest", 'TipoAlteracao'>
@@ -17582,6 +17564,9 @@ export namespace Prisma {
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      /**
+       * Valor atual: "sync-sqlserver-to-postgres" (ver SYNC_SQLSERVER_JOB_NAME em sync-constants.ts)
+       */
       jobName: string
       status: $Enums.SyncStatus
       registrosNovos: number
@@ -22667,6 +22652,7 @@ export namespace Prisma {
     quantidadeGavetas: 'quantidadeGavetas',
     valorMensalidade: 'valorMensalidade',
     vigenteDesde: 'vigenteDesde',
+    vigenteAte: 'vigenteAte',
     decretoCriador: 'decretoCriador',
     observacoes: 'observacoes',
     createdAt: 'createdAt'
@@ -23912,6 +23898,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFilter<"TarifaJazigo"> | number
     valorMensalidade?: DecimalFilter<"TarifaJazigo"> | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFilter<"TarifaJazigo"> | Date | string
+    vigenteAte?: DateTimeNullableFilter<"TarifaJazigo"> | Date | string | null
     decretoCriador?: StringNullableFilter<"TarifaJazigo"> | string | null
     observacoes?: StringNullableFilter<"TarifaJazigo"> | string | null
     createdAt?: DateTimeFilter<"TarifaJazigo"> | Date | string
@@ -23922,6 +23909,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     vigenteDesde?: SortOrder
+    vigenteAte?: SortOrderInput | SortOrder
     decretoCriador?: SortOrderInput | SortOrder
     observacoes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -23936,6 +23924,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFilter<"TarifaJazigo"> | number
     valorMensalidade?: DecimalFilter<"TarifaJazigo"> | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFilter<"TarifaJazigo"> | Date | string
+    vigenteAte?: DateTimeNullableFilter<"TarifaJazigo"> | Date | string | null
     decretoCriador?: StringNullableFilter<"TarifaJazigo"> | string | null
     observacoes?: StringNullableFilter<"TarifaJazigo"> | string | null
     createdAt?: DateTimeFilter<"TarifaJazigo"> | Date | string
@@ -23946,6 +23935,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     vigenteDesde?: SortOrder
+    vigenteAte?: SortOrderInput | SortOrder
     decretoCriador?: SortOrderInput | SortOrder
     observacoes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -23964,6 +23954,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntWithAggregatesFilter<"TarifaJazigo"> | number
     valorMensalidade?: DecimalWithAggregatesFilter<"TarifaJazigo"> | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeWithAggregatesFilter<"TarifaJazigo"> | Date | string
+    vigenteAte?: DateTimeNullableWithAggregatesFilter<"TarifaJazigo"> | Date | string | null
     decretoCriador?: StringNullableWithAggregatesFilter<"TarifaJazigo"> | string | null
     observacoes?: StringNullableWithAggregatesFilter<"TarifaJazigo"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"TarifaJazigo"> | Date | string
@@ -24220,7 +24211,7 @@ export namespace Prisma {
     AND?: ChangeRequestWhereInput | ChangeRequestWhereInput[]
     OR?: ChangeRequestWhereInput[]
     NOT?: ChangeRequestWhereInput | ChangeRequestWhereInput[]
-    id?: IntFilter<"ChangeRequest"> | number
+    id?: StringFilter<"ChangeRequest"> | string
     customerId?: StringFilter<"ChangeRequest"> | string
     reviewedById?: StringNullableFilter<"ChangeRequest"> | string | null
     tipo?: EnumTipoAlteracaoFilter<"ChangeRequest"> | $Enums.TipoAlteracao
@@ -24256,7 +24247,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestWhereUniqueInput = Prisma.AtLeast<{
-    id?: number
+    id?: string
     AND?: ChangeRequestWhereInput | ChangeRequestWhereInput[]
     OR?: ChangeRequestWhereInput[]
     NOT?: ChangeRequestWhereInput | ChangeRequestWhereInput[]
@@ -24291,17 +24282,15 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ChangeRequestCountOrderByAggregateInput
-    _avg?: ChangeRequestAvgOrderByAggregateInput
     _max?: ChangeRequestMaxOrderByAggregateInput
     _min?: ChangeRequestMinOrderByAggregateInput
-    _sum?: ChangeRequestSumOrderByAggregateInput
   }
 
   export type ChangeRequestScalarWhereWithAggregatesInput = {
     AND?: ChangeRequestScalarWhereWithAggregatesInput | ChangeRequestScalarWhereWithAggregatesInput[]
     OR?: ChangeRequestScalarWhereWithAggregatesInput[]
     NOT?: ChangeRequestScalarWhereWithAggregatesInput | ChangeRequestScalarWhereWithAggregatesInput[]
-    id?: IntWithAggregatesFilter<"ChangeRequest"> | number
+    id?: StringWithAggregatesFilter<"ChangeRequest"> | string
     customerId?: StringWithAggregatesFilter<"ChangeRequest"> | string
     reviewedById?: StringNullableWithAggregatesFilter<"ChangeRequest"> | string | null
     tipo?: EnumTipoAlteracaoWithAggregatesFilter<"ChangeRequest"> | $Enums.TipoAlteracao
@@ -25653,7 +25642,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     syncedAt?: Date | string
     createdAt?: Date | string
@@ -25669,7 +25658,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
     responsavelFinanceiroCustomerId?: string | null
@@ -25717,7 +25706,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
     responsavelFinanceiroCustomerId?: string | null
@@ -25759,6 +25748,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     vigenteDesde: Date | string
+    vigenteAte?: Date | string | null
     decretoCriador?: string | null
     observacoes?: string | null
     createdAt?: Date | string
@@ -25769,6 +25759,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     vigenteDesde: Date | string
+    vigenteAte?: Date | string | null
     decretoCriador?: string | null
     observacoes?: string | null
     createdAt?: Date | string
@@ -25779,6 +25770,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFieldUpdateOperationsInput | Date | string
+    vigenteAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     decretoCriador?: NullableStringFieldUpdateOperationsInput | string | null
     observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25789,6 +25781,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFieldUpdateOperationsInput | Date | string
+    vigenteAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     decretoCriador?: NullableStringFieldUpdateOperationsInput | string | null
     observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25799,6 +25792,7 @@ export namespace Prisma {
     quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     vigenteDesde: Date | string
+    vigenteAte?: Date | string | null
     decretoCriador?: string | null
     observacoes?: string | null
     createdAt?: Date | string
@@ -25809,6 +25803,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFieldUpdateOperationsInput | Date | string
+    vigenteAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     decretoCriador?: NullableStringFieldUpdateOperationsInput | string | null
     observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25819,6 +25814,7 @@ export namespace Prisma {
     quantidadeGavetas?: IntFieldUpdateOperationsInput | number
     valorMensalidade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     vigenteDesde?: DateTimeFieldUpdateOperationsInput | Date | string
+    vigenteAte?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     decretoCriador?: NullableStringFieldUpdateOperationsInput | string | null
     observacoes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -26103,6 +26099,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateInput = {
+    id?: string
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
     dadoAntigo: JsonNullValueInput | InputJsonValue
@@ -26118,7 +26115,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedCreateInput = {
-    id?: number
+    id?: string
     customerId: string
     reviewedById?: string | null
     tipo: $Enums.TipoAlteracao
@@ -26134,6 +26131,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
     dadoAntigo?: JsonNullValueInput | InputJsonValue
@@ -26149,7 +26147,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
@@ -26165,7 +26163,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateManyInput = {
-    id?: number
+    id?: string
     customerId: string
     reviewedById?: string | null
     tipo: $Enums.TipoAlteracao
@@ -26181,6 +26179,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
     dadoAntigo?: JsonNullValueInput | InputJsonValue
@@ -26194,7 +26193,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateManyInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
@@ -27060,6 +27059,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     vigenteDesde?: SortOrder
+    vigenteAte?: SortOrder
     decretoCriador?: SortOrder
     observacoes?: SortOrder
     createdAt?: SortOrder
@@ -27075,6 +27075,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     vigenteDesde?: SortOrder
+    vigenteAte?: SortOrder
     decretoCriador?: SortOrder
     observacoes?: SortOrder
     createdAt?: SortOrder
@@ -27085,6 +27086,7 @@ export namespace Prisma {
     quantidadeGavetas?: SortOrder
     valorMensalidade?: SortOrder
     vigenteDesde?: SortOrder
+    vigenteAte?: SortOrder
     decretoCriador?: SortOrder
     observacoes?: SortOrder
     createdAt?: SortOrder
@@ -27465,10 +27467,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type ChangeRequestAvgOrderByAggregateInput = {
-    id?: SortOrder
-  }
-
   export type ChangeRequestMaxOrderByAggregateInput = {
     id?: SortOrder
     customerId?: SortOrder
@@ -27493,10 +27491,6 @@ export namespace Prisma {
     revisadoEm?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type ChangeRequestSumOrderByAggregateInput = {
-    id?: SortOrder
   }
 
   export type EnumTipoAlteracaoWithAggregatesFilter<$PrismaModel = never> = {
@@ -29546,6 +29540,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateWithoutRevisadoPorInput = {
+    id?: string
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
     dadoAntigo: JsonNullValueInput | InputJsonValue
@@ -29560,7 +29555,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedCreateWithoutRevisadoPorInput = {
-    id?: number
+    id?: string
     customerId: string
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
@@ -29604,7 +29599,7 @@ export namespace Prisma {
     AND?: ChangeRequestScalarWhereInput | ChangeRequestScalarWhereInput[]
     OR?: ChangeRequestScalarWhereInput[]
     NOT?: ChangeRequestScalarWhereInput | ChangeRequestScalarWhereInput[]
-    id?: IntFilter<"ChangeRequest"> | number
+    id?: StringFilter<"ChangeRequest"> | string
     customerId?: StringFilter<"ChangeRequest"> | string
     reviewedById?: StringNullableFilter<"ChangeRequest"> | string | null
     tipo?: EnumTipoAlteracaoFilter<"ChangeRequest"> | $Enums.TipoAlteracao
@@ -29800,6 +29795,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateWithoutCustomerInput = {
+    id?: string
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
     dadoAntigo: JsonNullValueInput | InputJsonValue
@@ -29814,7 +29810,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedCreateWithoutCustomerInput = {
-    id?: number
+    id?: string
     reviewedById?: string | null
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
@@ -29844,7 +29840,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     syncedAt?: Date | string
     createdAt?: Date | string
@@ -29859,7 +29855,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
     syncedAt?: Date | string
@@ -30755,7 +30751,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     syncedAt?: Date | string
     createdAt?: Date | string
@@ -30770,7 +30766,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string
@@ -31458,7 +31454,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     syncedAt?: Date | string
     createdAt?: Date | string
@@ -31473,7 +31469,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
     responsavelFinanceiroCustomerId?: string | null
@@ -32309,7 +32305,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateManyRevisadoPorInput = {
-    id?: number
+    id?: string
     customerId: string
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
@@ -32324,6 +32320,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUpdateWithoutRevisadoPorInput = {
+    id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
     dadoAntigo?: JsonNullValueInput | InputJsonValue
@@ -32338,7 +32335,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateWithoutRevisadoPorInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
@@ -32353,7 +32350,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateManyWithoutRevisadoPorInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
@@ -32430,7 +32427,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestCreateManyCustomerInput = {
-    id?: number
+    id?: string
     reviewedById?: string | null
     tipo: $Enums.TipoAlteracao
     status?: $Enums.StatusAlteracao
@@ -32450,7 +32447,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     contratoId: string
     syncedAt?: Date | string
@@ -32710,6 +32707,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
     dadoAntigo?: JsonNullValueInput | InputJsonValue
@@ -32724,7 +32722,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateWithoutCustomerInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
@@ -32739,7 +32737,7 @@ export namespace Prisma {
   }
 
   export type ChangeRequestUncheckedUpdateManyWithoutCustomerInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: StringFieldUpdateOperationsInput | string
     reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumTipoAlteracaoFieldUpdateOperationsInput | $Enums.TipoAlteracao
     status?: EnumStatusAlteracaoFieldUpdateOperationsInput | $Enums.StatusAlteracao
@@ -32984,7 +32982,7 @@ export namespace Prisma {
     codigo: string
     quadra?: string | null
     setor?: string | null
-    quantidadeGavetas?: number
+    quantidadeGavetas: number
     valorMensalidade: Decimal | DecimalJsLike | number | string
     responsavelFinanceiroCustomerId?: string | null
     syncedAt?: Date | string

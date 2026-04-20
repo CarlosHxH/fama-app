@@ -91,7 +91,7 @@ enum MetodoPagamento {
   PIX
   BOLETO
   CARTAO_CREDITO
-  CARTAO_DEBITO
+  CARTAO_DEBITO // legado — importações do SQL Server; novas cobranças usam CARTAO_CREDITO
 }
 
 enum TipoAlteracao {
@@ -184,7 +184,7 @@ model Customer {
   sqlServerId    Int?    @unique @map("sql_server_id")
   cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14)
   nome           String  @db.VarChar(160)
-  email          String? @db.VarChar(120)
+  email          String? @db.VarChar(120) // não-único: clientes podem partilhar email (enforçado na camada de serviço)
   senhaHash      String? @map("senha_hash")
   primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
   ativo          Boolean @default(true)
@@ -312,6 +312,7 @@ model CustomerRefreshToken {
 
   @@index([customerId])
   @@index([expiresAt])
+  @@index([customerId, revogado, expiresAt])
   @@map("customer_refresh_tokens")
 }
 
@@ -411,7 +412,7 @@ model Jazigo {
   setor       String? @db.VarChar(20)
 
   // Decreto 4.332/2023
-  quantidadeGavetas Int     @default(3) @map("quantidade_gavetas")
+  quantidadeGavetas Int     @map("quantidade_gavetas")
   valorMensalidade  Decimal @map("valor_mensalidade") @db.Decimal(10, 2)
 
   contratoId String   @map("contrato_id")
@@ -451,12 +452,14 @@ model Jazigo {
 ///   WHERE quantidade_gavetas = ? AND vigente_desde <= D
 ///   ORDER BY vigente_desde DESC LIMIT 1
 model TarifaJazigo {
-  id                String   @id @default(uuid())
-  quantidadeGavetas Int      @map("quantidade_gavetas")
-  valorMensalidade  Decimal  @map("valor_mensalidade") @db.Decimal(10, 2)
-  vigenteDesde      DateTime @map("vigente_desde") @db.Date
-  decretoCriador    String?  @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
-  observacoes       String?  @db.Text
+  id                String    @id @default(uuid())
+  quantidadeGavetas Int       @map("quantidade_gavetas")
+  valorMensalidade  Decimal   @map("valor_mensalidade") @db.Decimal(10, 2)
+  vigenteDesde      DateTime  @map("vigente_desde") @db.Date
+  /// Preencher ao cadastrar o próximo reajuste para fechar o período desta tarifa.
+  vigenteAte        DateTime? @map("vigente_ate") @db.Date
+  decretoCriador    String?   @map("decreto_criador") @db.VarChar(100) // ex: "Decreto 4.332/2023"
+  observacoes       String?   @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -546,6 +549,10 @@ model Pagamento {
   @@index([status])
   @@index([tipo])
   @@index([dataVencimento])
+  // Compostos para queries frequentes
+  @@index([customerId, status])
+  @@index([dataVencimento, status])
+  @@index([jazigoId, status])
   @@map("pagamentos")
 }
 
@@ -614,7 +621,7 @@ model Notificacao {
 ///   PENDENTE → APROVADA (admin aplica os dados, preenche dadoAplicado + notaRevisao opcional)
 ///           → REJEITADA (admin explica o motivo em notaRevisao)
 model ChangeRequest {
-  id            Int             @id @default(autoincrement())
+  id            String          @id @default(uuid())
   customerId    String          @map("customer_id")
   reviewedById  String?         @map("reviewed_by_id")
   tipo          TipoAlteracao
@@ -652,6 +659,7 @@ model ChangeRequest {
 /// Permite reprocessar registros específicos sem re-sincronizar a entidade inteira.
 model SyncLog {
   id                   String     @id @default(uuid())
+  /// Valor atual: "sync-sqlserver-to-postgres" (ver SYNC_SQLSERVER_JOB_NAME em sync-constants.ts)
   jobName              String     @map("job_name") @db.VarChar(60)
   status               SyncStatus @default(PROCESSANDO)
   registrosNovos       Int        @default(0) @map("registros_novos")

@@ -1,0 +1,26 @@
+{
+  "name": "migrate",
+  "private": true,
+  "scripts": {
+    "migrate": "tsx --env-file=.env migrate.ts",
+    "migrate:dry": "tsx --env-file=.env migrate.ts --dry-run",
+    "migrate:reconcile": "tsx --env-file=.env migrate.ts --reconcile-only",
+    "migrate:from": "tsx --env-file=.env migrate.ts --from=",
+    "export-ignored": "tsx --env-file=.env export-ignored.ts",
+    "patch-phones": "tsx --env-file=.env patch-phones.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/mssql": "^9.1.11",
+    "@types/pg": "^8.20.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "mssql": "^12.3.1",
+    "pg": "^8.20.0",
+    "uuid": "^13.0.0"
+  }
+}

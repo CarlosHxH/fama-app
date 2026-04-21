@@ -181,13 +181,13 @@ export function AdminDashboard() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           aria-label="Indicadores"
         >
-          <KpiCard
+          {/* <KpiCard
             loading={loadingStats}
             label="Total recebido (histórico)"
             value={brl.format((stats.data?.totalReceivedCents ?? 0) / 100)}
             sub="Soma de pagamentos com estado recebido"
             icon={<Banknote className="h-5 w-5" strokeWidth={2} />}
-          />
+          /> */}
           <KpiCard
             loading={loadingStats}
             label="Valor pendente"
@@ -202,13 +202,13 @@ export function AdminDashboard() {
             sub="Pagamentos quitados no período"
             icon={<CheckCircle2 className="h-5 w-5" strokeWidth={2} />}
           />
-          {/* <KpiCard
+          <KpiCard
             loading={loadingStats}
             label="Em atraso"
             value={String(stats.data?.overdueCount ?? 0)}
             sub="Vencidas ou pendentes após vencimento"
             icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
-          /> */}
+          />
           <KpiCard
             loading={loadingStats}
             label="Em dia (aberto)"

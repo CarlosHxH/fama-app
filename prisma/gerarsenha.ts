@@ -18,8 +18,8 @@ function env(key: string, fallback?: string): string {
 // ---------------------------------------------------------------------------
 
 async function seedAdmin() {
-  const email = "admin@fama.com"; //env("SEED_ADMIN_EMAIL", "admin@fama.com");
-  const password = "fama2025!"; //env("SEED_ADMIN_PASSWORD", "fama2025!");
+  const email = "admin@fama.com";
+  const password = "fama2025!";
   const senhaHash = await hash(password, 12);
     console.log(senhaHash)
   await db.user.upsert({

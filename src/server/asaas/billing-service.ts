@@ -258,9 +258,15 @@ export async function createPixChargeForCustomer(input: {
 
 /**
  * Cria cobrança Asaas (PIX, boleto ou cartão) e registo em `Pagamento`.
+ *
+ * `customer` é sempre o TITULAR DO CONTRATO.
+ * `payerCustomer` é o PAGADOR EFETIVO quando difere do titular (ex.: responsável financeiro do jazigo).
+ * Quando `payerCustomer` é fornecido, `Pagamento.customerId` fica com o pagador e
+ * `Pagamento.titularContratoId` fica com o titular.
  */
 export async function createAsaasChargeForCustomer(input: {
   customer: Customer;
+  payerCustomer?: Customer | null;
   valueCents: number;
   description?: string;
   dueDate: Date;
@@ -278,6 +284,7 @@ export async function createAsaasChargeForCustomer(input: {
 }) {
   const {
     customer,
+    payerCustomer,
     valueCents,
     description,
     dueDate,
@@ -302,14 +309,20 @@ export async function createAsaasChargeForCustomer(input: {
     jazigoId,
   });
 
-  const payerEmail = responsavelFinanceiro?.email ?? email;
-  const payerCpf = responsavelFinanceiro?.cpf ?? cpfCnpj;
-  const payerName = responsavelFinanceiro?.nome;
+  // Entidade de faturação: pagador efetivo quando disponível, senão o titular.
+  // Quando há payerCustomer, usamos os dados do Customer do DB — sem overrides de CPF/email.
+  // Quando apenas responsavelFinanceiro (slice sem entidade) está disponível, aplicamos overrides no titular.
+  const billingEntity = payerCustomer ?? customer;
+  const hasSeparatePayer = !!payerCustomer;
 
-  const asaasCustomerId = await ensureAsaasCustomer(customer, {
-    cpfCnpjOverride: payerCpf,
-    emailOverride: payerEmail,
-    nameOverride: payerName,
+  const cpfOverride = cpfCnpj ?? (!hasSeparatePayer ? responsavelFinanceiro?.cpf : undefined);
+  const emailOverride = email ?? (!hasSeparatePayer ? (responsavelFinanceiro?.email ?? undefined) : undefined);
+  const nameOverride = !hasSeparatePayer ? (responsavelFinanceiro?.nome ?? undefined) : undefined;
+
+  const asaasCustomerId = await ensureAsaasCustomer(billingEntity, {
+    cpfCnpjOverride: cpfOverride,
+    emailOverride,
+    nameOverride,
   });
 
   const payload: Record<string, unknown> = {
@@ -356,7 +369,10 @@ export async function createAsaasChargeForCustomer(input: {
 
   return db.pagamento.create({
     data: {
-      customerId: customer.id,
+      // customerId = PAGADOR EFETIVO (pode ser diferente do titular do contrato)
+      customerId: billingEntity.id,
+      // titularContratoId = TITULAR DO CONTRATO para rastreabilidade (sempre definido em cobranças novas)
+      titularContratoId: customer.id,
       valorTitulo: decimalFromCents(valueCents),
       dataVencimento: utcNoonDate(dueDate),
       tipo: tipoPagamento,

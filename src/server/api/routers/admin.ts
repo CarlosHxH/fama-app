@@ -97,13 +97,13 @@ function endOfUtcDay(d: Date): Date {
   return x;
 }
 
-function ensureDueDateIsFuture(dueDate: Date): void {
+function ensureDueDateIsNotPast(dueDate: Date): void {
   const due = startOfUtcDay(dueDate).getTime();
   const today = startOfUtcDay(new Date()).getTime();
-  if (due <= today) {
+  if (due < today) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "A data de vencimento deve ser futura.",
+      message: "A data de vencimento não pode ser no passado.",
     });
   }
 }
@@ -723,7 +723,7 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const customerId = parseCustomerId(input.userId);
       const customer = await requireCustomer(customerId);
-      ensureDueDateIsFuture(input.dueDate);
+      ensureDueDateIsNotPast(input.dueDate);
 
       const contrato =
         input.contratoId && input.contratoId.length > 0
@@ -790,8 +790,22 @@ export const adminRouter = createTRPCRouter({
         legacySlice,
       );
 
+      // Resolve o Customer efetivo que pagará a cobrança.
+      // Precedência: jazigo.responsavelFinanceiroCustomer → contrato.responsavelFinanceiro.customer → titular.
+      // O payerCustomer garante que ensureAsaasCustomer usa o registo correto no DB (cpfCnpj, asaasCustomerId)
+      // e que Pagamento.customerId fica com o pagador real, não o titular.
+      let payerCustomer: typeof customer | null = null;
+      if (jazigo?.responsavelFinanceiroCustomer?.id) {
+        payerCustomer = await db.customer.findUnique({
+          where: { id: jazigo.responsavelFinanceiroCustomer.id },
+        });
+      } else if (legacyResp?.customer) {
+        payerCustomer = legacyResp.customer;
+      }
+
       return createAsaasChargeForCustomer({
         customer,
+        payerCustomer,
         valueCents: input.valueCents,
         description: input.description,
         dueDate: input.dueDate,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { auth } from "~/server/auth";
 
@@ -33,8 +34,15 @@ export default async function Home() {
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-16 text-[#1c1c1c]">
         <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl border border-[#b8972a]/35 bg-[#1a3a2a]/5 text-3xl shadow-sm">
-            <span aria-hidden>🏛️</span>
+          <div className="mx-auto flex items-center justify-center mb-6">
+            <Image
+              src="/logo-Jardim.png"
+              alt="Jardim das Palmeiras"
+              width={280}
+              height={100}
+              className="max-h-[200px] w-auto object-contain rounded-xl border border-[#b8972a]/35 bg-[#1a3a2a]/5 shadow-sm"
+              priority
+            />
           </div>
           <h1
             className="text-3xl font-extrabold tracking-tight text-[#1a3a2a] sm:text-4xl"
@@ -66,7 +74,7 @@ export default async function Home() {
                 ) : null}
                 <Link
                   href="/api/auth/signout"
-                  className="rounded-xl border border-[#ddd9d0] bg-white px-8 py-3.5 text-center text-[0.9rem] font-semibold text-[#4a4a4a] transition hover:bg-[#f5f2ed]"
+                  className="rounded-xl border border-[#b8972a]/35 border-2 bg-white/20 px-8 py-3.5 text-center text-[0.9rem] font-semibold text-[#4a4a4a] transition hover:bg-[#b8972a]/20"
                 >
                   Sair
                 </Link>

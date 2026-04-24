@@ -3,25 +3,10 @@ import { PrismaClient } from "../generated/prisma/client";
 
 const db = new PrismaClient();
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function env(key: string, fallback?: string): string {
-  const val = process.env[key] ?? fallback;
-  if (!val) throw new Error(`Variável de ambiente obrigatória ausente: ${key}`);
-  return val;
-}
-
-// ---------------------------------------------------------------------------
-// Admin
-// ---------------------------------------------------------------------------
-
-async function seedAdmin() {
+async function main():Promise<void> {
   const email = "admin@fama.com";
   const password = "fama2025!";
   const senhaHash = await hash(password, 12);
-    console.log(senhaHash)
   await db.user.upsert({
     where: { email },
     update: { senha: senhaHash },
@@ -37,4 +22,7 @@ async function seedAdmin() {
   console.log(`✓ Admin: ${email}`);
 }
 
-seedAdmin();
+void main().catch((err) => {
+  console.error('\n✗ Erro fatal:', err);
+  process.exit(1);
+});

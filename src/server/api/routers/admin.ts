@@ -1789,4 +1789,116 @@ export const adminRouter = createTRPCRouter({
       }
       await db.pagamento.delete({ where: { id: input.id } });
     }),
+
+  /**
+   * Pré-visualiza quantos jazigos com contrato ATIVO ainda não têm fatura de
+   * manutenção no ano solicitado (não CANCELADO). Não cria registos.
+   */
+  previewAnnualInvoices: adminFinanceProcedure
+    .input(z.object({ year: z.number().int().min(2020).max(2100).optional() }))
+    .query(async ({ input }) => {
+      const year = input.year ?? new Date().getFullYear();
+      const yearStart = new Date(Date.UTC(year, 0, 1));
+      const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+      const dueDate = new Date(Date.UTC(year, 6, 30, 12, 0, 0));
+
+      const jazigos = await db.jazigo.findMany({
+        where: {
+          contrato: { situacao: "ATIVO" },
+          NOT: {
+            pagamentos: {
+              some: {
+                tipo: "MANUTENCAO",
+                dataVencimento: { gte: yearStart, lte: yearEnd },
+                status: { not: "CANCELADO" },
+              },
+            },
+          },
+        },
+        select: {
+          id: true,
+          valorMensalidade: true,
+        },
+      });
+
+      const totalValueCents = jazigos.reduce(
+        (acc, j) => acc + centsFromDecimal(j.valorMensalidade),
+        0,
+      );
+
+      return {
+        year,
+        dueDate,
+        count: jazigos.length,
+        totalValueCents,
+      };
+    }),
+
+  /**
+   * Cria faturas de manutenção (Pagamento, sem cobrança Asaas) para todos os
+   * jazigos com contrato ATIVO que ainda não têm fatura no ano solicitado.
+   * Vencimento: 30 de julho do ano. Requer FINANCEIRO ou ADMIN.
+   */
+  generateAnnualInvoices: adminFinanceProcedure
+    .input(z.object({ year: z.number().int().min(2020).max(2100).optional() }))
+    .mutation(async ({ input }) => {
+      const year = input.year ?? new Date().getFullYear();
+      const yearStart = new Date(Date.UTC(year, 0, 1));
+      const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+      const dueDate = new Date(Date.UTC(year, 6, 30, 12, 0, 0));
+
+      const jazigos = await db.jazigo.findMany({
+        where: {
+          contrato: { situacao: "ATIVO" },
+          NOT: {
+            pagamentos: {
+              some: {
+                tipo: "MANUTENCAO",
+                dataVencimento: { gte: yearStart, lte: yearEnd },
+                status: { not: "CANCELADO" },
+              },
+            },
+          },
+        },
+        select: {
+          id: true,
+          contratoId: true,
+          valorMensalidade: true,
+          quantidadeGavetas: true,
+          responsavelFinanceiroCustomerId: true,
+          contrato: {
+            select: {
+              customerId: true,
+              responsavelFinanceiro: {
+                select: { customerId: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (jazigos.length === 0) return { created: 0 };
+
+      const rows = jazigos.map((j) => {
+        const customerId =
+          j.responsavelFinanceiroCustomerId ??
+          j.contrato.responsavelFinanceiro?.customerId ??
+          j.contrato.customerId;
+
+        return {
+          customerId,
+          jazigoId: j.id,
+          contratoId: j.contratoId,
+          valorTitulo: j.valorMensalidade,
+          dataVencimento: dueDate,
+          tipo: "MANUTENCAO" as const,
+          status: "PENDENTE" as const,
+          gavetasNaEpoca: j.quantidadeGavetas,
+          valorNaEpoca: j.valorMensalidade,
+        };
+      });
+
+      const result = await db.pagamento.createMany({ data: rows });
+      return { created: result.count };
+    }),
 });

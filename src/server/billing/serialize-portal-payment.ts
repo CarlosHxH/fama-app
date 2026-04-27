@@ -8,6 +8,7 @@ type PagamentoLike = {
   id: string;
   createdAt: Date;
   updatedAt: Date;
+  dataVencimento: Date;
   valorTitulo: Prisma.Decimal;
   status: string;
   metodoPagamento: string | null;

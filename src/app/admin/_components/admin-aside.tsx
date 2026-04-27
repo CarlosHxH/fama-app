@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import {
+  CalendarCheck,
   CreditCard,
   FileText,
   History,
@@ -46,6 +47,12 @@ const NAV_FINANCE = {
   icon: Receipt,
 } as const;
 
+const NAV_FATURAR = {
+  href: "/admin/pagamentos/faturar",
+  label: "Faturas anuais",
+  icon: CalendarCheck,
+} as const;
+
 function canEmitCharges(session: {
   user?: {
     accountKind?: string;
@@ -79,6 +86,7 @@ export function AdminAside() {
     ? ([
         NAV_BASE[0],
         NAV_FINANCE,
+        NAV_FATURAR,
         NAV_BASE[1],
         NAV_BASE[2],
         NAV_BASE[3],

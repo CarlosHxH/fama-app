@@ -1,8 +1,11 @@
 /**
  * Job de sincronização SQL Server → Postgres (tabelas de domínio + `sync_logs`).
- *
+ * npx prisma migrate dev --name sync-sqlserver-to-postgres
+ * npx prisma migrate deploy
  * Executar com `npm run job:sync` (Node + tsx). Evitar Bun: o stack mssql/tedious
  * pode falhar de forma inconsistente (ECONNRESET, "socket hang up", estado interno).
+ * executado com `bun run scripts/jobs/sync-sqlserver-to-postgres.ts`
+ * ou `npm run job:sync`
  */
 import { config as dotenvConfig } from "dotenv";
 // Next.js usa .env.local; dotenv/config carrega apenas .env.

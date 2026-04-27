@@ -9,7 +9,15 @@ import { z } from "zod";
 // dotenvConfig({ path: ".env", override: false });
 
 export const env = createEnv({
-  client: {},
+  client: {
+    NEXT_PUBLIC_APP_NAME: z.string().optional(),
+    NEXT_PUBLIC_ORG_FOOTER: z.string().optional(),
+    NEXT_PUBLIC_SUPPORT_PHONE: z.string().optional(),
+    NEXT_PUBLIC_SUPPORT_WHATSAPP_URL: z.string().optional(),
+    NEXT_PUBLIC_SUPPORT_WHATSAPP_LABEL: z.string().optional(),
+    NEXT_PUBLIC_BASE_PATH: z.string().optional(),
+    NEXT_PUBLIC_COBRANCA_LEGAL_URL: z.string().optional(),
+  },
   server: {
     AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(),
     DATABASE_URL: z.string().url(),
@@ -19,6 +27,13 @@ export const env = createEnv({
     ASAAS_WEBHOOK_TOKEN: z.string().optional()
   },
   runtimeEnv: {
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_ORG_FOOTER: process.env.NEXT_PUBLIC_ORG_FOOTER,
+    NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE,
+    NEXT_PUBLIC_SUPPORT_WHATSAPP_URL: process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL,
+    NEXT_PUBLIC_SUPPORT_WHATSAPP_LABEL: process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_LABEL,
+    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
+    NEXT_PUBLIC_COBRANCA_LEGAL_URL: process.env.NEXT_PUBLIC_COBRANCA_LEGAL_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV || "development",

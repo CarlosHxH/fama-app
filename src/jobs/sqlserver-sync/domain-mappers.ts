@@ -40,11 +40,14 @@ export function parseSqlServerDate(
 
   const raw = pickRow(row, [columnBase, columnBase.toLowerCase()]);
   if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
+    // +12 h neutralises any UTC offset up to ±12 h so getUTCDate() returns the
+    // correct calendar day even when the SQL Server host runs in a non-UTC timezone.
+    const shifted = new Date(raw.getTime() + 12 * 3_600_000);
     return new Date(
       Date.UTC(
-        raw.getUTCFullYear(),
-        raw.getUTCMonth(),
-        raw.getUTCDate(),
+        shifted.getUTCFullYear(),
+        shifted.getUTCMonth(),
+        shifted.getUTCDate(),
         12,
         0,
         0,

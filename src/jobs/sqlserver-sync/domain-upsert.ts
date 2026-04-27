@@ -14,6 +14,13 @@ import {
   toSqlServerInt,
 } from "./row-utils";
 
+/** Verdadeiro quando o erro é P2002 no campo `field` (nome da coluna DB, ex.: "numero_contrato"). */
+function isP2002On(e: unknown, field: string): boolean {
+  if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== "P2002") return false;
+  const target = e.meta?.target;
+  return Array.isArray(target) ? target.includes(field) : false;
+}
+
 function stateChar2(row: Record<string, unknown>): string {
   const cleaned = str(pickRow(row, ["Uf", "UF", "Estado", "estado"]), 8)
     .toUpperCase()
@@ -231,19 +238,21 @@ export async function upsertContratoFromContratosChainRow(
 
   const situacao = mapSituacaoContrato(row);
 
-  await prisma.contrato.upsert({
-    where: { sqlServerId: codContrato },
-    create: {
-      customerId: customer.id,
-      numeroContrato,
-      situacao,
-      sqlServerId: codContrato,
-    },
-    update: {
-      numeroContrato,
-      situacao,
-    },
-  });
+  try {
+    await prisma.contrato.upsert({
+      where: { sqlServerId: codContrato },
+      create: { customerId: customer.id, numeroContrato, situacao, sqlServerId: codContrato },
+      update: { situacao }, // numero_contrato imutável após criação
+    });
+  } catch (e) {
+    if (!isP2002On(e, "numero_contrato")) throw e;
+    // NumContrato duplicado no legado — usa chave sintética única pelo CodContrato
+    await prisma.contrato.upsert({
+      where: { sqlServerId: codContrato },
+      create: { customerId: customer.id, numeroContrato: `CTR-${codContrato}`, situacao, sqlServerId: codContrato },
+      update: { situacao },
+    });
+  }
   return true;
 }
 
@@ -282,19 +291,20 @@ export async function upsertContratoFromRow(
 
   const situacao = mapSituacaoContrato(row);
 
-  await prisma.contrato.upsert({
-    where: { sqlServerId: planSqlId },
-    create: {
-      customerId: customer.id,
-      numeroContrato,
-      situacao,
-      sqlServerId: planSqlId,
-    },
-    update: {
-      numeroContrato,
-      situacao,
-    },
-  });
+  try {
+    await prisma.contrato.upsert({
+      where: { sqlServerId: planSqlId },
+      create: { customerId: customer.id, numeroContrato, situacao, sqlServerId: planSqlId },
+      update: { situacao },
+    });
+  } catch (e) {
+    if (!isP2002On(e, "numero_contrato")) throw e;
+    await prisma.contrato.upsert({
+      where: { sqlServerId: planSqlId },
+      create: { customerId: customer.id, numeroContrato: `PL-${planSqlId}`, situacao, sqlServerId: planSqlId },
+      update: { situacao },
+    });
+  }
   return true;
 }
 
@@ -330,8 +340,6 @@ export async function upsertJazigoFromContratosJazigosRow(
     pickRow(row, ["Jazigo", "jazigo", "Codigo", "codigo", "NumeroJazigo"]),
     20,
   ).trim();
-  const codigo =
-    labelJazigo.length > 0 ? labelJazigo : `JZ-${jazigoSqlId}`;
 
   const nomeQuadra = str(
     pickRow(row, ["NomeQuadra", "nomeQuadra", "Quadra", "quadra"]),
@@ -345,6 +353,15 @@ export async function upsertJazigoFromContratosJazigosRow(
         ? String(codQuadra)
         : null;
 
+  // No SQL Server, `Jazigo` (ex.: "01") repete-se entre quadras — não é globalmente único.
+  // A chave natural é (CodQuadra, Jazigo). Prefixamos com a quadra para garantir unicidade
+  // no campo `codigo @unique` do Postgres. Fallback para JZ-{CodJazigo} quando sem etiqueta.
+  const quadraPrefix = quadra ? `${quadra.slice(0, 8)}-` : "";
+  const codigo =
+    labelJazigo.length > 0
+      ? `${quadraPrefix}${labelJazigo}`.slice(0, 20)
+      : `JZ-${jazigoSqlId}`;
+
   const gavetasRaw = toSqlServerInt(
     pickRow(row, [
       "QtdGavetas",
@@ -357,26 +374,23 @@ export async function upsertJazigoFromContratosJazigosRow(
   const quantidadeGavetas = gavetasRaw !== null && gavetasRaw > 0 ? gavetasRaw : 3;
   const valorMensalidade = monthlyFromGavetas(quantidadeGavetas);
 
-  await prisma.jazigo.upsert({
-    where: { sqlServerId: jazigoSqlId },
-    create: {
-      sqlServerId: jazigoSqlId,
-      codigo,
-      quadra,
-      setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
-      quantidadeGavetas,
-      valorMensalidade,
-      contratoId: contrato.id,
-    },
-    update: {
-      codigo,
-      quadra,
-      setor: str(pickRow(row, ["Setor", "setor"]), 20) || null,
-      quantidadeGavetas,
-      valorMensalidade,
-      contratoId: contrato.id,
-    },
-  });
+  const setor = str(pickRow(row, ["Setor", "setor"]), 20) || null;
+
+  try {
+    await prisma.jazigo.upsert({
+      where: { sqlServerId: jazigoSqlId },
+      create: { sqlServerId: jazigoSqlId, codigo, quadra, setor, quantidadeGavetas, valorMensalidade, contratoId: contrato.id },
+      update: { quadra, setor, quantidadeGavetas, valorMensalidade, contratoId: contrato.id }, // codigo imutável após criação
+    });
+  } catch (e) {
+    if (!isP2002On(e, "codigo")) throw e;
+    // codigo composto ainda colide (quadra com nome repetido) — usa JZ-{CodJazigo} que é único pelo PK
+    await prisma.jazigo.upsert({
+      where: { sqlServerId: jazigoSqlId },
+      create: { sqlServerId: jazigoSqlId, codigo: `JZ-${jazigoSqlId}`, quadra, setor, quantidadeGavetas, valorMensalidade, contratoId: contrato.id },
+      update: { quadra, setor, quantidadeGavetas, valorMensalidade, contratoId: contrato.id },
+    });
+  }
   return true;
 }
 
@@ -461,20 +475,32 @@ export async function upsertFinancialResponsibleFromRow(
   // Localiza ou cria o Customer pelo CPF/CNPJ antes de gravar o vínculo.
   let customer = await prisma.customer.findUnique({ where: { cpfCnpj } });
   if (!customer) {
+    // email é @unique: verificar se já pertence a outro Customer antes de criar
+    let emailForCreate: string | null = email;
+    if (emailForCreate !== null) {
+      const emailOwner = await prisma.customer.findUnique({ where: { email: emailForCreate } });
+      if (emailOwner) emailForCreate = null;
+    }
     customer = await prisma.customer.create({
       data: {
         cpfCnpj,
         nome,
-        email,
+        email: emailForCreate,
         primeiroAcesso: true,
       },
     });
   } else if (customer.nome !== nome || customer.email !== email) {
+    // email é @unique: só actualiza se não pertence a outro Customer
+    let emailForUpdate: string | null | undefined = undefined;
+    if (email !== null) {
+      const emailOwner = await prisma.customer.findUnique({ where: { email } });
+      if (!emailOwner || emailOwner.id === customer.id) emailForUpdate = email;
+    }
     customer = await prisma.customer.update({
       where: { id: customer.id },
       data: {
         nome,
-        ...(email !== null ? { email } : {}),
+        ...(emailForUpdate !== undefined ? { email: emailForUpdate } : {}),
       },
     });
   }
@@ -507,9 +533,7 @@ export async function upsertPagamentoFromRow(
   const due =
     parseSqlServerDate(row, "DataVencimento") ??
     parseSqlServerDate(row, "dataVencimento");
-  if (!due) {
-    return false;
-  }
+  if (!due) return false;
 
   const contratoCtx = await resolveContratoFromPlanOrChain(prisma, row);
   if (!contratoCtx) return false;

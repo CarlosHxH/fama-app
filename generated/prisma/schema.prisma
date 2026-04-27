@@ -184,7 +184,7 @@ model Customer {
   sqlServerId    Int?    @unique @map("sql_server_id")
   cpfCnpj        String  @unique @map("cpf_cnpj") @db.VarChar(14)
   nome           String  @db.VarChar(160)
-  email          String? @db.VarChar(120) // não-único: clientes podem partilhar email (enforçado na camada de serviço)
+  email          String? @unique @db.VarChar(120) // único: P2002 tratado na camada de serviço
   senhaHash      String? @map("senha_hash")
   primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
   ativo          Boolean @default(true)
@@ -221,7 +221,6 @@ model Customer {
   responsabilidadesFinanceiras ResponsavelFinanceiro[]
 
   @@index([cpfCnpj])
-  @@index([email])
   @@index([asaasCustomerId])
   @@map("customers")
 }

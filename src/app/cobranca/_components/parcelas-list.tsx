@@ -223,7 +223,6 @@ export function ParcelasList(props: ParcelasListProps) {
                     const pending = isBillingPendingPayment(p.status);
                     const active = selectedId === p.id;
                     const refLabel = new Date(p.createdAt).getFullYear().toString();
-                    console.log({p})
                     return (
                       <tr
                         key={p.id}

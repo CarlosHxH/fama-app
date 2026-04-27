@@ -4,7 +4,11 @@
  * Executar com `npm run job:sync` (Node + tsx). Evitar Bun: o stack mssql/tedious
  * pode falhar de forma inconsistente (ECONNRESET, "socket hang up", estado interno).
  */
-import "dotenv/config";
+import { config as dotenvConfig } from "dotenv";
+// Next.js usa .env.local; dotenv/config carrega apenas .env.
+// Carregar .env.local primeiro, depois .env como fallback.
+dotenvConfig({ path: ".env.local", override: false });
+dotenvConfig({ path: ".env", override: false });
 
 import { loadJobEnv } from "../../src/jobs/sqlserver-sync/job-env";
 import { createJobPrisma } from "../../src/jobs/sqlserver-sync/prisma-job";

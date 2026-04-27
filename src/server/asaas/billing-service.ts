@@ -120,11 +120,29 @@ export async function ensureAsaasCustomer(
     });
   }
 
+  const digits = cpfCnpj.replace(/\D/g, "");
   const body: Record<string, string> = {
-    name: options?.nameOverride ?? customer.nome ?? cpfCnpj.replace(/\D/g, ""),
-    cpfCnpj: cpfCnpj.replace(/\D/g, ""),
+    name: options?.nameOverride ?? customer.nome ?? digits,
+    cpfCnpj: digits,
   };
   if (emailRaw) body.email = emailRaw;
+
+  // Check if customer already exists in Asaas by CPF/CNPJ before creating.
+  try {
+    const existing = await asaasFetch<{ data: AsaasCustomer[] }>(
+      `/customers?cpfCnpj=${digits}&limit=1`,
+    );
+    if (existing.data.length > 0) {
+      const asaasId = existing.data[0]!.id;
+      await db.customer.update({
+        where: { id: customer.id },
+        data: { asaasCustomerId: asaasId },
+      });
+      return asaasId;
+    }
+  } catch {
+    // If lookup fails, fall through to creation
+  }
 
   try {
     const created = await asaasFetch<AsaasCustomer>("/customers", {
@@ -133,7 +151,7 @@ export async function ensureAsaasCustomer(
     });
 
     const persistEmail = !customer.email?.trim() && !!emailRaw;
-    const digitsCpf = body.cpfCnpj;
+    const digitsCpf = digits;
 
     try {
       await db.customer.update({
@@ -239,6 +257,7 @@ export async function createPixChargeForCustomer(input: {
   return db.pagamento.create({
     data: {
       customerId: customer.id,
+      titularContratoId: customer.id,
       valorTitulo: decimalFromCents(valueCents),
       dataVencimento: utcNoonDate(dueDate),
       tipo: jazigoId ? "MANUTENCAO" : "TAXA_SERVICO",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { Prisma } from "../../../../../generated/prisma/client";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import {
@@ -14,6 +15,8 @@ const webhookBodySchema = z.object({
     .object({
       id: z.string(),
       status: z.string(),
+      value: z.number().optional(),
+      netValue: z.number().optional(),
       clientPaymentDate: z.string().optional(),
       paymentDate: z.string().optional(),
     })
@@ -58,11 +61,22 @@ export async function POST(request: Request) {
     const transition = resolvePagamentoStatusTransition(row.status, mapped);
     const nextStatus = transition ?? row.status;
 
+    const isPago = nextStatus === "PAGO";
+    const rawDateStr = payment.paymentDate ?? payment.clientPaymentDate;
+    const dataPagamento = isPago && rawDateStr ? new Date(rawDateStr) : undefined;
+    const valorPago =
+      isPago && payment.value != null
+        ? new Prisma.Decimal(payment.value)
+        : undefined;
+
     await db.pagamento.update({
       where: { id: row.id },
       data: {
         status: nextStatus,
         webhookRecebidoEm: new Date(),
+        webhookData: json as Prisma.InputJsonValue,
+        ...(dataPagamento !== undefined ? { dataPagamento } : {}),
+        ...(valorPago !== undefined ? { valorPago } : {}),
       },
     });
 

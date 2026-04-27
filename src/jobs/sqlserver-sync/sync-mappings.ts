@@ -112,7 +112,13 @@ FROM dbo.Boletos b WITH (NOLOCK)
     id: "cessionarios-enderecos",
     sourceTable: "dbo.Cessionarios_Enderecos",
     keyColumns: ["CodCessionario", "TipoEndereco"],
-    sourceQuery: `SELECT * FROM dbo.Cessionarios_Enderecos WITH (NOLOCK)`,
+    sourceQuery: `
+SELECT e.*,
+  c.Cidade,
+  c.UF
+FROM dbo.Cessionarios_Enderecos e WITH (NOLOCK)
+LEFT JOIN dbo.Cidades c WITH (NOLOCK) ON e.CodCidade = c.CodCidade
+`.trim(),
   },
   {
     id: "cessionarios-fones",

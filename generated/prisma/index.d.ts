@@ -23316,12 +23316,12 @@ export namespace Prisma {
     id?: string
     sqlServerId?: number
     cpfCnpj?: string
+    email?: string
     asaasCustomerId?: string
     AND?: CustomerWhereInput | CustomerWhereInput[]
     OR?: CustomerWhereInput[]
     NOT?: CustomerWhereInput | CustomerWhereInput[]
     nome?: StringFilter<"Customer"> | string
-    email?: StringNullableFilter<"Customer"> | string | null
     senhaHash?: StringNullableFilter<"Customer"> | string | null
     primeiroAcesso?: BoolFilter<"Customer"> | boolean
     ativo?: BoolFilter<"Customer"> | boolean
@@ -23340,7 +23340,7 @@ export namespace Prisma {
     pagamentosComoPagador?: PagamentoListRelationFilter
     pagamentosComoTitular?: PagamentoListRelationFilter
     responsabilidadesFinanceiras?: ResponsavelFinanceiroListRelationFilter
-  }, "id" | "sqlServerId" | "cpfCnpj" | "asaasCustomerId">
+  }, "id" | "sqlServerId" | "cpfCnpj" | "email" | "asaasCustomerId">
 
   export type CustomerOrderByWithAggregationInput = {
     id?: SortOrder

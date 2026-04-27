@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   ExternalLink,
   Filter,
@@ -64,6 +65,9 @@ export function HistoricoPagamentosClient() {
   const [dueToStr, setDueToStr] = useState("");
   /** ID da cobrança aguardando confirmação de remoção. */
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.staffRole === "ADMIN";
 
   const hasCustomRange = Boolean(dueFromStr || dueToStr);
   const effectiveDueWindow = hasCustomRange ? ("all" as const) : dueWindow;
@@ -355,7 +359,7 @@ export function HistoricoPagamentosClient() {
                                 <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
                                 Cliente
                               </Link>
-                              {isDeletable(p) ? (
+                              {isAdmin && isDeletable(p) ? (
                                 <button
                                   type="button"
                                   onClick={() => setConfirmDeleteId(p.id)}

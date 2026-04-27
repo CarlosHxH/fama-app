@@ -1658,7 +1658,7 @@ export const adminRouter = createTRPCRouter({
    * Remove uma cobrança criada manualmente (sqlServerId IS NULL).
    * Cancela no Asaas quando há asaasId. Bloqueado para cobranças já pagas.
    */
-  deleteManualPayment: adminFinanceProcedure
+  deleteManualPayment: adminManageStaffProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input }) => {
       const payment = await db.pagamento.findUnique({ where: { id: input.id } });

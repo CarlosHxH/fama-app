@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, Banknote, CheckCircle2, ClipboardList, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Banknote, CheckCircle2, ClipboardList, Eye, EyeOff, X } from "lucide-react";
 
 import type { RouterOutputs } from "~/trpc/react";
 
@@ -21,6 +22,8 @@ export type ParcelasListProps = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   centsToBrl: (cents: number) => string;
+  onCancelCharge?: (paymentId: string) => void;
+  cancelPending?: boolean;
 };
 
 function statusPillClass(status: BillingPaymentStatus): string {
@@ -92,7 +95,11 @@ export function ParcelasList(props: ParcelasListProps) {
     selectedId,
     onSelect,
     centsToBrl,
+    onCancelCharge,
+    cancelPending,
   } = props;
+
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
   const visible = (payments ?? []).filter(
     (p) => !hidePaid || !isBillingPaid(p.status),
@@ -222,7 +229,7 @@ export function ParcelasList(props: ParcelasListProps) {
                     const paid = isBillingPaid(p.status);
                     const pending = isBillingPendingPayment(p.status);
                     const active = selectedId === p.id;
-                    const refLabel = new Date(p.createdAt).getFullYear().toString();
+                    const refLabel = new Date(p.dataVencimento).getFullYear().toString();
                     return (
                       <tr
                         key={p.id}
@@ -279,7 +286,39 @@ export function ParcelasList(props: ParcelasListProps) {
                           </span>
                         </td>
                         <td className="amount-col">{centsToBrl(p.valueCents)}</td>
-                        <td style={{ textAlign: "right", paddingRight: "1rem" }} />
+                        <td style={{ textAlign: "right", paddingRight: "0.5rem", minWidth: "8rem" }}>
+                          {onCancelCharge && isBillingPendingPayment(p.status) && p.asaasBillingType !== null && (
+                            confirmCancelId === p.id ? (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                                <span style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 600 }}>Cancelar?</span>
+                                <button
+                                  type="button"
+                                  disabled={cancelPending}
+                                  onClick={() => { onCancelCharge(p.id); setConfirmCancelId(null); }}
+                                  style={{ fontSize: "0.7rem", fontWeight: 700, color: "#fff", background: "#d97706", border: "none", borderRadius: "5px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
+                                >
+                                  Sim
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmCancelId(null)}
+                                  style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--text-mid)", background: "none", border: "1px solid var(--border)", borderRadius: "5px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
+                                >
+                                  Não
+                                </button>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmCancelId(p.id)}
+                                title="Cancelar cobrança Asaas (poderá gerar nova cobrança com outro método)"
+                                style={{ fontSize: "0.68rem", fontWeight: 600, color: "#92400e", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "5px", padding: "0.2rem 0.55rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                              >
+                                <X size={10} /> Cancelar
+                              </button>
+                            )
+                          )}
+                        </td>
                       </tr>
                     );
                   })}

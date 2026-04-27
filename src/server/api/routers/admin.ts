@@ -527,13 +527,49 @@ export const adminRouter = createTRPCRouter({
           syncedAt: true,
           createdAt: true,
           updatedAt: true,
-          _count: {
+          telefones: {
+            select: { id: true, numero: true, tipo: true, observacoes: true },
+            orderBy: { createdAt: "asc" },
+          },
+          enderecos: {
             select: {
-              pagamentosComoPagador: true,
-              telefones: true,
-              enderecos: true,
-              contratos: true,
+              id: true,
+              tipo: true,
+              logradouro: true,
+              numero: true,
+              complemento: true,
+              bairro: true,
+              cidade: true,
+              uf: true,
+              cep: true,
+              correspondencia: true,
             },
+            orderBy: { correspondencia: "desc" },
+          },
+          contratos: {
+            select: {
+              id: true,
+              numeroContrato: true,
+              situacao: true,
+              jazigos: {
+                select: {
+                  id: true,
+                  codigo: true,
+                  quadra: true,
+                  setor: true,
+                  quantidadeGavetas: true,
+                  valorMensalidade: true,
+                },
+              },
+              responsavelFinanceiro: {
+                select: {
+                  id: true,
+                  motivo: true,
+                  customer: { select: { id: true, nome: true, cpfCnpj: true, email: true } },
+                },
+              },
+            },
+            orderBy: { createdAt: "asc" },
           },
         },
       });
@@ -545,9 +581,9 @@ export const adminRouter = createTRPCRouter({
       }
 
       const recentPayments = await db.pagamento.findMany({
-        where: { customerId: input.id },
-        orderBy: { createdAt: "desc" },
-        take: 10,
+        where: { customerId: input.id, valorTitulo: { gt: 0 } },
+        orderBy: { dataVencimento: "desc" },
+        take: 50,
         select: {
           id: true,
           valorTitulo: true,
@@ -556,6 +592,11 @@ export const adminRouter = createTRPCRouter({
           createdAt: true,
           invoiceUrl: true,
           metodoPagamento: true,
+          sqlServerId: true,
+          asaasId: true,
+          tipo: true,
+          jazigo: { select: { codigo: true, quadra: true } },
+          contrato: { select: { numeroContrato: true } },
         },
       });
 
@@ -568,9 +609,75 @@ export const adminRouter = createTRPCRouter({
           createdAt: p.createdAt,
           invoiceUrl: p.invoiceUrl,
           metodoPagamento: p.metodoPagamento,
+          sqlServerId: p.sqlServerId,
+          asaasId: p.asaasId,
+          tipo: p.tipo,
+          jazigoCodigo: p.jazigo?.codigo ?? null,
+          jazigoQuadra: p.jazigo?.quadra ?? null,
+          contratoNumero: p.contrato?.numeroContrato ?? null,
           valueCents: centsFromDecimal(p.valorTitulo),
         })),
       };
+    }),
+
+  /** Cancela a cobrança Asaas de um pagamento, mantendo o registo PENDENTE para novo método. */
+  cancelCustomerCharge: adminFinanceProcedure
+    .input(z.object({ paymentId: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const payment = await db.pagamento.findUnique({ where: { id: input.paymentId } });
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND", message: "Cobrança não encontrada." });
+      if (payment.status === "PAGO" || payment.status === "ESTORNADO") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Não é possível cancelar cobranças já pagas ou estornadas." });
+      }
+      if (payment.asaasId) await cancelAsaasCharge(payment.asaasId);
+      await db.pagamento.update({
+        where: { id: payment.id },
+        data: { asaasId: null, metodoPagamento: null, invoiceUrl: null, webhookData: Prisma.DbNull },
+      });
+    }),
+
+  /** Cria ou actualiza um endereço de um cliente. */
+  upsertCustomerAddress: adminOperationalProcedure
+    .input(
+      z.object({
+        customerId: z.string().uuid(),
+        id: z.string().uuid().optional(),
+        tipo: z.enum(["RESIDENCIAL", "COMERCIAL"]).optional(),
+        logradouro: z.string().trim().max(200).optional(),
+        numero: z.string().trim().max(10).optional(),
+        complemento: z.string().trim().max(100).optional(),
+        bairro: z.string().trim().max(100).optional(),
+        cidade: z.string().trim().max(120).optional(),
+        uf: z.string().trim().max(2).optional(),
+        cep: z.string().trim().max(10).optional(),
+        correspondencia: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { customerId, id, ...fields } = input;
+      const data: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(fields)) {
+        if (v !== undefined) data[k] = v === "" ? null : v;
+      }
+      if (id) {
+        const addr = await db.customerAddress.findUnique({ where: { id } });
+        if (!addr || addr.customerId !== customerId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Endereço não encontrado." });
+        }
+        return db.customerAddress.update({ where: { id }, data });
+      }
+      return db.customerAddress.create({
+        data: { customerId, correspondencia: true, cidade: "—", ...data },
+      });
+    }),
+
+  /** Remove um endereço de um cliente. */
+  deleteCustomerAddress: adminOperationalProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const addr = await db.customerAddress.findUnique({ where: { id: input.id } });
+      if (!addr) throw new TRPCError({ code: "NOT_FOUND", message: "Endereço não encontrado." });
+      await db.customerAddress.delete({ where: { id: input.id } });
     }),
 
   /**

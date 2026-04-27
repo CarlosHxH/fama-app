@@ -169,6 +169,8 @@ export function CobrancaClient() {
               selectedId={selectedId}
               onSelect={setSelectedId}
               centsToBrl={centsToBrl}
+              onCancelCharge={(paymentId) => cancelCharge.mutate({ paymentId })}
+              cancelPending={cancelCharge.isPending}
             />
             <JazigosAccordion
               selectedJazigoId={selectedJazigoId}

@@ -1,198 +1,32 @@
 "use client";
 
-import { CreditCard, ExternalLink, FileText, Pencil, User } from "lucide-react";
+import { CreditCard, ExternalLink, FileText } from "lucide-react";
 
 import type { BillingListItem } from "./parcelas-list";
 
-type SessionUser = {
-  name?: string | null;
-  cpfCnpj?: string | null;
-};
-
 type CobrancaStaticModalsProps = {
-  user: SessionUser | undefined;
-  /** Cobrança selecionada — links Asaas para cartão/boleto. */
   payment?: BillingListItem | null;
-  openTitular: boolean;
-  openResp: boolean;
   openCard: boolean;
   openBoleto: boolean;
-  onCloseTitular: () => void;
-  onCloseResp: () => void;
   onCloseCard: () => void;
   onCloseBoleto: () => void;
   cardModalTotal: string;
 };
 
 /**
- * Modais estáticos alinhados ao HTML (edição titular, responsável, cartão, boleto — demonstração).
+ * Modais de pagamento: cartão (link externo) e boleto (linha digitável / PDF).
  */
 export function CobrancaStaticModals({
-  user,
   payment,
-  openTitular,
-  openResp,
   openCard,
   openBoleto,
-  onCloseTitular,
-  onCloseResp,
   onCloseCard,
   onCloseBoleto,
   cardModalTotal,
 }: CobrancaStaticModalsProps) {
   return (
     <>
-      <div
-        className={`modal-overlay${openTitular ? " open" : ""}`}
-        id="modal-titular"
-        role="presentation"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onCloseTitular();
-        }}
-      >
-        <div
-          className="modal"
-          style={{ textAlign: "left", padding: "1.5rem", maxWidth: "500px" }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-titular-title"
-          onClick={(ev) => ev.stopPropagation()}
-        >
-          <h3
-            id="modal-titular-title"
-            style={{
-              marginBottom: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "1.2rem",
-            }}
-          >
-            <Pencil size={18} style={{ flexShrink: 0 }} /> Atualizar Dados do Titular
-          </h3>
-          <p
-            style={{
-              fontSize: "0.8rem",
-              marginBottom: "1.25rem",
-              color: "var(--text-mid)",
-              lineHeight: 1.5,
-            }}
-          >
-            Mantenha seus telefones e endereço atualizados. O documento não pode
-            ser modificado.
-          </p>
-          <div className="field" style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                fontSize: "0.65rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-              }}
-            >
-              Nome completo
-            </label>
-            <input
-              type="text"
-              readOnly
-              value={user?.name ?? ""}
-              style={{
-                width: "100%",
-                padding: "0.7rem",
-                border: "2px solid var(--border)",
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-                background: "var(--cream)",
-              }}
-            />
-          </div>
-          <div className="field" style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                fontSize: "0.65rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-              }}
-            >
-              CPF / CNPJ
-            </label>
-            <input
-              type="text"
-              disabled
-              value={user?.cpfCnpj ?? ""}
-              style={{
-                width: "100%",
-                padding: "0.7rem",
-                border: "2px solid var(--border)",
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-                opacity: 0.8,
-              }}
-            />
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-light)" }}>
-            Alteração completa pelo portal será disponibilizada em versão futura.
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ marginTop: 0, flex: 1, padding: "0.7rem" }}
-              onClick={onCloseTitular}
-            >
-              Fechar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={`modal-overlay${openResp ? " open" : ""}`}
-        id="modal-resp"
-        role="presentation"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onCloseResp();
-        }}
-      >
-        <div
-          className="modal"
-          style={{ textAlign: "left", padding: "1.5rem", maxWidth: "500px" }}
-          role="dialog"
-          aria-modal="true"
-          onClick={(ev) => ev.stopPropagation()}
-        >
-          <h3
-            style={{
-              marginBottom: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "1.2rem",
-            }}
-          >
-            <User size={18} style={{ flexShrink: 0 }} /> Novo Responsável Financeiro
-          </h3>
-          <p
-            style={{
-              fontSize: "0.8rem",
-              marginBottom: "1.25rem",
-              color: "var(--text-mid)",
-            }}
-          >
-            Funcionalidade de cadastro em desenvolvimento.
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ flex: 1, padding: "0.7rem" }}
-              onClick={onCloseResp}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-
+      {/* ── Cartão ── */}
       <div
         className={`modal-overlay${openCard ? " open" : ""}`}
         id="modal-card"
@@ -240,7 +74,6 @@ export function CobrancaStaticModals({
               Total
             </div>
             <div
-              id="card-modal-total"
               style={{
                 fontSize: "1.25rem",
                 fontWeight: 800,
@@ -293,6 +126,7 @@ export function CobrancaStaticModals({
         </div>
       </div>
 
+      {/* ── Boleto ── */}
       <div
         className={`modal-overlay${openBoleto ? " open" : ""}`}
         id="modal-boleto"
@@ -308,7 +142,7 @@ export function CobrancaStaticModals({
           aria-modal="true"
           onClick={(ev) => ev.stopPropagation()}
         >
-          <div id="boleto-generating-state">
+          <div>
             <div
               style={{
                 marginBottom: "1rem",

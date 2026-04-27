@@ -3,7 +3,7 @@ import { hash } from "bcrypt-ts";
 import { Prisma } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
-import { createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
+import { cancelAsaasCharge, createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
 import {
   buildPaymentBucketWhere,
   type PaymentBucket,
@@ -1652,5 +1652,34 @@ export const adminRouter = createTRPCRouter({
           updatedAt: true,
         },
       });
+    }),
+
+  /**
+   * Remove uma cobrança criada manualmente (sqlServerId IS NULL).
+   * Cancela no Asaas quando há asaasId. Bloqueado para cobranças já pagas.
+   */
+  deleteManualPayment: adminFinanceProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const payment = await db.pagamento.findUnique({ where: { id: input.id } });
+      if (!payment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Cobrança não encontrada." });
+      }
+      if (payment.sqlServerId !== null) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Apenas cobranças criadas manualmente podem ser removidas.",
+        });
+      }
+      if (payment.status === "PAGO" || payment.status === "ESTORNADO") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Não é possível remover cobranças já pagas ou estornadas.",
+        });
+      }
+      if (payment.asaasId) {
+        await cancelAsaasCharge(payment.asaasId);
+      }
+      await db.pagamento.delete({ where: { id: input.id } });
     }),
 });

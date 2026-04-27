@@ -559,8 +559,10 @@ export async function upsertPagamentoFromRow(
   const tipo = jazigo ? "MANUTENCAO" : "TAXA_SERVICO";
 
   const valorTitulo = decRequired(
-    pickRow(row, ["ValorTitulo", "valorTitulo", "Valor", "valor"]),
+    pickRow(row, ["ValorTitulo", "valorTitulo", "Valor", "valor", "VlrTitulo", "vlrTitulo"]),
   );
+  // Boletos zerados/cancelados no legado não têm valor cobrável — ignorar.
+  if (valorTitulo.isZero()) return false;
 
   await prisma.pagamento.upsert({
     where: { sqlServerId: boletoSqlId },

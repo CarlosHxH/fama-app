@@ -44,8 +44,6 @@ export function CobrancaClient() {
   const [itemsOpen, setItemsOpen] = useState(true);
   const [selectedJazigoId, setSelectedJazigoId] = useState<string>("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
-  const [openTitular, setOpenTitular] = useState(false);
-  const [openResp, setOpenResp] = useState(false);
   const [openCard, setOpenCard] = useState(false);
   const [openBoleto, setOpenBoleto] = useState(false);
 
@@ -161,11 +159,7 @@ export function CobrancaClient() {
         <HeroStepper currentStep={currentStep} />
         <div className="page-wrapper">
           <div className="left-col">
-            <TitularCard
-              user={session?.user}
-              onOpenEditTitular={() => setOpenTitular(true)}
-              onOpenResp={() => setOpenResp(true)}
-            />
+            <TitularCard />
             <ParcelasList
               payments={listQuery.data}
               listLoading={listLoading}
@@ -216,14 +210,9 @@ export function CobrancaClient() {
       />
 
       <CobrancaStaticModals
-        user={session?.user}
         payment={selected}
-        openTitular={openTitular}
-        openResp={openResp}
         openCard={openCard}
         openBoleto={openBoleto}
-        onCloseTitular={() => setOpenTitular(false)}
-        onCloseResp={() => setOpenResp(false)}
         onCloseCard={() => setOpenCard(false)}
         onCloseBoleto={() => setOpenBoleto(false)}
         cardModalTotal={cardModalTotal}

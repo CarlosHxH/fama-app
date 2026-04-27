@@ -48,7 +48,7 @@ export const billingRouter = createTRPCRouter({
     requirePortalSession(ctx);
     const customerId = ctx.session.user.id;
     const rows = await db.pagamento.findMany({
-      where: { customerId },
+      where: { customerId, valorTitulo: { gt: 0 } },
       orderBy: { createdAt: "desc" },
       include: {
         jazigo: { select: { codigo: true, quadra: true } },

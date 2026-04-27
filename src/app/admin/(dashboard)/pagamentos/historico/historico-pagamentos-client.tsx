@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Filter,
   Loader2,
+  Trash2,
   Users,
 } from "lucide-react";
 
@@ -38,6 +39,11 @@ function statusBadgeClass(status: string) {
   }
 }
 
+/** Cobrança removível: criada manualmente e não quitada/estornada. */
+function isDeletable(p: { sqlServerId: number | null; status: string }): boolean {
+  return p.sqlServerId === null && p.status !== "PAGO" && p.status !== "ESTORNADO";
+}
+
 type PaymentBucket =
   | "all"
   | "overdue"
@@ -54,9 +60,10 @@ export function HistoricoPagamentosClient() {
   const [dueWindow, setDueWindow] = useState<DueWindow>("all");
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
-  /** Intervalo personalizado de data de vencimento (YYYY-MM-DD). */
   const [dueFromStr, setDueFromStr] = useState("");
   const [dueToStr, setDueToStr] = useState("");
+  /** ID da cobrança aguardando confirmação de remoção. */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const hasCustomRange = Boolean(dueFromStr || dueToStr);
   const effectiveDueWindow = hasCustomRange ? ("all" as const) : dueWindow;
@@ -82,8 +89,16 @@ export function HistoricoPagamentosClient() {
     dueTo,
   };
 
+  const utils = api.useUtils();
   const payments = api.admin.listPayments.useInfiniteQuery(queryInput, {
     getNextPageParam: (last) => last.nextCursor,
+  });
+
+  const deletePayment = api.admin.deleteManualPayment.useMutation({
+    onSuccess: () => {
+      setConfirmDeleteId(null);
+      void utils.admin.listPayments.invalidate();
+    },
   });
 
   const rows = useMemo(
@@ -242,73 +257,121 @@ export function HistoricoPagamentosClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-jardim-border">
-                  {rows.map((p) => (
-                    <tr
-                      key={p.id}
-                      className="transition-colors hover:bg-jardim-cream/50"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 text-jardim-text-muted sm:px-5">
-                        {new Date(p.createdAt).toLocaleString("pt-BR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </td>
-                      <td className="max-w-[220px] px-4 py-3 sm:px-5">
-                        <span className="block truncate font-medium text-jardim-text">
-                          {p.user.name ?? p.user.email ?? "—"}
-                        </span>
-                        {p.user.cpfCnpj ? (
-                          <span className="block truncate text-[11px] text-jardim-text-muted">
-                            {p.user.cpfCnpj}
+                  {rows.map((p) => {
+                    const isConfirming = confirmDeleteId === p.id;
+                    const isDeleting = deletePayment.isPending && confirmDeleteId === p.id;
+
+                    return (
+                      <tr
+                        key={p.id}
+                        className={cn(
+                          "transition-colors hover:bg-jardim-cream/50",
+                          isConfirming && "bg-red-50 hover:bg-red-50",
+                        )}
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 text-jardim-text-muted sm:px-5">
+                          {new Date(p.createdAt).toLocaleString("pt-BR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </td>
+                        <td className="max-w-[220px] px-4 py-3 sm:px-5">
+                          <span className="block truncate font-medium text-jardim-text">
+                            {p.user.name ?? p.user.email ?? "—"}
                           </span>
-                        ) : null}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-jardim-text-muted sm:px-5">
-                        {p.paymentMethod ?? "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-jardim-green-dark sm:px-5">
-                        {brl.format(p.valueCents / 100)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-jardim-text sm:px-5">
-                        {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
-                      </td>
-                      <td className="px-4 py-3 sm:px-5">
-                        <span
-                          className={cn(
-                            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
-                            statusBadgeClass(p.status),
-                          )}
-                        >
-                          {STATUS_LABEL[p.status] ?? p.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right sm:px-5">
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                          {p.invoiceUrl ? (
-                            <a
-                              href={p.invoiceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
-                            >
-                              <ExternalLink
-                                className="h-3.5 w-3.5 shrink-0"
-                                aria-hidden
-                              />
-                              Fatura
-                            </a>
+                          {p.user.cpfCnpj ? (
+                            <span className="block truncate text-[11px] text-jardim-text-muted">
+                              {p.user.cpfCnpj}
+                            </span>
                           ) : null}
-                          <Link
-                            href={`/admin/clientes/${p.customerId}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-jardim-text-muted sm:px-5">
+                          {p.paymentMethod ?? "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 tabular-nums text-jardim-green-dark sm:px-5">
+                          {brl.format(p.valueCents / 100)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-jardim-text sm:px-5">
+                          {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
+                        </td>
+                        <td className="px-4 py-3 sm:px-5">
+                          <span
+                            className={cn(
+                              "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+                              statusBadgeClass(p.status),
+                            )}
                           >
-                            <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                            Cliente
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {STATUS_LABEL[p.status] ?? p.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right sm:px-5">
+                          {isConfirming ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="text-xs font-medium text-red-700">
+                                Remover cobrança?
+                              </span>
+                              <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() =>
+                                  deletePayment.mutate({ id: p.id })
+                                }
+                                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : null}
+                                Confirmar
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="inline-flex items-center rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-text transition hover:bg-jardim-cream"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                              {p.invoiceUrl ? (
+                                <a
+                                  href={p.invoiceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                                >
+                                  <ExternalLink
+                                    className="h-3.5 w-3.5 shrink-0"
+                                    aria-hidden
+                                  />
+                                  Fatura
+                                </a>
+                              ) : null}
+                              <Link
+                                href={`/admin/clientes/${p.customerId}`}
+                                className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                              >
+                                <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                Cliente
+                              </Link>
+                              {isDeletable(p) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteId(p.id)}
+                                  title="Remover cobrança"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                  Remover
+                                </button>
+                              ) : null}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {payments.hasNextPage ? (
@@ -330,6 +393,12 @@ export function HistoricoPagamentosClient() {
           )}
         </div>
       </section>
+
+      {deletePayment.error ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+          {deletePayment.error.message}
+        </p>
+      ) : null}
 
       {payments.error ? (
         <p className="text-sm text-red-800" role="alert">

@@ -1087,8 +1087,9 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      const where: Prisma.PagamentoWhereInput =
-        and.length > 0 ? { AND: and } : {};
+      and.push({ valorTitulo: { gt: 0 } });
+
+      const where: Prisma.PagamentoWhereInput = { AND: and };
 
       const items = await db.pagamento.findMany({
         where,
@@ -1800,7 +1801,7 @@ export const adminRouter = createTRPCRouter({
       const year = input.year ?? new Date().getFullYear();
       const yearStart = new Date(Date.UTC(year, 0, 1));
       const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
-      const dueDate = new Date(Date.UTC(year, 6, 30, 12, 0, 0));
+      const defaultDueDate = new Date(Date.UTC(year, 6, 30, 12, 0, 0));
 
       const jazigos = await db.jazigo.findMany({
         where: {
@@ -1817,8 +1818,16 @@ export const adminRouter = createTRPCRouter({
         },
         select: {
           id: true,
+          codigo: true,
           valorMensalidade: true,
+          contrato: {
+            select: {
+              numeroContrato: true,
+              customer: { select: { nome: true, cpfCnpj: true } },
+            },
+          },
         },
+        orderBy: { codigo: "asc" },
       });
 
       const totalValueCents = jazigos.reduce(
@@ -1828,9 +1837,17 @@ export const adminRouter = createTRPCRouter({
 
       return {
         year,
-        dueDate,
+        defaultDueDate,
         count: jazigos.length,
         totalValueCents,
+        jazigos: jazigos.map((j) => ({
+          id: j.id,
+          codigo: j.codigo ?? "—",
+          valorMensalidadeCents: centsFromDecimal(j.valorMensalidade),
+          numeroContrato: j.contrato.numeroContrato,
+          customerNome: j.contrato.customer.nome,
+          customerCpfCnpj: j.contrato.customer.cpfCnpj,
+        })),
       };
     }),
 
@@ -1840,26 +1857,37 @@ export const adminRouter = createTRPCRouter({
    * Vencimento: 30 de julho do ano. Requer FINANCEIRO ou ADMIN.
    */
   generateAnnualInvoices: adminFinanceProcedure
-    .input(z.object({ year: z.number().int().min(2020).max(2100).optional() }))
+    .input(
+      z.object({
+        year: z.number().int().min(2020).max(2100).optional(),
+        jazigoIds: z.array(z.string().uuid()).optional(),
+        dueDate: z.date().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const year = input.year ?? new Date().getFullYear();
       const yearStart = new Date(Date.UTC(year, 0, 1));
       const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
-      const dueDate = new Date(Date.UTC(year, 6, 30, 12, 0, 0));
+      const dueDate = input.dueDate ?? new Date(Date.UTC(year, 6, 30, 12, 0, 0));
 
-      const jazigos = await db.jazigo.findMany({
-        where: {
-          contrato: { situacao: "ATIVO" },
-          NOT: {
-            pagamentos: {
-              some: {
-                tipo: "MANUTENCAO",
-                dataVencimento: { gte: yearStart, lte: yearEnd },
-                status: { not: "CANCELADO" },
-              },
+      const baseWhere = {
+        contrato: { situacao: "ATIVO" },
+        NOT: {
+          pagamentos: {
+            some: {
+              tipo: "MANUTENCAO",
+              dataVencimento: { gte: yearStart, lte: yearEnd },
+              status: { not: "CANCELADO" },
             },
           },
         },
+      };
+
+      const jazigos = await db.jazigo.findMany({
+        where:
+          input.jazigoIds && input.jazigoIds.length > 0
+            ? { AND: [baseWhere, { id: { in: input.jazigoIds } }] }
+            : baseWhere,
         select: {
           id: true,
           contratoId: true,

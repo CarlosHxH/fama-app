@@ -1,0 +1,159 @@
+{
+  "status": "FALHA",
+  "elapsed_s": 35.9,
+  "dry_run": false,
+  "steps": [
+    {
+      "step": "tarifas_jazigo",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [],
+      "durationMs": 675
+    },
+    {
+      "step": "customers",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customers",
+          "sqlServerId": null,
+          "motivo": "[customers] [customers lote 10] duplicate key value violates unique constraint \"customers_sql_server_id_key\""
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "customer_addresses",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customer_addresses",
+          "sqlServerId": null,
+          "motivo": "[customer_addresses] [customer_addresses lote 1] insert or update on table \"customer_addresses\" violates foreign key constraint \"customer_addresses_customer_id_fkey\""
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "customer_phones",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customer_phones",
+          "sqlServerId": null,
+          "motivo": "[customer_phones] [customer_phones lote 1] insert or update on table \"customer_phones\" violates foreign key constraint \"customer_phones_customer_id_fkey\""
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "contratos",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "contratos",
+          "sqlServerId": null,
+          "motivo": "[contratos] [contratos lote 1] insert or update on table \"contratos\" violates foreign key constraint \"contratos_customer_id_fkey\""
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "jazigos",
+      "afetados": 16092,
+      "ignorados": 309,
+      "erros": [],
+      "durationMs": 10523
+    },
+    {
+      "step": "responsaveis_financeiros",
+      "afetados": 6078,
+      "ignorados": 103,
+      "erros": [],
+      "durationMs": 5423
+    },
+    {
+      "step": "pagamentos",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "pagamentos",
+          "sqlServerId": null,
+          "motivo": "[pagamentos] [pagamentos lote 3] insert or update on table \"pagamentos\" violates foreign key constraint \"pagamentos_customer_id_fkey\""
+        }
+      ],
+      "durationMs": 0
+    }
+  ],
+  "reconcile": [
+    {
+      "entidade": "customers",
+      "mssql_count": 19126,
+      "pg_count": 18604,
+      "delta": -522,
+      "ok": false
+    },
+    {
+      "entidade": "customer_addresses",
+      "mssql_count": 15361,
+      "pg_count": 15301,
+      "delta": -60,
+      "ok": false
+    },
+    {
+      "entidade": "customer_phones",
+      "mssql_count": 33001,
+      "pg_count": 32920,
+      "delta": -81,
+      "ok": false
+    },
+    {
+      "entidade": "contratos",
+      "mssql_count": 14539,
+      "pg_count": 14471,
+      "delta": -68,
+      "ok": false
+    },
+    {
+      "entidade": "jazigos",
+      "mssql_count": 16174,
+      "pg_count": 16092,
+      "delta": -82,
+      "ok": false,
+      "nota": "Δ pequeno pode persistir por jazigos com código (quadra-jazigo) duplicado no legado"
+    },
+    {
+      "entidade": "pagamentos (boletos)",
+      "mssql_count": 28900,
+      "pg_count": 28798,
+      "delta": -102,
+      "ok": false
+    },
+    {
+      "entidade": "pagamentos (aquisição)",
+      "mssql_count": 15529,
+      "pg_count": 15461,
+      "delta": -68,
+      "ok": false
+    },
+    {
+      "entidade": "responsaveis_financeiros",
+      "mssql_count": -1,
+      "pg_count": 6078,
+      "delta": 0,
+      "ok": true
+    }
+  ],
+  "stepErrors": [
+    "[customers] [customers lote 10] duplicate key value violates unique constraint \"customers_sql_server_id_key\"",
+    "[customer_addresses] [customer_addresses lote 1] insert or update on table \"customer_addresses\" violates foreign key constraint \"customer_addresses_customer_id_fkey\"",
+    "[customer_phones] [customer_phones lote 1] insert or update on table \"customer_phones\" violates foreign key constraint \"customer_phones_customer_id_fkey\"",
+    "[contratos] [contratos lote 1] insert or update on table \"contratos\" violates foreign key constraint \"contratos_customer_id_fkey\"",
+    "[pagamentos] [pagamentos lote 3] insert or update on table \"pagamentos\" violates foreign key constraint \"pagamentos_customer_id_fkey\""
+  ]
+}

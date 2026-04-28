@@ -132,11 +132,13 @@ function validarCpf(cpf: string): boolean {
 function normalizeCpf(raw: string | null | undefined): string {
   if (!raw) return ''
   const digits = raw.replace(/\D/g, '').slice(0, 14)
-  // CPFs com 9–10 dígitos: provável perda de zeros à esquerda no legado.
-  // Aplica padding e valida o checksum — se falhar, é RG ou dado corrompido.
+  // CPFs com 9–10 dígitos: perda de zeros à esquerda em exportações do legado.
+  // Aplica apenas padding — NÃO valida checksum, pois zeros perdidos corrompem os
+  // dígitos verificadores antes do cálculo, causando rejeição de CPFs legítimos.
+  // Rejeita somente sequências trivialmente inválidas (todos dígitos iguais).
   if (digits.length >= 9 && digits.length < 11) {
     const padded = digits.padStart(11, '0')
-    return validarCpf(padded) ? padded : ''
+    return /^(\d)\1{10}$/.test(padded) ? '' : padded
   }
   return digits
 }
@@ -503,21 +505,40 @@ async function migrateCustomers(mssql: sql.ConnectionPool): Promise<StepResult> 
     ])
   }
 
-  const afetados = await withTransaction(c =>
-    pgBatchInsert(c, 'customers', cols, rows,
+  let afetados = 0
+  try {
+    afetados = await withTransaction(async c => {
+      // Libera sql_server_id obsoleto: se o CPF de um cessionário mudou no legado entre
+      // execuções, o row antigo em PG tem o mesmo sql_server_id mas um cpf_cnpj diferente.
+      // O INSERT seguinte (sem conflito em cpf_cnpj) criaria um 2º row com o mesmo
+      // sql_server_id → violação de customers_sql_server_id_key.
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const chunk = rows.slice(i, i + BATCH_SIZE)
+        const placeholders = chunk
+          .map((_, ri) => `($${ri * 2 + 1}::int, $${ri * 2 + 2}::text)`)
+          .join(', ')
+        await c.query(
+          `UPDATE customers SET sql_server_id = NULL
+           FROM (VALUES ${placeholders}) AS v(ssid, cpf)
+           WHERE customers.sql_server_id = v.ssid
+             AND customers.cpf_cnpj <> v.cpf`,
+          chunk.flatMap(r => [r[1] as number, r[2] as string])
+        )
+      }
       // Conflito por cpf_cnpj (chave de negócio) para também cobrir registros
       // inseridos sem sql_server_id pelo step responsaveis_financeiros.
-      // ON CONFLICT (sql_server_id) não dispara quando o registro existente tem
-      // sql_server_id=NULL, causando violação de cpf_cnpj_key.
-      `ON CONFLICT (cpf_cnpj) DO UPDATE SET
-         sql_server_id = EXCLUDED.sql_server_id,
-         nome          = EXCLUDED.nome,
-         synced_at     = EXCLUDED.synced_at,
-         updated_at    = now()`)
-  )
-
-  // Reconstrói mapa por CPF — inclui cessionários com CPF duplicado (não têm sql_server_id próprio no PG)
-  await reloadCessionarioUuids(mssql)
+      return pgBatchInsert(c, 'customers', cols, rows,
+        `ON CONFLICT (cpf_cnpj) DO UPDATE SET
+           sql_server_id = EXCLUDED.sql_server_id,
+           nome          = EXCLUDED.nome,
+           synced_at     = EXCLUDED.synced_at,
+           updated_at    = now()`)
+    })
+  } finally {
+    // Sempre recarrega — se withTransaction fez ROLLBACK, o mapa em memória
+    // ficaria dessincronizado do PG, causando FK violations nos steps seguintes.
+    await reloadCessionarioUuids(mssql)
+  }
 
   ignorados = ignoradosSemCpf
   log(step, `✓ ${afetados} upserted  |  ${ignoradosSemCpf} sem CPF recuperável  |  ${cpfDup} CPFs duplicados unificados`)
@@ -631,7 +652,7 @@ async function migrateCustomerPhones(mssql: sql.ConnectionPool): Promise<StepRes
 
   const afetados = await withTransaction(c =>
     pgBatchInsert(c, 'customer_phones', cols, rows,
-      'ON CONFLICT (sql_server_id) DO NOTHING')
+      'ON CONFLICT (sql_server_id) DO UPDATE SET updated_at = now()')
   )
   log(step, `✓ ${afetados} inseridos  |  ${ignorados} ignorados`)
   return { step, afetados, ignorados, erros: [], durationMs: Date.now() - t0 }
@@ -785,16 +806,19 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
   const jazigoVisto = new Set<number>()
   const codigoVisto = new Set<string>()
   const now = new Date()
-  let ignoradosSemContrato = 0  // sem entrada em Contratos_Jazigos ou cessionário sem CPF
-  let ignoradosCodigoDup   = 0  // código Quadra-Jazigo duplicado no legado
+  // ignoradosSemContrato calculado após o loop (jazigos sem nenhum contrato válido)
+  let ignoradosCodigoDup = 0
 
   for (const r of jazigosRows) {
     const codJazigo = r['CodJazigo'] as number
     if (jazigoVisto.has(codJazigo)) continue
-    jazigoVisto.add(codJazigo)
 
     const contratoId = contratoUuid.get(r['CodContrato'] as number)
-    if (!contratoId) { ignoradosSemContrato++; continue }
+    // Não marca como visitado: ORDER BY CodContrato DESC garante que o próximo
+    // row do mesmo jazigo será um contrato mais antigo — tenta até encontrar um válido.
+    if (!contratoId) continue
+
+    jazigoVisto.add(codJazigo)
 
     const codigo = `${String(r['Quadra'] ?? '').trim()}-${String(r['CodigoJazigo'] ?? '').trim()}`
     if (codigoVisto.has(codigo)) { ignoradosCodigoDup++; continue }
@@ -824,6 +848,9 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
   )
   await syncMap(jazigoUuid, 'jazigos')
 
+  // Jazigos sem nenhum contrato com UUID válido (contrato do cessionário sem CPF ou sem Contratos_Jazigos)
+  const totalUniqJazigos = new Set(jazigosRows.map(r => r['CodJazigo'] as number)).size
+  const ignoradosSemContrato = totalUniqJazigos - jazigoVisto.size
   const ignorados = ignoradosSemContrato + ignoradosCodigoDup
   log(step, `✓ ${afetados} upserted  |  ${ignoradosSemContrato} sem contrato/CPF  |  ${ignoradosCodigoDup} código duplicado`)
   return { step, afetados, ignorados, erros: [], durationMs: Date.now() - t0 }
@@ -1009,6 +1036,9 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   for (const r of boletosRows) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignoradosBoletos++; continue }
+
+    // Boletos com ValorTitulo=0 são registros inválidos do legado (quitados sem valor).
+    if (!r['ValorTitulo'] || Number(r['ValorTitulo']) === 0) { ignoradosBoletos++; continue }
 
     const dataVenc = oleToDate(r['DataVencimento'] as number | null)
     if (!dataVenc) { ignoradosBoletos++; continue }

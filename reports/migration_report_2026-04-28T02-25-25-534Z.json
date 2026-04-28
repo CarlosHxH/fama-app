@@ -1,0 +1,123 @@
+{
+  "status": "SUCESSO",
+  "elapsed_s": 120.5,
+  "dry_run": false,
+  "steps": [
+    {
+      "step": "tarifas_jazigo",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [],
+      "durationMs": 694
+    },
+    {
+      "step": "customers",
+      "afetados": 14102,
+      "ignorados": 185,
+      "erros": [],
+      "durationMs": 17745
+    },
+    {
+      "step": "customer_addresses",
+      "afetados": 15368,
+      "ignorados": 53,
+      "erros": [],
+      "durationMs": 17629
+    },
+    {
+      "step": "customer_phones",
+      "afetados": 33009,
+      "ignorados": 68,
+      "erros": [],
+      "durationMs": 20290
+    },
+    {
+      "step": "contratos",
+      "afetados": 14548,
+      "ignorados": 92,
+      "erros": [],
+      "durationMs": 13834
+    },
+    {
+      "step": "jazigos",
+      "afetados": 16185,
+      "ignorados": 216,
+      "erros": [],
+      "durationMs": 14110
+    },
+    {
+      "step": "responsaveis_financeiros",
+      "afetados": 6133,
+      "ignorados": 47,
+      "erros": [],
+      "durationMs": 7802
+    },
+    {
+      "step": "pagamentos",
+      "afetados": 44444,
+      "ignorados": 161,
+      "erros": [],
+      "durationMs": 28427
+    }
+  ],
+  "reconcile": [
+    {
+      "entidade": "customers",
+      "mssql_count": 19126,
+      "pg_count": 18731,
+      "delta": -395,
+      "ok": false
+    },
+    {
+      "entidade": "customer_addresses",
+      "mssql_count": 15361,
+      "pg_count": 15368,
+      "delta": 7,
+      "ok": false
+    },
+    {
+      "entidade": "customer_phones",
+      "mssql_count": 33001,
+      "pg_count": 33009,
+      "delta": 8,
+      "ok": false
+    },
+    {
+      "entidade": "contratos",
+      "mssql_count": 14539,
+      "pg_count": 14548,
+      "delta": 9,
+      "ok": false
+    },
+    {
+      "entidade": "jazigos",
+      "mssql_count": 16174,
+      "pg_count": 16185,
+      "delta": 11,
+      "ok": false,
+      "nota": "Δ pequeno pode persistir por jazigos com código (quadra-jazigo) duplicado no legado"
+    },
+    {
+      "entidade": "pagamentos (boletos)",
+      "mssql_count": 28900,
+      "pg_count": 28906,
+      "delta": 6,
+      "ok": false
+    },
+    {
+      "entidade": "pagamentos (aquisição)",
+      "mssql_count": 15529,
+      "pg_count": 15538,
+      "delta": 9,
+      "ok": false
+    },
+    {
+      "entidade": "responsaveis_financeiros",
+      "mssql_count": -1,
+      "pg_count": 6133,
+      "delta": 0,
+      "ok": true
+    }
+  ],
+  "stepErrors": []
+}

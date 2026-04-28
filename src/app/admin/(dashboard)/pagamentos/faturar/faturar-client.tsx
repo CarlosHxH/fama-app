@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -8,6 +8,8 @@ import {
   ChevronRight,
   FileText,
   Loader2,
+  Search,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -33,6 +35,8 @@ export function FaturarClient() {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [dueDateStr, setDueDateStr] = useState(defaultDueDateStr(currentYear));
+  const [searchStr, setSearchStr] = useState("");
+  const deferredSearch = useDeferredValue(searchStr);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
   const [confirming, setConfirming] = useState(false);
@@ -53,19 +57,43 @@ export function FaturarClient() {
     () => preview.data?.jazigos ?? [],
     [preview.data?.jazigos],
   );
-  const allIds = useMemo(() => jazigos.map((j) => j.id), [jazigos]);
+
+  // Full list IDs — used to decide whether to send jazigoIds or undefined to the API
+  const fullIds = useMemo(() => jazigos.map((j) => j.id), [jazigos]);
+
+  // Client-side filter: nome, CPF (digits only), código, contrato
+  const filteredJazigos = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return jazigos;
+    const digits = q.replace(/\D/g, "");
+    return jazigos.filter(
+      (j) =>
+        j.customerNome.toLowerCase().includes(q) ||
+        (digits && j.customerCpfCnpj.replace(/\D/g, "").includes(digits)) ||
+        j.codigo.toLowerCase().includes(q) ||
+        j.numeroContrato.toLowerCase().includes(q),
+    );
+  }, [jazigos, deferredSearch]);
+
+  // allIds: IDs visíveis após filtro — usado nos toggles de seleção
+  const allIds = useMemo(() => filteredJazigos.map((j) => j.id), [filteredJazigos]);
 
   const pageJazigos = useMemo(
-    () => jazigos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [jazigos, page],
+    () => filteredJazigos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [filteredJazigos, page],
   );
-  const totalPages = Math.max(1, Math.ceil(jazigos.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredJazigos.length / PAGE_SIZE));
 
   const pageAllSelected =
     pageJazigos.length > 0 && pageJazigos.every((j) => selected.has(j.id));
   const pageIndeterminate =
     !pageAllSelected && pageJazigos.some((j) => selected.has(j.id));
-  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+
+  // "Selecionar todos" opera sobre os itens filtrados
+  const allVisibleSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+
+  // Para o generate: só omite jazigoIds se TODOS os jazigos (sem filtro) estão selecionados
+  const generateAllSelected = fullIds.length > 0 && fullIds.every((id) => selected.has(id));
 
   const selectedTotal = useMemo(
     () =>
@@ -91,6 +119,11 @@ export function FaturarClient() {
     setConfirming(false);
   }
 
+  function handleSearchChange(v: string) {
+    setSearchStr(v);
+    setPage(0);
+  }
+
   function togglePageAll() {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -103,12 +136,16 @@ export function FaturarClient() {
     });
   }
 
-  function toggleAll() {
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(allIds));
-    }
+  function toggleAllVisible() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        allIds.forEach((id) => next.delete(id));
+      } else {
+        allIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
   }
 
   function toggleOne(id: string) {
@@ -124,8 +161,7 @@ export function FaturarClient() {
     const dueDate = new Date(`${dueDateStr}T12:00:00Z`);
     generate.mutate({
       year,
-      // Se todos selecionados, omite a lista — o backend aplica o filtro completo.
-      jazigoIds: allSelected ? undefined : [...selected],
+      jazigoIds: generateAllSelected ? undefined : [...selected],
       dueDate,
     });
   }
@@ -137,6 +173,8 @@ export function FaturarClient() {
       return dueDateStr;
     }
   }, [dueDateStr]);
+
+  const isFiltering = deferredSearch.trim().length > 0;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
@@ -154,47 +192,79 @@ export function FaturarClient() {
       {/* Controles + tabela */}
       <section className="overflow-hidden rounded-2xl border border-jardim-border bg-jardim-white shadow-sm">
         {/* Filtros */}
-        <div className="grid gap-4 border-b border-jardim-border bg-jardim-cream/50 px-4 py-4 sm:grid-cols-2 sm:px-6">
-          <div>
-            <label
-              htmlFor="faturar-year"
-              className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted"
-            >
-              Ano de referência
-            </label>
-            <input
-              id="faturar-year"
-              type="number"
-              min={2020}
-              max={2100}
-              value={year}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                if (v >= 2020 && v <= 2100) handleYearChange(v);
-              }}
-              className="mt-1 w-28 rounded-xl border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="faturar-due"
-              className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted"
-            >
-              Data de vencimento
-            </label>
-            <input
-              id="faturar-due"
-              type="date"
-              value={dueDateStr}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setDueDateStr(e.target.value);
-                  setDone(null);
-                  setConfirming(false);
-                }
-              }}
-              className="mt-1 rounded-xl border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
-            />
+        <div className="border-b border-jardim-border bg-jardim-cream/50 px-4 py-4 sm:px-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label
+                htmlFor="faturar-year"
+                className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted"
+              >
+                Ano de referência
+              </label>
+              <input
+                id="faturar-year"
+                type="number"
+                min={2020}
+                max={2100}
+                value={year}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (v >= 2020 && v <= 2100) handleYearChange(v);
+                }}
+                className="mt-1 w-28 rounded-xl border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="faturar-due"
+                className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted"
+              >
+                Data de vencimento
+              </label>
+              <input
+                id="faturar-due"
+                type="date"
+                value={dueDateStr}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDueDateStr(e.target.value);
+                    setDone(null);
+                    setConfirming(false);
+                  }
+                }}
+                className="mt-1 rounded-xl border border-jardim-border bg-jardim-white px-3 py-2 text-sm focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
+              />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label
+                htmlFor="faturar-search"
+                className="block text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted"
+              >
+                Pesquisar
+              </label>
+              <div className="relative mt-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-jardim-text-light" aria-hidden />
+                <input
+                  id="faturar-search"
+                  type="search"
+                  placeholder="Nome, CPF, jazigo ou contrato"
+                  value={searchStr}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-jardim-border bg-jardim-white py-2 pl-8 pr-8 text-sm placeholder:text-jardim-text-light focus:border-jardim-green-mid focus:outline-none focus:ring-2 focus:ring-jardim-green-mid/25"
+                />
+                {searchStr && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearchChange("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-jardim-text-muted hover:text-jardim-text"
+                    aria-label="Limpar pesquisa"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -205,9 +275,7 @@ export function FaturarClient() {
               <span className="font-bold text-jardim-green-dark tabular-nums">
                 {selected.size}
               </span>{" "}
-              de{" "}
-              <span className="font-bold tabular-nums">{jazigos.length}</span>{" "}
-              selecionados
+              selecionado{selected.size !== 1 ? "s" : ""}
               {selected.size > 0 && (
                 <span className="ml-2 text-jardim-text">
                   —{" "}
@@ -216,13 +284,20 @@ export function FaturarClient() {
                   </span>
                 </span>
               )}
+              {isFiltering && (
+                <span className="ml-3 text-jardim-text-light">
+                  · {filteredJazigos.length} de {jazigos.length} visíveis
+                </span>
+              )}
             </p>
             <button
               type="button"
-              onClick={toggleAll}
+              onClick={toggleAllVisible}
               className="rounded-lg border border-jardim-border bg-jardim-white px-3 py-1.5 text-sm font-medium text-jardim-text transition hover:bg-jardim-cream"
             >
-              {allSelected ? "Desmarcar todos" : "Selecionar todos"}
+              {allVisibleSelected
+                ? isFiltering ? "Desmarcar visíveis" : "Desmarcar todos"
+                : isFiltering ? "Selecionar visíveis" : "Selecionar todos"}
             </button>
           </div>
         )}
@@ -245,6 +320,19 @@ export function FaturarClient() {
               aria-hidden
             />
             Todos os jazigos ativos já têm fatura para {year}.
+          </div>
+        ) : filteredJazigos.length === 0 ? (
+          <div className="px-4 py-12 text-center sm:px-6">
+            <p className="text-sm font-medium text-jardim-text-muted">
+              Nenhum jazigo corresponde à pesquisa.
+            </p>
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              className="mt-2 text-xs font-medium text-jardim-green-mid hover:underline"
+            >
+              Limpar filtro
+            </button>
           </div>
         ) : (
           /* Tabela */
@@ -331,7 +419,7 @@ export function FaturarClient() {
               <span className="font-semibold tabular-nums">{page + 1}</span> de{" "}
               <span className="tabular-nums">{totalPages}</span>
               <span className="ml-1 text-jardim-text-muted/70">
-                ({jazigos.length} jazigos)
+                ({filteredJazigos.length} jazigos)
               </span>
             </span>
             <div className="flex items-center gap-2">

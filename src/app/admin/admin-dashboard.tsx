@@ -465,13 +465,14 @@ export function AdminDashboard() {
                 </p>
               </div>
             ) : (
-              <table className="w-full min-w-[720px] text-left text-sm">
+              <table className="w-full min-w-[820px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-jardim-border bg-jardim-cream/80 text-[11px] font-semibold uppercase tracking-wider text-jardim-text-muted">
                     <th className="px-5 py-3 sm:px-6">Data</th>
                     <th className="px-5 py-3 sm:px-6">Utilizador</th>
                     <th className="px-5 py-3 sm:px-6">Meio</th>
                     <th className="px-5 py-3 sm:px-6">Valor</th>
+                    <th className="px-5 py-3 sm:px-6">Vencimento</th>
                     <th className="px-5 py-3 sm:px-6">Estado</th>
                     <th className="px-5 py-3 text-right sm:px-6">Ações</th>
                   </tr>
@@ -503,6 +504,9 @@ export function AdminDashboard() {
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 tabular-nums text-jardim-green-dark sm:px-6">
                         {brl.format(p.valueCents / 100)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 tabular-nums text-jardim-text sm:px-6">
+                        {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="px-5 py-3.5 sm:px-6">
                         <span

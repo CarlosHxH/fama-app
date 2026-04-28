@@ -1,0 +1,65 @@
+{
+  "status": "SUCESSO",
+  "elapsed_s": 5.8,
+  "dry_run": true,
+  "steps": [
+    {
+      "step": "tarifas_jazigo",
+      "afetados": 4,
+      "ignorados": 0,
+      "erros": [],
+      "durationMs": 1
+    },
+    {
+      "step": "customers",
+      "afetados": 14026,
+      "ignorados": 261,
+      "erros": [],
+      "durationMs": 421
+    },
+    {
+      "step": "customer_addresses",
+      "afetados": 15301,
+      "ignorados": 120,
+      "erros": [],
+      "durationMs": 1298
+    },
+    {
+      "step": "customer_phones",
+      "afetados": 32920,
+      "ignorados": 157,
+      "erros": [],
+      "durationMs": 1154
+    },
+    {
+      "step": "contratos",
+      "afetados": 14471,
+      "ignorados": 169,
+      "erros": [],
+      "durationMs": 293
+    },
+    {
+      "step": "jazigos",
+      "afetados": 16092,
+      "ignorados": 309,
+      "erros": [],
+      "durationMs": 392
+    },
+    {
+      "step": "responsaveis_financeiros",
+      "afetados": 6078,
+      "ignorados": 103,
+      "erros": [],
+      "durationMs": 1028
+    },
+    {
+      "step": "pagamentos",
+      "afetados": 44259,
+      "ignorados": 346,
+      "erros": [],
+      "durationMs": 1251
+    }
+  ],
+  "reconcile": [],
+  "stepErrors": []
+}

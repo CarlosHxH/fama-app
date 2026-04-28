@@ -1,0 +1,115 @@
+{
+  "status": "FALHA",
+  "elapsed_s": 285,
+  "dry_run": true,
+  "steps": [
+    {
+      "step": "tarifas_jazigo",
+      "afetados": 4,
+      "ignorados": 0,
+      "erros": [],
+      "durationMs": 1
+    },
+    {
+      "step": "customers",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customers",
+          "sqlServerId": null,
+          "motivo": "[customers] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "customer_addresses",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customer_addresses",
+          "sqlServerId": null,
+          "motivo": "[customer_addresses] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "customer_phones",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "customer_phones",
+          "sqlServerId": null,
+          "motivo": "[customer_phones] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "contratos",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "contratos",
+          "sqlServerId": null,
+          "motivo": "[contratos] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "jazigos",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "jazigos",
+          "sqlServerId": null,
+          "motivo": "[jazigos] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "responsaveis_financeiros",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "responsaveis_financeiros",
+          "sqlServerId": null,
+          "motivo": "[responsaveis_financeiros] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    },
+    {
+      "step": "pagamentos",
+      "afetados": 0,
+      "ignorados": 0,
+      "erros": [
+        {
+          "step": "pagamentos",
+          "sqlServerId": null,
+          "motivo": "[pagamentos] read ECONNRESET"
+        }
+      ],
+      "durationMs": 0
+    }
+  ],
+  "reconcile": [],
+  "stepErrors": [
+    "[customers] read ECONNRESET",
+    "[customer_addresses] read ECONNRESET",
+    "[customer_phones] read ECONNRESET",
+    "[contratos] read ECONNRESET",
+    "[jazigos] read ECONNRESET",
+    "[responsaveis_financeiros] read ECONNRESET",
+    "[pagamentos] read ECONNRESET"
+  ]
+}

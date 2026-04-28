@@ -103,8 +103,17 @@ export async function runSync(
 
     for (const mapping of mappings) {
       mappingsRun++;
-      const result = await pool.request().query(mapping.sourceQuery);
-      const recordset = result.recordset as Record<string, unknown>[];
+      // Streaming mode: server sends rows as produced, keeping TCP active and
+      // preventing firewall/NAT idle-timeout (typically ~40s) from dropping the connection.
+      const request = pool.request();
+      request.stream = true;
+      const recordset: Record<string, unknown>[] = [];
+      await new Promise<void>((resolve, reject) => {
+        request.on("row", (row: Record<string, unknown>) => recordset.push(row));
+        request.on("error", reject);
+        request.on("done", () => resolve());
+        request.query(mapping.sourceQuery).catch(reject);
+      });
 
       if (mapping.id === "cessionarios-enderecos") {
         const batch: Record<string, unknown>[] = [];

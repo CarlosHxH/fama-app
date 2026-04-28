@@ -176,6 +176,27 @@ function banner(text: string) {
   console.log(`\n${line}\n  ${text}\n${line}`)
 }
 
+/**
+ * Executa uma query MSSQL em modo streaming.
+ * O servidor envia rows conforme as produz, mantendo o TCP com dados fluindo
+ * e evitando que firewalls/NAT com idle-timeout (~40s) derrubem a conexão.
+ */
+async function mssqlStream(
+  conn: sql.ConnectionPool,
+  query: string,
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = []
+  const request = conn.request()
+  request.stream = true
+  await new Promise<void>((resolve, reject) => {
+    request.on('row', (row: Record<string, unknown>) => rows.push(row))
+    request.on('error', (err: Error) => reject(err))
+    request.on('done', () => resolve())
+    request.query(query).catch(reject)
+  })
+  return rows
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ID MAPS  (SQL Server ID → PostgreSQL UUID)
 // Mantidos em memória para resolver FKs sem SELECTs extras por registro.
@@ -212,18 +233,16 @@ async function syncMap(map: Map<number, string>, table: string): Promise<void> {
 async function reloadCessionarioUuids(mssql: sql.ConnectionPool): Promise<void> {
   if (DRY_RUN) return
 
-  const [pgRes, mssqlRes] = await Promise.all([
+  const [pgRes, mssqlRows] = await Promise.all([
     pgPool.query<{ id: string; cpf_cnpj: string }>('SELECT id, cpf_cnpj FROM customers').catch(() => ({ rows: [] })),
-    mssql.request().query(`
-      SELECT CodCessionario, CPF FROM dbo.Cessionarios WHERE CPF IS NOT NULL AND CPF != ''
-    `),
+    mssqlStream(mssql, `SELECT CodCessionario, CPF FROM dbo.Cessionarios WHERE CPF IS NOT NULL AND CPF != ''`),
   ])
 
   const cpfToUuid = new Map<string, string>()
   for (const r of pgRes.rows) cpfToUuid.set(r['cpf_cnpj']!, r['id']!)
 
   cessionarioUuid.clear()
-  for (const r of mssqlRes.recordset as Record<string, unknown>[]) {
+  for (const r of mssqlRows) {
     const cpf  = normalizeCpf(r['CPF'] as string | null)
     const uuid = cpfToUuid.get(cpf)
     if (uuid) cessionarioUuid.set(r['CodCessionario'] as number, uuid)
@@ -238,19 +257,16 @@ async function reloadCessionarioUuids(mssql: sql.ConnectionPool): Promise<void> 
 async function reloadContratoUuids(mssql: sql.ConnectionPool): Promise<void> {
   if (DRY_RUN) return
 
-  const [pgRes, mssqlRes] = await Promise.all([
+  const [pgRes, mssqlRows] = await Promise.all([
     pgPool.query<{ id: string; numero_contrato: string }>('SELECT id, numero_contrato FROM contratos').catch(() => ({ rows: [] })),
-    mssql.request().query(`
-      SELECT CodContrato, NumContrato FROM dbo.Contratos
-      WHERE NumContrato IS NOT NULL AND NumContrato != ''
-    `),
+    mssqlStream(mssql, `SELECT CodContrato, NumContrato FROM dbo.Contratos WHERE NumContrato IS NOT NULL AND NumContrato != ''`),
   ])
 
   const numToUuid = new Map<string, string>()
   for (const r of pgRes.rows) numToUuid.set(r['numero_contrato']!, r['id']!)
 
   contratoUuid.clear()
-  for (const r of mssqlRes.recordset as Record<string, unknown>[]) {
+  for (const r of mssqlRows) {
     const num  = String(r['NumContrato'] ?? '').trim()
     const uuid = numToUuid.get(num)
     if (uuid) contratoUuid.set(r['CodContrato'] as number, uuid)
@@ -428,7 +444,7 @@ async function migrateCustomers(mssql: sql.ConnectionPool): Promise<StepResult> 
   const t0   = Date.now()
   log(step, 'Lendo Cessionarios...')
 
-  const result = await mssql.request().query(`
+  const recordset = await mssqlStream(mssql, `
     SELECT
       CodCessionario,
       Cessionario     AS Nome,
@@ -449,7 +465,15 @@ async function migrateCustomers(mssql: sql.ConnectionPool): Promise<StepResult> 
   let cpfDup           = 0
   let ignorados        = 0 // alias — preenchido ao final
 
-  for (const r of result.recordset as Record<string, unknown>[]) {
+  // Pre-carrega emails já existentes no PG para evitar violação de customers_email_key.
+  // email é @unique — dois cessionários do legado com o mesmo email causariam falha no INSERT.
+  const emailsSeen: Set<string> = DRY_RUN
+    ? new Set()
+    : await pgPool.query<{ email: string }>('SELECT email FROM customers WHERE email IS NOT NULL')
+        .then(r => new Set(r.rows.map(x => x.email!)))
+        .catch(() => new Set<string>())
+
+  for (const r of recordset) {
     const cpf = normalizeCpf(r['CPF'] as string | null)
     if (!cpf) { ignoradosSemCpf++; continue }
 
@@ -465,10 +489,15 @@ async function migrateCustomers(mssql: sql.ConnectionPool): Promise<StepResult> 
     cpfToUuid.set(cpf, id)
     cessionarioUuid.set(r['CodCessionario'] as number, id)
 
+    // Email: nulifica se já visto no PG ou em lote anterior — evita customers_email_key
+    const rawEmail = String(r['Email'] ?? '').trim() || null
+    const email    = rawEmail && !emailsSeen.has(rawEmail) ? rawEmail : null
+    if (email) emailsSeen.add(email)
+
     rows.push([
       id, r['CodCessionario'], cpf,
       String(r['Nome'] ?? '').trim(),
-      String(r['Email'] ?? '').trim() || null,
+      email,
       true, true,
       syncedAt, syncedAt, syncedAt,
     ])
@@ -476,12 +505,15 @@ async function migrateCustomers(mssql: sql.ConnectionPool): Promise<StepResult> 
 
   const afetados = await withTransaction(c =>
     pgBatchInsert(c, 'customers', cols, rows,
-      `ON CONFLICT (sql_server_id) DO UPDATE SET
-         cpf_cnpj   = EXCLUDED.cpf_cnpj,
-         nome       = EXCLUDED.nome,
-         email      = EXCLUDED.email,
-         synced_at  = EXCLUDED.synced_at,
-         updated_at = now()`)
+      // Conflito por cpf_cnpj (chave de negócio) para também cobrir registros
+      // inseridos sem sql_server_id pelo step responsaveis_financeiros.
+      // ON CONFLICT (sql_server_id) não dispara quando o registro existente tem
+      // sql_server_id=NULL, causando violação de cpf_cnpj_key.
+      `ON CONFLICT (cpf_cnpj) DO UPDATE SET
+         sql_server_id = EXCLUDED.sql_server_id,
+         nome          = EXCLUDED.nome,
+         synced_at     = EXCLUDED.synced_at,
+         updated_at    = now()`)
   )
 
   // Reconstrói mapa por CPF — inclui cessionários com CPF duplicado (não têm sql_server_id próprio no PG)
@@ -499,7 +531,7 @@ async function migrateCustomerAddresses(mssql: sql.ConnectionPool): Promise<Step
   const t0   = Date.now()
   log(step, 'Lendo Cessionarios_Enderecos...')
 
-  const result = await mssql.request().query(`
+  const recordset = await mssqlStream(mssql, `
     SELECT
       e.CodCessionario,
       e.TipoEndereco,
@@ -523,7 +555,7 @@ async function migrateCustomerAddresses(mssql: sql.ConnectionPool): Promise<Step
   const now = new Date()
   let ignorados = 0
 
-  for (const r of result.recordset as Record<string, unknown>[]) {
+  for (const r of recordset) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignorados++; continue }
 
@@ -567,7 +599,7 @@ async function migrateCustomerPhones(mssql: sql.ConnectionPool): Promise<StepRes
   const t0   = Date.now()
   log(step, 'Lendo Cessionarios_Fones...')
 
-  const result = await mssql.request().query(`
+  const recordset = await mssqlStream(mssql, `
     SELECT CodFone, CodCessionario, Tipo, Numero, Obs
     FROM dbo.Cessionarios_Fones
   `)
@@ -580,7 +612,7 @@ async function migrateCustomerPhones(mssql: sql.ConnectionPool): Promise<StepRes
   const now = new Date()
   let ignorados = 0
 
-  for (const r of result.recordset as Record<string, unknown>[]) {
+  for (const r of recordset) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignorados++; continue }
 
@@ -615,7 +647,7 @@ async function migrateContratos(mssql: sql.ConnectionPool): Promise<StepResult> 
   // ROW_NUMBER garante apenas o cessionário mais recente por contrato.
   // Contratos são ordenados por situação (ATIVO primeiro) para que a deduplicação
   // por NumContrato preserve o contrato ativo quando há duplicatas de número.
-  const result = await mssql.request().query(`
+  const recordset = await mssqlStream(mssql, `
     SELECT
       c.CodContrato,
       c.NumContrato,
@@ -647,7 +679,7 @@ async function migrateContratos(mssql: sql.ConnectionPool): Promise<StepResult> 
 
   const sitPriority = (s: string) => s === 'A' ? 0 : s === 'Q' ? 1 : 2
 
-  for (const r of result.recordset as Record<string, unknown>[]) {
+  for (const r of recordset) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignorados++; continue }
 
@@ -721,13 +753,13 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
   const t0   = Date.now()
   log(step, 'Lendo Jazigos + Gavetas + Contratos_Jazigos...')
 
-  const [gavetasRes, jazigosRes] = await Promise.all([
-    mssql.request().query(`
+  const [gavetasRows, jazigosRows] = await Promise.all([
+    mssqlStream(mssql, `
       SELECT CodJazigo, COUNT(*) AS QtdGavetas
       FROM dbo.Gavetas
       GROUP BY CodJazigo
     `),
-    mssql.request().query(`
+    mssqlStream(mssql, `
       SELECT
         j.CodJazigo,
         q.Quadra,
@@ -741,7 +773,7 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
   ])
 
   gavetasPorJazigo.clear()
-  for (const r of gavetasRes.recordset as Record<string, unknown>[])
+  for (const r of gavetasRows)
     gavetasPorJazigo.set(r['CodJazigo'] as number, Number(r['QtdGavetas']))
 
   const cols = [
@@ -756,7 +788,7 @@ async function migrateJazigos(mssql: sql.ConnectionPool): Promise<StepResult> {
   let ignoradosSemContrato = 0  // sem entrada em Contratos_Jazigos ou cessionário sem CPF
   let ignoradosCodigoDup   = 0  // código Quadra-Jazigo duplicado no legado
 
-  for (const r of jazigosRes.recordset as Record<string, unknown>[]) {
+  for (const r of jazigosRows) {
     const codJazigo = r['CodJazigo'] as number
     if (jazigoVisto.has(codJazigo)) continue
     jazigoVisto.add(codJazigo)
@@ -814,8 +846,8 @@ async function migrateResponsaveisFinanceiros(mssql: sql.ConnectionPool): Promis
 
   log(step, 'Lendo Cessionarios_Planos_Responsavel...')
 
-  const [responsaveisRes, planosContratosRes] = await Promise.all([
-    mssql.request().query(`
+  const [responsaveisQueryRows, planosContratosRows] = await Promise.all([
+    mssqlStream(mssql, `
       SELECT
         cp.CodCessionarioPlano,
         cp.CodCessionario,
@@ -827,7 +859,7 @@ async function migrateResponsaveisFinanceiros(mssql: sql.ConnectionPool): Promis
              ON cpr.CodCessionarioPlano = cp.CodCessionarioPlano
       WHERE cp.PossuiResponsavelFinanceiro = 1
     `),
-    mssql.request().query(`
+    mssqlStream(mssql, `
       SELECT cp.CodCessionarioPlano, cc.CodContrato
       FROM dbo.Cessionarios_Planos cp
       INNER JOIN dbo.Contratos_Cessionarios cc ON cc.CodCessionario = cp.CodCessionario
@@ -839,7 +871,7 @@ async function migrateResponsaveisFinanceiros(mssql: sql.ConnectionPool): Promis
   ])
 
   const planoContratoMap = new Map<number, number>()
-  for (const r of planosContratosRes.recordset as Record<string, unknown>[])
+  for (const r of planosContratosRows)
     planoContratoMap.set(r['CodCessionarioPlano'] as number, r['CodContrato'] as number)
 
   const existingCpfs: Map<string, string> = DRY_RUN
@@ -854,7 +886,7 @@ async function migrateResponsaveisFinanceiros(mssql: sql.ConnectionPool): Promis
   let ignorados = 0
   let newCust   = 0
 
-  for (const r of responsaveisRes.recordset as Record<string, unknown>[]) {
+  for (const r of responsaveisQueryRows) {
     const cpf = normalizeCpf(r['CpfResponsavel'] as string | null)
     if (!cpf) { ignorados++; continue }
 
@@ -920,11 +952,9 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   log(step, 'Lendo Boletos + Contratos_Pagamentos...')
 
   // Todos os jazigos por contrato (lista completa — não apenas o mínimo)
-  const allCJ = await mssql.request().query(`
-    SELECT CodContrato, CodJazigo FROM dbo.Contratos_Jazigos ORDER BY CodContrato, CodJazigo
-  `)
+  const allCJ = await mssqlStream(mssql, `SELECT CodContrato, CodJazigo FROM dbo.Contratos_Jazigos ORDER BY CodContrato, CodJazigo`)
   const jazigosPorContrato = new Map<number, number[]>()
-  for (const r of allCJ.recordset as Record<string, unknown>[]) {
+  for (const r of allCJ) {
     const k    = r['CodContrato'] as number
     const list = jazigosPorContrato.get(k) ?? []
     list.push(r['CodJazigo'] as number)
@@ -932,7 +962,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   }
 
   // Contrato mais recente por cessionário (para resolver jazigoId em boletos)
-  const contratoCess = await mssql.request().query(`
+  const contratoCess = await mssqlStream(mssql, `
     SELECT cc.CodCessionario, cc.CodContrato
     FROM dbo.Contratos_Cessionarios cc
     INNER JOIN (
@@ -941,7 +971,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
     ) mx ON mx.MaxCC = cc.CodContCess
   `)
   const contratoPorCessionario = new Map<number, number>()
-  for (const r of contratoCess.recordset as Record<string, unknown>[])
+  for (const r of contratoCess)
     contratoPorCessionario.set(r['CodCessionario'] as number, r['CodContrato'] as number)
 
   const cols = [
@@ -956,7 +986,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   ]
 
   // ── Boletos de manutenção ──────────────────────────────────────────────────
-  const boletosRes = await mssql.request().query(`
+  const boletosRows = await mssqlStream(mssql, `
     SELECT
       b.CodBoleto,
       b.NossoNumero,
@@ -976,7 +1006,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   let ignoradosBoletos = 0
   const nowBol = new Date()
 
-  for (const r of boletosRes.recordset as Record<string, unknown>[]) {
+  for (const r of boletosRows) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignoradosBoletos++; continue }
 
@@ -1023,7 +1053,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   // ── Contratos_Pagamentos — aquisição ───────────────────────────────────────
   // sql_server_id = -(CodPagto): negativo para não colidir com CodBoleto (positivo).
   // Convenção: sql_server_id < 0 identifica pagamentos de aquisição.
-  const pagtosRes = await mssql.request().query(`
+  const pagtosRows = await mssqlStream(mssql, `
     SELECT
       cp.CodPagto,
       cp.CodContrato,
@@ -1043,7 +1073,7 @@ async function migratePagamentos(mssql: sql.ConnectionPool): Promise<StepResult>
   let ignoradosAq = 0
   const nowAq = new Date()
 
-  for (const r of pagtosRes.recordset as Record<string, unknown>[]) {
+  for (const r of pagtosRows) {
     const customerId = cessionarioUuid.get(r['CodCessionario'] as number)
     if (!customerId) { ignoradosAq++; continue }
 

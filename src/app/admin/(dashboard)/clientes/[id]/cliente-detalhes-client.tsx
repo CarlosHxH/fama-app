@@ -554,7 +554,7 @@ export function ClienteDetalhesClient() {
 
 const TIPO_LABELS: Record<string, string> = { CELULAR: "Cel", FIXO: "Fixo", WHATSAPP: "WA" };
 
-function TelRow({ tel, canEdit, customerId, onDone }: {
+function TelRow({ tel, canEdit, customerId: _customerId, onDone }: {
   tel: { id: string; numero: string; tipo: string; observacoes: string | null };
   canEdit: boolean;
   customerId: string;

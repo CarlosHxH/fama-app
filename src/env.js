@@ -5,8 +5,8 @@ import { z } from "zod";
 // Garante carregamento de `.env.local`/`.env` quando o processo não vem
 // com variáveis já injetadas (ex.: scripts Node / alguns ambientes de deploy).
 // Next.js normalmente faz isso, mas este fallback evita crash em boot quando não faz.
-// dotenvConfig({ path: ".env.local", override: false });
-// dotenvConfig({ path: ".env", override: false });
+dotenvConfig({ path: ".env.local", override: false });
+dotenvConfig({ path: ".env", override: false });
 
 export const env = createEnv({
   client: {

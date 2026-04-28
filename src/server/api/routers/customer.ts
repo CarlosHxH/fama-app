@@ -109,7 +109,7 @@ export const customerRouter = createTRPCRouter({
       const customerId = requirePortal(ctx);
       if (input.id) {
         const phone = await db.customerPhone.findUnique({ where: { id: input.id } });
-        if (!phone || phone.customerId !== customerId) {
+        if (phone?.customerId !== customerId) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Telefone não encontrado." });
         }
         return db.customerPhone.update({
@@ -132,7 +132,7 @@ export const customerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const customerId = requirePortal(ctx);
       const phone = await db.customerPhone.findUnique({ where: { id: input.id } });
-      if (!phone || phone.customerId !== customerId) {
+      if (phone?.customerId !== customerId) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Telefone não encontrado." });
       }
       await db.customerPhone.delete({ where: { id: input.id } });
@@ -162,7 +162,7 @@ export const customerRouter = createTRPCRouter({
       }
       if (id) {
         const addr = await db.customerAddress.findUnique({ where: { id } });
-        if (!addr || addr.customerId !== customerId) {
+        if (addr?.customerId !== customerId) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Endereço não encontrado." });
         }
         return db.customerAddress.update({ where: { id }, data });

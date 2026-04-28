@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -49,7 +49,10 @@ export function FaturarClient() {
     },
   });
 
-  const jazigos: PreviewJazigo[] = preview.data?.jazigos ?? [];
+  const jazigos = useMemo<PreviewJazigo[]>(
+    () => preview.data?.jazigos ?? [],
+    [preview.data?.jazigos],
+  );
   const allIds = useMemo(() => jazigos.map((j) => j.id), [jazigos]);
 
   const pageJazigos = useMemo(
@@ -72,7 +75,6 @@ export function FaturarClient() {
     [jazigos, selected],
   );
 
-  const pageCheckboxRef = useRef<HTMLInputElement>(null);
   const setPageCheckboxIndeterminate = useCallback(
     (el: HTMLInputElement | null) => {
       if (el) el.indeterminate = pageIndeterminate;

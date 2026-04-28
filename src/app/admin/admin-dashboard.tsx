@@ -18,7 +18,6 @@ import {
 } from "recharts";
 import {
   AlertTriangle,
-  Banknote,
   BarChart3,
   CheckCircle2,
   Clock,

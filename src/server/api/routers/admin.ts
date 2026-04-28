@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { hash } from "bcrypt-ts";
-import { Prisma } from "../../../../generated/prisma/client";
+import { Prisma, $Enums } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
 import { cancelAsaasCharge, createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
@@ -661,7 +661,7 @@ export const adminRouter = createTRPCRouter({
       }
       if (id) {
         const addr = await db.customerAddress.findUnique({ where: { id } });
-        if (!addr || addr.customerId !== customerId) {
+        if (addr?.customerId !== customerId) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Endereço não encontrado." });
         }
         return db.customerAddress.update({ where: { id }, data });
@@ -1805,13 +1805,13 @@ export const adminRouter = createTRPCRouter({
 
       const jazigos = await db.jazigo.findMany({
         where: {
-          contrato: { situacao: "ATIVO" },
+          contrato: { situacao: $Enums.SituacaoContrato.ATIVO },
           NOT: {
             pagamentos: {
               some: {
-                tipo: "MANUTENCAO",
+                tipo: $Enums.TipoPagamento.MANUTENCAO,
                 dataVencimento: { gte: yearStart, lte: yearEnd },
-                status: { not: "CANCELADO" },
+                status: { not: $Enums.StatusPagamento.CANCELADO },
               },
             },
           },
@@ -1871,13 +1871,13 @@ export const adminRouter = createTRPCRouter({
       const dueDate = input.dueDate ?? new Date(Date.UTC(year, 6, 30, 12, 0, 0));
 
       const baseWhere = {
-        contrato: { situacao: "ATIVO" },
+        contrato: { situacao: $Enums.SituacaoContrato.ATIVO },
         NOT: {
           pagamentos: {
             some: {
-              tipo: "MANUTENCAO",
+              tipo: $Enums.TipoPagamento.MANUTENCAO,
               dataVencimento: { gte: yearStart, lte: yearEnd },
-              status: { not: "CANCELADO" },
+              status: { not: $Enums.StatusPagamento.CANCELADO },
             },
           },
         },
@@ -1919,8 +1919,8 @@ export const adminRouter = createTRPCRouter({
           contratoId: j.contratoId,
           valorTitulo: j.valorMensalidade,
           dataVencimento: dueDate,
-          tipo: "MANUTENCAO" as const,
-          status: "PENDENTE" as const,
+          tipo: $Enums.TipoPagamento.MANUTENCAO,
+          status: $Enums.StatusPagamento.PENDENTE,
           gavetasNaEpoca: j.quantidadeGavetas,
           valorNaEpoca: j.valorMensalidade,
         };

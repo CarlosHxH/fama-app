@@ -5,6 +5,10 @@ WORKDIR /app
 
 # Copia arquivos de definição de pacotes
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+
+# AJUSTE AQUI: Copia a pasta prisma antes do install para o 'prisma generate' funcionar
+COPY prisma ./prisma/
+
 RUN \
   if [ -f package-lock.json ]; then npm ci; \
   elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
@@ -21,7 +25,7 @@ COPY . .
 # Desativa telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# Executa o build (certifique-se que o output: 'standalone' está no next.config.js)
+# Executa o build
 RUN npm run build
 
 # Estágio 3: Runner
@@ -37,10 +41,10 @@ RUN adduser --system --uid 1001 nextjs
 # Copia os arquivos necessários do builder para o runner
 COPY --from=builder /app/public ./public
 
-# O segredo do standalone: copiar para a pasta interna do servidor
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
+# Copia o standalone e os estáticos (resolve o erro 404)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -50,5 +54,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# O arquivo server.js é gerado pelo modo standalone
 CMD ["node", "server.js"]

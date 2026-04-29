@@ -30,7 +30,8 @@ ARG DATABASE_URL
 
 # Desativa telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
-
+# Forçamos o SKIP_ENV_VALIDATION diretamente no comando de build
+RUN SKIP_ENV_VALIDATION=1 npm run build
 # Executa o build
 RUN npm run build
 

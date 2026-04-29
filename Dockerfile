@@ -20,6 +20,9 @@ RUN \
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+
+COPY --from=deps /app/generated ./generated
+
 COPY . .
 
 # AJUSTE: Declare os ARGs para as variáveis que o seu config valida

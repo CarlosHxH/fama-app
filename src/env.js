@@ -24,7 +24,8 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "test", "production"]) .default("development"),
     ASAAS_API_KEY: z.string().min(1),
     ASAAS_API_URL: z.string().url(),
-    ASAAS_WEBHOOK_TOKEN: z.string().optional()
+    ASAAS_WEBHOOK_TOKEN: z.string().optional(),
+    NEXTAUTH_URL: z.string().url(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "Fama",
@@ -35,6 +36,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH || "/",
     NEXT_PUBLIC_COBRANCA_LEGAL_URL: process.env.NEXT_PUBLIC_COBRANCA_LEGAL_URL || "https://www.fama.com.br/politica-de-privacidade",
     AUTH_SECRET: process.env.AUTH_SECRET || "secret",
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || "https://sistema.famavida.org.br",
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV || "development",
     ASAAS_API_KEY: process.env.ASAAS_API_KEY || "secret",

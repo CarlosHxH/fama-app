@@ -10,7 +10,7 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import("next").NextConfig} */
 const config = {
   output: "standalone",
-  poweredByHeader: false,
+  // poweredByHeader: false,
   // Evita inferir a raiz a partir de lockfiles noutra pasta (ex.: C:\Users\...\package-lock.json),
   // o que corrompe caminhos em `.next` e pode causar ENOENT em _buildManifest.js.tmp (Turbopack).
   turbopack: {

@@ -22,6 +22,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# AJUSTE: Declare os ARGs para as variáveis que o seu config valida
+ARG ASAAS_API_KEY
+ARG AUTH_SECRET
+ARG DATABASE_URL
+# Adicione outras que o seu src/env.js exigir...
+
 # Desativa telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
 

@@ -46,6 +46,7 @@ export function CobrancaClient() {
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
   const [openCard, setOpenCard] = useState(false);
   const [openBoleto, setOpenBoleto] = useState(false);
+  const [cpfFix, setCpfFix] = useState("");
 
   const utils = api.useUtils();
   const listQuery = api.billing.listMine.useQuery(undefined, {
@@ -70,6 +71,7 @@ export function CobrancaClient() {
   const createCharge = api.billing.createCharge.useMutation({
     onSuccess: async (row) => {
       await utils.billing.listMine.invalidate();
+      setCpfFix("");
       setSelectedJazigoId("");
       setSelectedId(row.id);
       if (row.asaasBillingType === "PIX") {
@@ -85,6 +87,7 @@ export function CobrancaClient() {
   const initiatePayment = api.billing.initiatePayment.useMutation({
     onSuccess: async (row) => {
       await utils.billing.listMine.invalidate();
+      setCpfFix("");
       setSelectedId(row.id);
       if (row.asaasBillingType === "PIX") {
         setPixModalOpen(true);
@@ -103,11 +106,13 @@ export function CobrancaClient() {
   }, [selected, pixModalOpen]);
 
   function onConfirmPayment() {
+    const cpfOverride = cpfFix.replace(/\D/g, "") || undefined;
+
     // Nova cobrança a partir de jazigo selecionado
     if (!selected && selectedJazigoId) {
       const billingType =
         payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
-      createCharge.mutate({ jazigoId: selectedJazigoId, billingType });
+      createCharge.mutate({ jazigoId: selectedJazigoId, billingType, cpfCnpj: cpfOverride });
       return;
     }
 
@@ -117,15 +122,15 @@ export function CobrancaClient() {
       payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
 
     // Já tem cobrança Asaas com o mesmo método: apenas abre o modal
-    if (selected.asaasBillingType === billingType) {
+    if (selected.asaasBillingType === billingType && !cpfOverride) {
       if (payMethod === "pix") { setPixModalOpen(true); return; }
       if (payMethod === "card") { setOpenCard(true); return; }
       setOpenBoleto(true);
       return;
     }
 
-    // Sem cobrança ou método diferente: inicia/troca via backend
-    initiatePayment.mutate({ paymentId: selected.id, billingType });
+    // Sem cobrança, método diferente, ou com CPF de correção: inicia/troca via backend
+    initiatePayment.mutate({ paymentId: selected.id, billingType, cpfCnpj: cpfOverride });
   }
 
   const payerName =
@@ -188,6 +193,8 @@ export function CobrancaClient() {
             jazigoSelected={!!selectedJazigoId && !selected}
             createPending={createCharge.isPending}
             createError={createCharge.error?.message ?? null}
+            cpfFix={cpfFix}
+            onCpfFix={setCpfFix}
           />
         </div>
       </main>

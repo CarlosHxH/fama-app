@@ -1043,6 +1043,47 @@ export const adminRouter = createTRPCRouter({
       return { overdue, pendingCurrent, total: overdue + pendingCurrent };
     }),
 
+  /** Lista cobranças abertas (pendentes + atrasadas) de um cliente para o painel admin. */
+  listOpenPaymentsForUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const items = await db.pagamento.findMany({
+        where: {
+          customerId: input.userId,
+          valorTitulo: { gt: 0 },
+          OR: [{ status: "ATRASADO" }, { status: "PENDENTE" }],
+        },
+        orderBy: { dataVencimento: "asc" },
+        take: 100,
+        select: {
+          id: true,
+          status: true,
+          valorTitulo: true,
+          dataVencimento: true,
+          invoiceUrl: true,
+          asaasId: true,
+          metodoPagamento: true,
+          jazigo: {
+            select: {
+              codigo: true,
+              contrato: { select: { numeroContrato: true } },
+            },
+          },
+        },
+      });
+      return items.map((p) => ({
+        id: p.id,
+        status: p.status,
+        valueCents: centsFromDecimal(p.valorTitulo),
+        dataVencimento: p.dataVencimento,
+        invoiceUrl: p.invoiceUrl ?? null,
+        asaasId: p.asaasId ?? null,
+        metodoPagamento: p.metodoPagamento ?? null,
+        jazigoCodigo: p.jazigo?.codigo ?? null,
+        contratoNumero: p.jazigo?.contrato?.numeroContrato ?? null,
+      }));
+    }),
+
   /**
    * Lista pagamentos para tabelas admin (dashboard e histórico), com filtros e cursor.
    * Suporta `useInfiniteQuery` no cliente (`cursor` = último `id` da página anterior).

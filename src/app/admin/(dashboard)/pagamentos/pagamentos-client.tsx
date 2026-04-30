@@ -222,6 +222,134 @@ function SuccessCard({
   );
 }
 
+// ─── Open payments panel ──────────────────────────────────────────────────────
+
+function OpenPaymentsPanel({ userId }: { userId: string }) {
+  const query = api.admin.listOpenPaymentsForUser.useQuery(
+    { userId },
+    { refetchOnWindowFocus: false },
+  );
+
+  const now = new Date();
+
+  const items = query.data ?? [];
+  const overdue = items.filter(
+    (p) =>
+      p.status === "ATRASADO" ||
+      (p.status === "PENDENTE" && new Date(p.dataVencimento) < now),
+  );
+  const pending = items.filter(
+    (p) => p.status === "PENDENTE" && new Date(p.dataVencimento) >= now,
+  );
+
+  return (
+    <div className="rounded-2xl border border-jardim-border bg-jardim-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-jardim-border px-5 py-4">
+        <div>
+          <h2 className="text-sm font-semibold text-jardim-green-dark">
+            Cobranças em aberto
+          </h2>
+          {!query.isLoading && (
+            <p className="mt-0.5 text-xs text-jardim-text-muted">
+              {items.length === 0
+                ? "Nenhuma cobrança pendente"
+                : `${items.length} cobrança${items.length !== 1 ? "s" : ""}`}
+            </p>
+          )}
+        </div>
+        {(overdue.length > 0 || pending.length > 0) && (
+          <div className="flex gap-1.5">
+            {overdue.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
+                <AlertTriangle className="h-3 w-3" aria-hidden />
+                {overdue.length} vencida{overdue.length !== 1 ? "s" : ""}
+              </span>
+            )}
+            {pending.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
+                {pending.length} em aberto
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {query.isLoading ? (
+        <div className="flex items-center gap-2 px-5 py-6 text-sm text-jardim-text-muted">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          A carregar…
+        </div>
+      ) : items.length === 0 ? (
+        <div className="px-5 py-8 text-center text-sm text-jardim-text-muted">
+          Cliente sem cobranças pendentes.
+        </div>
+      ) : (
+        <div className="divide-y divide-jardim-border">
+          {items.map((p) => {
+            const isOverdue =
+              p.status === "ATRASADO" ||
+              (p.status === "PENDENTE" && new Date(p.dataVencimento) < now);
+            return (
+              <div key={p.id} className="flex items-start justify-between gap-3 px-5 py-3.5">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                        isOverdue
+                          ? "bg-red-100 text-red-700"
+                          : "bg-amber-100 text-amber-700",
+                      )}
+                    >
+                      {isOverdue ? "Vencida" : "Em aberto"}
+                    </span>
+                    {p.metodoPagamento && (
+                      <span className="text-[10px] font-medium text-jardim-text-muted">
+                        {p.metodoPagamento}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-jardim-green-dark">
+                    {fmtBrl(p.valueCents)}
+                  </p>
+                  <p className="text-xs text-jardim-text-muted">
+                    Venc.{" "}
+                    {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
+                    {p.jazigoCodigo ? ` · Jazigo ${p.jazigoCodigo}` : ""}
+                    {p.contratoNumero
+                      ? ` · Contrato ${p.contratoNumero}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1.5">
+                  {p.invoiceUrl ? (
+                    <>
+                      <CopyButton text={p.invoiceUrl} label="Copiar link" />
+                      <a
+                        href={p.invoiceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-jardim-border bg-jardim-white px-3 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Abrir fatura
+                      </a>
+                    </>
+                  ) : (
+                    <span className="text-[11px] italic text-jardim-text-muted">
+                      Sem link gerado
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 export function PagamentosClient() {
@@ -261,11 +389,6 @@ export function PagamentosClient() {
   );
 
   const create = api.admin.createPaymentForUser.useMutation();
-
-  const openCountQuery = api.admin.countOpenPaymentsForUser.useQuery(
-    { userId: selectedUserId ?? "" },
-    { enabled: Boolean(selectedUserId) },
-  );
 
   // Derived state
   const selected = useMemo(
@@ -349,32 +472,35 @@ export function PagamentosClient() {
     );
   }
 
+  const pageHeader = (
+    <div className="mb-6">
+      <h1 className="text-lg font-semibold text-jardim-green-dark sm:text-xl">
+        Gerar cobranças
+      </h1>
+      <p className="mt-1 text-sm text-jardim-text-muted">
+        Cria uma cobrança no Asaas para um titular: PIX, boleto ou cartão.
+      </p>
+    </div>
+  );
+
   // ── Success state ──
   if (create.isSuccess && create.data) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="mb-6">
-          <h1 className="text-lg font-semibold text-jardim-green-dark sm:text-xl">
-            Gerar cobranças
-          </h1>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        {pageHeader}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start">
+          <SuccessCard payment={create.data} onReset={resetForm} />
+          {selectedUserId && <OpenPaymentsPanel userId={selectedUserId} />}
         </div>
-        <SuccessCard payment={create.data} onReset={resetForm} />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-jardim-green-dark sm:text-xl">
-          Gerar cobranças
-        </h1>
-        <p className="mt-1 text-sm text-jardim-text-muted">
-          Cria uma cobrança no Asaas para um titular: PIX, boleto ou cartão.
-        </p>
-      </div>
-
-      <form onSubmit={onSubmit} className="space-y-6">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      {pageHeader}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start">
+        <form onSubmit={onSubmit} className="space-y-6">
 
         {/* ── 1. Cliente ── */}
         <section className="rounded-2xl border border-jardim-border bg-jardim-white p-5 shadow-sm sm:p-6">
@@ -461,31 +587,6 @@ export function PagamentosClient() {
             </div>
           )}
 
-          {/* Open payments indicator */}
-          {selectedUserId && (
-            <div className="mt-2">
-              {openCountQuery.isLoading ? (
-                <div className="flex items-center gap-1.5 text-xs text-jardim-text-muted">
-                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-                  A verificar cobranças em aberto…
-                </div>
-              ) : openCountQuery.data && openCountQuery.data.total > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {openCountQuery.data.overdue > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                      <AlertTriangle className="h-3 w-3" aria-hidden />
-                      {openCountQuery.data.overdue} vencida{openCountQuery.data.overdue !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                  {openCountQuery.data.pendingCurrent > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                      {openCountQuery.data.pendingCurrent} em aberto
-                    </span>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          )}
         </section>
 
         {/* ── 2. Contrato & Jazigo ── */}
@@ -795,7 +896,19 @@ export function PagamentosClient() {
             "Gerar cobrança"
           )}
         </button>
-      </form>
+        </form>
+
+        {/* Right column: open payments */}
+        <div>
+          {selectedUserId ? (
+            <OpenPaymentsPanel userId={selectedUserId} />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-jardim-border p-8 text-center text-sm text-jardim-text-muted">
+              Selecione um cliente para ver as cobranças em aberto.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

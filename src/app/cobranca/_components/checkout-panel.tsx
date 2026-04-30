@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, FileText, Lock, Loader2, Zap } from "lucide-react";
+import { CreditCard, FileText, Lock, Loader2, UserCheck, Zap } from "lucide-react";
 
 import type { BillingListItem } from "./parcelas-list";
 import { isBillingPaid, isBillingPendingPayment } from "~/lib/billing-status";
@@ -38,6 +38,8 @@ export type CheckoutPanelProps = {
   jazigoSelected?: boolean;
   createPending?: boolean;
   createError?: string | null;
+  cpfFix?: string;
+  onCpfFix?: (v: string) => void;
 };
 
 /**
@@ -59,6 +61,8 @@ export function CheckoutPanel({
   jazigoSelected,
   createPending,
   createError,
+  cpfFix = "",
+  onCpfFix,
 }: CheckoutPanelProps) {
   const total = selected ? centsToBrl(selected.valueCents) : "R$ 0,00";
   const billingType = selected?.asaasBillingType ?? null;
@@ -258,7 +262,65 @@ export function CheckoutPanel({
               <><Lock size={15} style={{ display: "inline", marginRight: 6 }} />Confirmar Pagamento</>
             )}
           </button>
-          {(initiateError ?? createError) ? (
+          {(initiateError ?? createError) &&
+          /CPF|CNPJ|preencher/i.test(initiateError ?? createError ?? "") ? (
+            <div
+              role="alert"
+              style={{
+                marginTop: "0.75rem",
+                background: "#fef2f2",
+                border: "1px solid #fca5a5",
+                borderRadius: "0.75rem",
+                padding: "0.85rem 1rem",
+              }}
+            >
+              <p style={{ fontSize: "0.75rem", color: "#b91c1c", marginBottom: "0.6rem" }}>
+                Para prosseguir, informe seu CPF ou CNPJ.
+              </p>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  autoFocus
+                  value={cpfFix}
+                  onChange={(e) => onCpfFix?.(e.target.value)}
+                  placeholder="000.000.000-00"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: "0.5rem 0.75rem",
+                    border: "1px solid #fca5a5",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.82rem",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={onConfirmPayment}
+                  disabled={!cpfFix.replace(/\D/g, "") || initiatePending || createPending}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    padding: "0.5rem 0.85rem",
+                    background: "#dc2626",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    opacity: !cpfFix.replace(/\D/g, "") || initiatePending || createPending ? 0.5 : 1,
+                  }}
+                >
+                  {initiatePending || createPending ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <><UserCheck size={13} />Tentar</>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (initiateError ?? createError) ? (
             <p
               role="alert"
               style={{

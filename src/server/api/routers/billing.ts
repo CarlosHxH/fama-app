@@ -144,6 +144,7 @@ export const billingRouter = createTRPCRouter({
       z.object({
         paymentId: z.string().uuid(),
         billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
+        cpfCnpj: z.string().max(22).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -190,6 +191,7 @@ export const billingRouter = createTRPCRouter({
         dataVencimento: payment.dataVencimento,
         customer,
         billingType: input.billingType,
+        cpfCnpj: input.cpfCnpj,
       });
       return serializePortalPayment(updated);
     }),
@@ -243,6 +245,7 @@ export const billingRouter = createTRPCRouter({
         jazigoId: z.string().uuid(),
         billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
         description: z.string().max(500).optional(),
+        cpfCnpj: z.string().max(22).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -283,6 +286,7 @@ export const billingRouter = createTRPCRouter({
           dueDate,
           jazigoId: jazigo.id,
           contratoId: jazigo.contrato.id,
+          cpfCnpj: input.cpfCnpj,
         });
         return serializePortalPayment(created);
       }
@@ -297,6 +301,7 @@ export const billingRouter = createTRPCRouter({
         contratoId: jazigo.contrato.id,
         jazigoId: jazigo.id,
         responsavelFinanceiro: null,
+        cpfCnpj: input.cpfCnpj,
       });
       return serializePortalPayment(created);
     }),

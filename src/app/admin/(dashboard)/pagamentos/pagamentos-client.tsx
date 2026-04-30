@@ -224,128 +224,166 @@ function SuccessCard({
 
 // ─── Open payments panel ──────────────────────────────────────────────────────
 
-function OpenPaymentsPanel({ userId }: { userId: string }) {
+function OpenPaymentsPanel({ userId, billingType }: { userId: string; billingType: BillingType }) {
+  const utils = api.useUtils();
   const query = api.admin.listOpenPaymentsForUser.useQuery(
     { userId },
     { refetchOnWindowFocus: false },
   );
+  const attachCharge = api.admin.attachChargeToPayment.useMutation();
+
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+  const [results, setResults] = useState<Record<string, { ok: boolean; invoiceUrl?: string | null; error?: string }>>({});
 
   const now = new Date();
-
   const items = query.data ?? [];
-  const overdue = items.filter(
-    (p) =>
-      p.status === "ATRASADO" ||
-      (p.status === "PENDENTE" && new Date(p.dataVencimento) < now),
-  );
-  const pending = items.filter(
-    (p) => p.status === "PENDENTE" && new Date(p.dataVencimento) >= now,
-  );
+  const overdueCount = items.filter(
+    (p) => p.status === "ATRASADO" || (p.status === "PENDENTE" && new Date(p.dataVencimento) < now),
+  ).length;
+
+  function toggleAll() {
+    setChecked(checked.size === items.length ? new Set() : new Set(items.map((p) => p.id)));
+  }
+
+  function toggle(id: string) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function generateCharges() {
+    if (checked.size === 0) return;
+    setGenerating(true);
+    const next: typeof results = { ...results };
+    for (const id of checked) {
+      try {
+        const res = await attachCharge.mutateAsync({ paymentId: id, billingType });
+        next[id] = { ok: true, invoiceUrl: res.invoiceUrl };
+      } catch (e) {
+        next[id] = { ok: false, error: e instanceof Error ? e.message : "Erro" };
+      }
+    }
+    setResults(next);
+    setChecked(new Set());
+    setGenerating(false);
+    void utils.admin.listOpenPaymentsForUser.invalidate({ userId });
+  }
+
+  if (query.isLoading) {
+    return (
+      <div className="flex items-center gap-2 py-2 text-xs text-jardim-text-muted">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+        A verificar cobranças em aberto…
+      </div>
+    );
+  }
+
+  if (items.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-jardim-border bg-jardim-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-jardim-border px-5 py-4">
-        <div>
-          <h2 className="text-sm font-semibold text-jardim-green-dark">
-            Cobranças em aberto
-          </h2>
-          {!query.isLoading && (
-            <p className="mt-0.5 text-xs text-jardim-text-muted">
-              {items.length === 0
-                ? "Nenhuma cobrança pendente"
-                : `${items.length} cobrança${items.length !== 1 ? "s" : ""}`}
-            </p>
-          )}
+    <div className="overflow-hidden rounded-xl border border-jardim-border">
+      {/* Sub-header */}
+      <div className="flex items-center justify-between gap-3 border-b border-jardim-border bg-jardim-cream/60 px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded accent-jardim-green-dark"
+            checked={checked.size === items.length}
+            onChange={toggleAll}
+          />
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted">
+            {checked.size === 0
+              ? `${items.length} em aberto${overdueCount > 0 ? ` · ${overdueCount} vencida${overdueCount !== 1 ? "s" : ""}` : ""}`
+              : `${checked.size} selecionada${checked.size !== 1 ? "s" : ""}`}
+          </span>
         </div>
-        {(overdue.length > 0 || pending.length > 0) && (
-          <div className="flex gap-1.5">
-            {overdue.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
-                <AlertTriangle className="h-3 w-3" aria-hidden />
-                {overdue.length} vencida{overdue.length !== 1 ? "s" : ""}
-              </span>
-            )}
-            {pending.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
-                {pending.length} em aberto
-              </span>
-            )}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={generateCharges}
+          disabled={checked.size === 0 || generating}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-jardim-green-dark px-3 py-1 text-xs font-semibold text-white transition hover:bg-jardim-green-mid disabled:opacity-40"
+        >
+          {generating
+            ? <><Loader2 className="h-3 w-3 animate-spin" />A gerar…</>
+            : <><Zap className="h-3 w-3" />Gerar cobrança{checked.size > 1 ? `s (${checked.size})` : ""}</>}
+        </button>
       </div>
 
-      {query.isLoading ? (
-        <div className="flex items-center gap-2 px-5 py-6 text-sm text-jardim-text-muted">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          A carregar…
-        </div>
-      ) : items.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-jardim-text-muted">
-          Cliente sem cobranças pendentes.
-        </div>
-      ) : (
-        <div className="divide-y divide-jardim-border">
-          {items.map((p) => {
-            const isOverdue =
-              p.status === "ATRASADO" ||
-              (p.status === "PENDENTE" && new Date(p.dataVencimento) < now);
-            return (
-              <div key={p.id} className="flex items-start justify-between gap-3 px-5 py-3.5">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                        isOverdue
-                          ? "bg-red-100 text-red-700"
-                          : "bg-amber-100 text-amber-700",
-                      )}
-                    >
-                      {isOverdue ? "Vencida" : "Em aberto"}
-                    </span>
-                    {p.metodoPagamento && (
-                      <span className="text-[10px] font-medium text-jardim-text-muted">
-                        {p.metodoPagamento}
-                      </span>
+      {/* Rows */}
+      <div className="divide-y divide-jardim-border">
+        {items.map((p) => {
+          const isOverdue =
+            p.status === "ATRASADO" ||
+            (p.status === "PENDENTE" && new Date(p.dataVencimento) < now);
+          const result = results[p.id];
+          const isChecked = checked.has(p.id);
+          return (
+            <div
+              key={p.id}
+              onClick={() => toggle(p.id)}
+              className={cn(
+                "flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors",
+                isChecked ? "bg-jardim-green-mid/8" : "hover:bg-jardim-cream/40",
+              )}
+            >
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded accent-jardim-green-dark"
+                checked={isChecked}
+                onChange={() => toggle(p.id)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                      isOverdue ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
                     )}
-                  </div>
-                  <p className="mt-1 text-sm font-semibold text-jardim-green-dark">
-                    {fmtBrl(p.valueCents)}
-                  </p>
-                  <p className="text-xs text-jardim-text-muted">
-                    Venc.{" "}
-                    {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
-                    {p.jazigoCodigo ? ` · Jazigo ${p.jazigoCodigo}` : ""}
-                    {p.contratoNumero
-                      ? ` · Contrato ${p.contratoNumero}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col gap-1.5">
-                  {p.invoiceUrl ? (
-                    <>
-                      <CopyButton text={p.invoiceUrl} label="Copiar link" />
-                      <a
-                        href={p.invoiceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-jardim-border bg-jardim-white px-3 py-1.5 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Abrir fatura
-                      </a>
-                    </>
-                  ) : (
-                    <span className="text-[11px] italic text-jardim-text-muted">
-                      Sem link gerado
-                    </span>
+                  >
+                    {isOverdue ? "Vencida" : "Em aberto"}
+                  </span>
+                  {p.metodoPagamento && (
+                    <span className="text-[10px] text-jardim-text-muted">{p.metodoPagamento}</span>
+                  )}
+                  {result?.ok && <span className="text-[10px] font-semibold text-green-600">✓ gerada</span>}
+                  {result && !result.ok && (
+                    <span className="text-[10px] font-semibold text-red-600" title={result.error}>✗ erro</span>
                   )}
                 </div>
+                <div className="mt-0.5 flex items-baseline gap-2">
+                  <span className="text-sm font-semibold text-jardim-green-dark">{fmtBrl(p.valueCents)}</span>
+                  <span className="text-xs text-jardim-text-muted">
+                    Venc. {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
+                    {p.jazigoCodigo ? ` · Jazigo ${p.jazigoCodigo}` : ""}
+                    {p.contratoNumero ? ` · Ctr. ${p.contratoNumero}` : ""}
+                  </span>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+              {p.invoiceUrl && (
+                <div
+                  className="flex shrink-0 flex-col gap-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <CopyButton text={p.invoiceUrl} label="Copiar" />
+                  <a
+                    href={p.invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border border-jardim-border bg-jardim-white px-2.5 py-1 text-xs font-medium text-jardim-green-dark transition hover:bg-jardim-cream"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Abrir
+                  </a>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -486,20 +524,17 @@ export function PagamentosClient() {
   // ── Success state ──
   if (create.isSuccess && create.data) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {pageHeader}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start">
-          <SuccessCard payment={create.data} onReset={resetForm} />
-          {selectedUserId && <OpenPaymentsPanel userId={selectedUserId} />}
-        </div>
+        <SuccessCard payment={create.data} onReset={resetForm} />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       {pageHeader}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start">
+      <div className="space-y-6">
         <form onSubmit={onSubmit} className="space-y-6">
 
         {/* ── 1. Cliente ── */}
@@ -721,6 +756,16 @@ export function PagamentosClient() {
               </div>
             </fieldset>
 
+            {/* Cobranças em aberto — geração rápida */}
+            {selectedUserId && (
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-jardim-text-muted">
+                  Cobranças em aberto — gerar com o método acima
+                </p>
+                <OpenPaymentsPanel userId={selectedUserId} billingType={billingType} />
+              </div>
+            )}
+
             {/* Valor e vencimento */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -897,17 +942,6 @@ export function PagamentosClient() {
           )}
         </button>
         </form>
-
-        {/* Right column: open payments */}
-        <div>
-          {selectedUserId ? (
-            <OpenPaymentsPanel userId={selectedUserId} />
-          ) : (
-            <div className="rounded-2xl border border-dashed border-jardim-border p-8 text-center text-sm text-jardim-text-muted">
-              Selecione um cliente para ver as cobranças em aberto.
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

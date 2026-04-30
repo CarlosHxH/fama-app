@@ -3,7 +3,11 @@ import { hash } from "bcrypt-ts";
 import { Prisma, $Enums } from "../../../../generated/prisma/client";
 import { z } from "zod";
 
-import { cancelAsaasCharge, createAsaasChargeForCustomer } from "~/server/asaas/billing-service";
+import {
+  cancelAsaasCharge,
+  createAsaasChargeForCustomer,
+  attachAsaasChargeToPayment,
+} from "~/server/asaas/billing-service";
 import {
   buildPaymentBucketWhere,
   type PaymentBucket,
@@ -1082,6 +1086,44 @@ export const adminRouter = createTRPCRouter({
         jazigoCodigo: p.jazigo?.codigo ?? null,
         contratoNumero: p.jazigo?.contrato?.numeroContrato ?? null,
       }));
+    }),
+
+  /** Cria ou troca a cobrança Asaas de um Pagamento já existente no banco. */
+  attachChargeToPayment: adminFinanceProcedure
+    .input(
+      z.object({
+        paymentId: z.string().uuid(),
+        billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const payment = await db.pagamento.findUnique({ where: { id: input.paymentId } });
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const customer = await db.customer.findUnique({ where: { id: payment.customerId } });
+      if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (payment.asaasId) {
+        await cancelAsaasCharge(payment.asaasId);
+        await db.pagamento.update({
+          where: { id: payment.id },
+          data: { asaasId: null, metodoPagamento: null, invoiceUrl: null, webhookData: Prisma.DbNull },
+        });
+      }
+
+      const updated = await attachAsaasChargeToPayment({
+        pagamentoId: payment.id,
+        valorTitulo: payment.valorTitulo,
+        dataVencimento: payment.dataVencimento,
+        customer,
+        billingType: input.billingType,
+      });
+
+      return {
+        id: updated.id,
+        invoiceUrl: updated.invoiceUrl,
+        asaasId: updated.asaasId,
+      };
     }),
 
   /**

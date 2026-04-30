@@ -6,9 +6,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fama-app
-    # 5433 no host evita conflito com PostgreSQL nativo do Windows (costuma ocupar 5432).
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,7 +15,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
   app:
     build:
       context: .
@@ -32,7 +30,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
@@ -42,6 +39,5 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
-
 volumes:
   postgres_data:

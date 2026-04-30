@@ -66,8 +66,14 @@ export const authConfig = {
   logger: {
     error(error: Error) {
       // CredentialsSignin é esperado quando o utilizador erra credenciais.
-      // O authorize já regista o motivo específico via console.warn — suprimir aqui evita duplicação ruidosa.
-      if (error.name === "CredentialsSignin") return;
+      // No bundle minificado error.name fica "v"; verificar também error.type e error.message.
+      const e = error as Error & { type?: string; code?: string };
+      if (
+        e.type === "CredentialsSignin" ||
+        e.code === "credentials" ||
+        e.name === "CredentialsSignin" ||
+        e.message?.includes("credentialssignin")
+      ) return;
       console.error("[auth][error]", error);
     },
   },

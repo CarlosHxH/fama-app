@@ -53,6 +53,67 @@ async function fetchPaymentDetails(paymentId: string): Promise<AsaasPaymentCreat
   }
 }
 
+/**
+ * Cria um pagamento no Asaas com retry automático quando o cliente não tem CPF/CNPJ cadastrado.
+ * Se o Asaas rejeitar a cobrança por ausência de CPF, tenta atualizar o cliente com o CPF e retenta uma vez.
+ */
+async function postAsaasPayment(
+  payload: Record<string, unknown>,
+  asaasCustomerId: string,
+  cpfDigits: string,
+): Promise<AsaasPaymentCreateResponse> {
+  try {
+    return await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    if (
+      e instanceof AsaasApiError &&
+      /CPF|CNPJ|preencher/i.test(e.message) &&
+      cpfDigits
+    ) {
+      console.warn(
+        `[asaas] Cobrança rejeitada por ausência de CPF no cliente ${asaasCustomerId}. Tentando atualizar cadastro...`,
+      );
+      try {
+        await asaasFetch(`/customers/${asaasCustomerId}`, {
+          method: "POST",
+          body: JSON.stringify({ cpfCnpj: cpfDigits }),
+        });
+      } catch {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "CPF/CNPJ inválido para este cliente. Corrija o cadastro antes de gerar cobranças.",
+        });
+      }
+      try {
+        return await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch (e2) {
+        if (e2 instanceof AsaasApiError) {
+          throw new TRPCError({
+            code: "BAD_GATEWAY",
+            message: `Asaas (cobrança): ${e2.message}`,
+          });
+        }
+        throw e2;
+      }
+    }
+    if (e instanceof TRPCError) throw e;
+    if (e instanceof AsaasApiError) {
+      throw new TRPCError({
+        code: "BAD_GATEWAY",
+        message: `Asaas (cobrança): ${e.message}`,
+      });
+    }
+    throw e;
+  }
+}
+
 /** Cancela um pagamento Asaas (soft-delete). Não lança se já cancelado. */
 export async function cancelAsaasCharge(asaasId: string): Promise<void> {
   try {
@@ -121,44 +182,40 @@ export async function ensureAsaasCustomer(
   }
 
   const digits = cpfCnpj.replace(/\D/g, "");
-  const body: Record<string, string> = {
-    name: options?.nameOverride ?? customer.nome ?? digits,
-    cpfCnpj: digits,
-  };
-  if (emailRaw) body.email = emailRaw;
+  const name = options?.nameOverride ?? customer.nome ?? digits;
 
-  // Check if customer already exists in Asaas by CPF/CNPJ before creating.
-  try {
-    const existing = await asaasFetch<{ data: AsaasCustomer[] }>(
-      `/customers?cpfCnpj=${digits}&limit=1`,
-    );
-    if (existing.data.length > 0) {
-      const asaasId = existing.data[0]!.id;
-      await db.customer.update({
-        where: { id: customer.id },
-        data: { asaasCustomerId: asaasId },
-      });
-      return asaasId;
+  // Verifica se já existe no Asaas pelo CPF/CNPJ para evitar duplicatas.
+  if (digits) {
+    try {
+      const existing = await asaasFetch<{ data: AsaasCustomer[] }>(
+        `/customers?cpfCnpj=${digits}&limit=1`,
+      );
+      if (existing.data.length > 0) {
+        const asaasId = existing.data[0]!.id;
+        await db.customer.update({
+          where: { id: customer.id },
+          data: { asaasCustomerId: asaasId },
+        });
+        return asaasId;
+      }
+    } catch {
+      // Lookup falhou — segue para criação
     }
-  } catch {
-    // If lookup fails, fall through to creation
   }
 
-  try {
+  const persistEmail = !customer.email?.trim() && !!emailRaw;
+
+  async function createAndPersist(body: Record<string, string>): Promise<string> {
     const created = await asaasFetch<AsaasCustomer>("/customers", {
       method: "POST",
       body: JSON.stringify(body),
     });
-
-    const persistEmail = !customer.email?.trim() && !!emailRaw;
-    const digitsCpf = digits;
 
     try {
       await db.customer.update({
         where: { id: customer.id },
         data: {
           asaasCustomerId: created.id,
-          cpfCnpj: digitsCpf,
           ...(persistEmail ? { email: emailRaw } : {}),
         },
       });
@@ -177,7 +234,40 @@ export async function ensureAsaasCustomer(
     }
 
     return created.id;
+  }
+
+  const bodyWithCpf: Record<string, string> = { name, cpfCnpj: digits };
+  if (emailRaw) bodyWithCpf.email = emailRaw;
+
+  try {
+    return await createAndPersist(bodyWithCpf);
   } catch (e) {
+    // CPF/CNPJ inválido rejeitado pelo Asaas — tenta criar sem o documento
+    // para garantir que a cobrança possa ser gerada mesmo assim.
+    if (
+      e instanceof AsaasApiError &&
+      /cpf|cnpj|inválido|invalid/i.test(e.message)
+    ) {
+      console.warn(
+        `[asaas] CPF/CNPJ inválido para cliente "${customer.nome ?? customer.id}" (${digits}) — criando sem documento.`,
+      );
+      const bodyWithoutCpf: Record<string, string> = { name };
+      if (emailRaw) bodyWithoutCpf.email = emailRaw;
+      try {
+        return await createAndPersist(bodyWithoutCpf);
+      } catch (e2) {
+        if (e2 instanceof TRPCError) throw e2;
+        if (e2 instanceof AsaasApiError) {
+          throw new TRPCError({
+            code: "BAD_GATEWAY",
+            message: `Asaas (cliente sem CPF): ${e2.message}`,
+          });
+        }
+        throw e2;
+      }
+    }
+
+    if (e instanceof TRPCError) throw e;
     if (e instanceof AsaasApiError) {
       throw new TRPCError({
         code: "BAD_GATEWAY",
@@ -215,6 +305,7 @@ export async function createPixChargeForCustomer(input: {
     emailOverride: email,
   });
 
+  const cpfDigits = (cpfCnpj ?? customer.cpfCnpj ?? "").replace(/\D/g, "");
   const payload = {
     customer: asaasCustomerId,
     billingType: "PIX",
@@ -223,21 +314,7 @@ export async function createPixChargeForCustomer(input: {
     description: description ?? "Cobrança PIX",
   };
 
-  let payment: AsaasPaymentCreateResponse;
-  try {
-    payment = await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    if (e instanceof AsaasApiError) {
-      throw new TRPCError({
-        code: "BAD_GATEWAY",
-        message: `Asaas (cobrança): ${e.message}`,
-      });
-    }
-    throw e;
-  }
+  const payment = await postAsaasPayment(payload, asaasCustomerId, cpfDigits);
 
   const [jazigo, pixQr] = await Promise.all([
     jazigoId
@@ -344,6 +421,12 @@ export async function createAsaasChargeForCustomer(input: {
     nameOverride,
   });
 
+  const cpfDigits = (
+    cpfCnpj ??
+    responsavelFinanceiro?.cpf ??
+    billingEntity.cpfCnpj ??
+    ""
+  ).replace(/\D/g, "");
   const payload: Record<string, unknown> = {
     customer: asaasCustomerId,
     billingType,
@@ -352,21 +435,7 @@ export async function createAsaasChargeForCustomer(input: {
     description: description ?? `Cobrança ${billingType}`,
   };
 
-  let payment: AsaasPaymentCreateResponse;
-  try {
-    payment = await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    if (e instanceof AsaasApiError) {
-      throw new TRPCError({
-        code: "BAD_GATEWAY",
-        message: `Asaas (cobrança): ${e.message}`,
-      });
-    }
-    throw e;
-  }
+  const payment = await postAsaasPayment(payload, asaasCustomerId, cpfDigits);
 
   const [jazigo, fullDetails, pixQr] = await Promise.all([
     jazigoId
@@ -454,6 +523,7 @@ export async function attachAsaasChargeToPayment(input: {
     ? (() => { const d = new Date(); d.setDate(d.getDate() + 3); d.setUTCHours(12, 0, 0, 0); return d; })()
     : dataVencimento;
 
+  const cpfDigits = (cpfCnpj ?? customer.cpfCnpj ?? "").replace(/\D/g, "");
   const payload = {
     customer: asaasCustomerId,
     billingType,
@@ -462,21 +532,7 @@ export async function attachAsaasChargeToPayment(input: {
     description: description ?? `Cobrança ${billingType}`,
   };
 
-  let payment: AsaasPaymentCreateResponse;
-  try {
-    payment = await asaasFetch<AsaasPaymentCreateResponse>("/payments", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    if (e instanceof AsaasApiError) {
-      throw new TRPCError({
-        code: "BAD_GATEWAY",
-        message: `Asaas (cobrança): ${e.message}`,
-      });
-    }
-    throw e;
-  }
+  const payment = await postAsaasPayment(payload, asaasCustomerId, cpfDigits);
 
   const [pixQr, fullDetails] = await Promise.all([
     billingType === "PIX" ? fetchPixQrCode(payment.id) : Promise.resolve(null),

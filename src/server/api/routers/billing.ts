@@ -41,6 +41,23 @@ function capacidadeLabel(gavetas: number): string {
 }
 
 /**
+ * Retorna o filtro Prisma de pagamentos visíveis ao cliente:
+ * - pagamentos onde ele é o pagador (customerId)
+ * - pagamentos de jazigos onde ele é responsável financeiro direto
+ * - pagamentos de jazigos onde ele é responsável financeiro via contrato (legado)
+ */
+function wherePaymentVisibleTo(customerId: string): Prisma.PagamentoWhereInput {
+  return {
+    valorTitulo: { gt: 0 },
+    OR: [
+      { customerId },
+      { jazigo: { responsavelFinanceiroCustomerId: customerId } },
+      { jazigo: { contrato: { responsavelFinanceiro: { customerId } } } },
+    ],
+  };
+}
+
+/**
  * API de cobrança para o cliente autenticado (Asaas: PIX, boleto, cartão).
  */
 export const billingRouter = createTRPCRouter({
@@ -48,7 +65,7 @@ export const billingRouter = createTRPCRouter({
     requirePortalSession(ctx);
     const customerId = ctx.session.user.id;
     const rows = await db.pagamento.findMany({
-      where: { customerId, valorTitulo: { gt: 0 } },
+      where: wherePaymentVisibleTo(customerId),
       orderBy: { createdAt: "desc" },
       include: {
         jazigo: { select: { codigo: true, quadra: true } },
@@ -69,7 +86,7 @@ export const billingRouter = createTRPCRouter({
       requirePortalSession(ctx);
       const customerId = ctx.session.user.id;
       const row = await db.pagamento.findFirst({
-        where: { id: input.id, customerId },
+        where: { id: input.id, AND: [wherePaymentVisibleTo(customerId)] },
       });
       if (!row) {
         throw new TRPCError({ code: "NOT_FOUND" });
@@ -134,7 +151,7 @@ export const billingRouter = createTRPCRouter({
       const customerId = ctx.session.user.id;
 
       const payment = await db.pagamento.findFirst({
-        where: { id: input.paymentId, customerId },
+        where: { id: input.paymentId, AND: [wherePaymentVisibleTo(customerId)] },
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -165,7 +182,7 @@ export const billingRouter = createTRPCRouter({
       const customerId = ctx.session.user.id;
 
       const payment = await db.pagamento.findFirst({
-        where: { id: input.paymentId, customerId },
+        where: { id: input.paymentId, AND: [wherePaymentVisibleTo(customerId)] },
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
       if (payment.status === "PAGO") {

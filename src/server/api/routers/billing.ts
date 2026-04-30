@@ -155,8 +155,30 @@ export const billingRouter = createTRPCRouter({
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
 
-      if (payment.asaasId) {
+      // Mapeia método local → billingType Asaas para comparação
+      const currentBillingType =
+        payment.metodoPagamento === "BOLETO" ? "BOLETO"
+        : payment.metodoPagamento === "CARTAO_CREDITO" ? "CREDIT_CARD"
+        : payment.metodoPagamento === "PIX" ? "PIX"
+        : null;
+
+      // Já tem cobrança Asaas com o mesmo método: retorna sem recriar
+      if (payment.asaasId && currentBillingType === input.billingType) {
         return serializePortalPayment(payment);
+      }
+
+      // Tem cobrança Asaas com método diferente: cancela a anterior
+      if (payment.asaasId) {
+        await cancelAsaasCharge(payment.asaasId);
+        await db.pagamento.update({
+          where: { id: payment.id },
+          data: {
+            asaasId: null,
+            metodoPagamento: null,
+            invoiceUrl: null,
+            webhookData: Prisma.DbNull,
+          },
+        });
       }
 
       const customer = await db.customer.findUnique({ where: { id: customerId } });

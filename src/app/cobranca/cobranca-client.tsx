@@ -96,13 +96,6 @@ export function CobrancaClient() {
     },
   });
 
-  const cancelCharge = api.billing.cancelCharge.useMutation({
-    onSuccess: async () => {
-      await utils.billing.listMine.invalidate();
-      setSelectedId(null);
-    },
-  });
-
   const currentStep = useMemo((): 1 | 2 | 3 | 4 => {
     if (selected && isBillingPaid(selected.status)) return 4;
     if (pixModalOpen) return 3;
@@ -110,7 +103,7 @@ export function CobrancaClient() {
   }, [selected, pixModalOpen]);
 
   function onConfirmPayment() {
-    // New charge from jazigo (no existing payment selected)
+    // Nova cobrança a partir de jazigo selecionado
     if (!selected && selectedJazigoId) {
       const billingType =
         payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
@@ -120,17 +113,18 @@ export function CobrancaClient() {
 
     if (!selected || !isBillingPendingPayment(selected.status)) return;
 
-    // Se o pagamento já tem cobrança Asaas, abrir modal correspondente
-    if (selected.asaasBillingType) {
+    const billingType =
+      payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
+
+    // Já tem cobrança Asaas com o mesmo método: apenas abre o modal
+    if (selected.asaasBillingType === billingType) {
       if (payMethod === "pix") { setPixModalOpen(true); return; }
       if (payMethod === "card") { setOpenCard(true); return; }
       setOpenBoleto(true);
       return;
     }
 
-    // Pagamento sem cobrança Asaas: criar agora com o método selecionado
-    const billingType =
-      payMethod === "pix" ? "PIX" : payMethod === "boleto" ? "BOLETO" : "CREDIT_CARD";
+    // Sem cobrança ou método diferente: inicia/troca via backend
     initiatePayment.mutate({ paymentId: selected.id, billingType });
   }
 
@@ -169,8 +163,6 @@ export function CobrancaClient() {
               selectedId={selectedId}
               onSelect={setSelectedId}
               centsToBrl={centsToBrl}
-              onCancelCharge={(paymentId) => cancelCharge.mutate({ paymentId })}
-              cancelPending={cancelCharge.isPending}
             />
             <JazigosAccordion
               selectedJazigoId={selectedJazigoId}
@@ -196,8 +188,6 @@ export function CobrancaClient() {
             jazigoSelected={!!selectedJazigoId && !selected}
             createPending={createCharge.isPending}
             createError={createCharge.error?.message ?? null}
-            onCancelCharge={selected?.asaasBillingType ? () => cancelCharge.mutate({ paymentId: selected.id }) : undefined}
-            cancelPending={cancelCharge.isPending}
           />
         </div>
       </main>

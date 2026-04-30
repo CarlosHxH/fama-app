@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, FileText, Lock, Loader2, Trash2, Zap } from "lucide-react";
+import { CreditCard, FileText, Lock, Loader2, Zap } from "lucide-react";
 
 import type { BillingListItem } from "./parcelas-list";
 import { isBillingPaid, isBillingPendingPayment } from "~/lib/billing-status";
@@ -38,8 +38,6 @@ export type CheckoutPanelProps = {
   jazigoSelected?: boolean;
   createPending?: boolean;
   createError?: string | null;
-  onCancelCharge?: () => void;
-  cancelPending?: boolean;
 };
 
 /**
@@ -61,13 +59,9 @@ export function CheckoutPanel({
   jazigoSelected,
   createPending,
   createError,
-  onCancelCharge,
-  cancelPending,
 }: CheckoutPanelProps) {
   const total = selected ? centsToBrl(selected.valueCents) : "R$ 0,00";
   const billingType = selected?.asaasBillingType ?? null;
-  // Once a charge exists in Asaas the method is fixed — disable switching.
-  const methodLocked = Boolean(billingType) && !!selected && isBillingPendingPayment(selected.status);
 
   const canConfirm =
     Boolean(selected) &&
@@ -206,7 +200,6 @@ export function CheckoutPanel({
               className={`pay-option${payMethod === "pix" ? " selected" : ""}`}
               id="opt-pix"
               aria-pressed={payMethod === "pix"}
-              disabled={methodLocked && payMethod !== "pix"}
               onClick={() => onPayMethod("pix")}
             >
               <div className="pay-radio" />
@@ -221,7 +214,6 @@ export function CheckoutPanel({
               className={`pay-option${payMethod === "card" ? " selected" : ""}`}
               id="opt-cartao"
               aria-pressed={payMethod === "card"}
-              disabled={methodLocked && payMethod !== "card"}
               onClick={() => onPayMethod("card")}
             >
               <div className="pay-radio" />
@@ -236,7 +228,6 @@ export function CheckoutPanel({
               className={`pay-option${payMethod === "boleto" ? " selected" : ""}`}
               id="opt-boleto"
               aria-pressed={payMethod === "boleto"}
-              disabled={methodLocked && payMethod !== "boleto"}
               onClick={() => onPayMethod("boleto")}
             >
               <div className="pay-radio" />
@@ -246,39 +237,6 @@ export function CheckoutPanel({
               <div className="pay-icons"><FileText size={16} /></div>
             </button>
           </div>
-          {methodLocked ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.5rem", gap: "0.5rem" }}>
-              <p style={{ fontSize: "0.72rem", color: "var(--text-light)", margin: 0 }}>
-                Método fixado pela cobrança gerada.
-              </p>
-              {onCancelCharge ? (
-                <button
-                  type="button"
-                  onClick={onCancelCharge}
-                  disabled={cancelPending}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.3rem",
-                    fontSize: "0.72rem",
-                    color: "#b91c1c",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "0.2rem 0.4rem",
-                    borderRadius: "4px",
-                    whiteSpace: "nowrap",
-                    opacity: cancelPending ? 0.6 : 1,
-                  }}
-                >
-                  {cancelPending
-                    ? <Loader2 size={12} className="animate-spin" />
-                    : <Trash2 size={12} />}
-                  Cancelar cobrança
-                </button>
-              ) : null}
-            </div>
-          ) : null}
 
           <div id="cartao-detalhes" style={{ display: "none" }} />
 

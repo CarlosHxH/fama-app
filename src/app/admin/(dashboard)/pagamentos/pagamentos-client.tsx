@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import {
+  AlertTriangle,
   Check,
   ChevronDown,
   ClipboardCopy,
@@ -261,6 +262,11 @@ export function PagamentosClient() {
 
   const create = api.admin.createPaymentForUser.useMutation();
 
+  const openCountQuery = api.admin.countOpenPaymentsForUser.useQuery(
+    { userId: selectedUserId ?? "" },
+    { enabled: Boolean(selectedUserId) },
+  );
+
   // Derived state
   const selected = useMemo(
     () => usersQuery.data?.items.find((u) => u.id === selectedUserId) ?? null,
@@ -452,6 +458,32 @@ export function PagamentosClient() {
                   {fmtCpf(selected.cpfCnpj)} · {selected.email ?? "sem e-mail"}
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Open payments indicator */}
+          {selectedUserId && (
+            <div className="mt-2">
+              {openCountQuery.isLoading ? (
+                <div className="flex items-center gap-1.5 text-xs text-jardim-text-muted">
+                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                  A verificar cobranças em aberto…
+                </div>
+              ) : openCountQuery.data && openCountQuery.data.total > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {openCountQuery.data.overdue > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                      <AlertTriangle className="h-3 w-3" aria-hidden />
+                      {openCountQuery.data.overdue} vencida{openCountQuery.data.overdue !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {openCountQuery.data.pendingCurrent > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                      {openCountQuery.data.pendingCurrent} em aberto
+                    </span>
+                  )}
+                </div>
+              ) : null}
             </div>
           )}
         </section>
@@ -708,11 +740,40 @@ export function PagamentosClient() {
         </section>
 
         {/* Error */}
-        {create.error && (
+        {create.error && /CPF|CNPJ|preencher/i.test(create.error.message) ? (
+          <div className="space-y-3 rounded-xl bg-red-50 px-4 py-4 text-sm text-red-800 ring-1 ring-red-200">
+            <p>{create.error.message}</p>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-red-700">
+                CPF/CNPJ correto
+              </label>
+              <div className="flex gap-2">
+                <input
+                  autoFocus
+                  className="min-w-0 flex-1 rounded-xl border border-red-300 bg-white px-3 py-2 text-sm text-jardim-green-dark focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-300/40"
+                  value={cpfOverride}
+                  onChange={(e) => setCpfOverride(e.target.value)}
+                  placeholder="000.000.000-00"
+                />
+                <button
+                  type="submit"
+                  disabled={create.isPending || !cpfOverride.replace(/\D/g, "")}
+                  className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {create.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : (
+                    "Tentar novamente"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : create.error ? (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200">
             {create.error.message}
           </p>
-        )}
+        ) : null}
 
         {/* Submit */}
         <button

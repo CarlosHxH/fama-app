@@ -1016,6 +1016,33 @@ export const adminRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  /** Contagem rápida de cobranças pendentes/atrasadas para um cliente. */
+  countOpenPaymentsForUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const [overdue, pendingCurrent] = await Promise.all([
+        db.pagamento.count({
+          where: {
+            customerId: input.userId,
+            valorTitulo: { gt: 0 },
+            OR: [
+              { status: "ATRASADO" },
+              { status: "PENDENTE", dataVencimento: { lt: new Date() } },
+            ],
+          },
+        }),
+        db.pagamento.count({
+          where: {
+            customerId: input.userId,
+            valorTitulo: { gt: 0 },
+            status: "PENDENTE",
+            dataVencimento: { gte: new Date() },
+          },
+        }),
+      ]);
+      return { overdue, pendingCurrent, total: overdue + pendingCurrent };
+    }),
+
   /**
    * Lista pagamentos para tabelas admin (dashboard e histórico), com filtros e cursor.
    * Suporta `useInfiniteQuery` no cliente (`cursor` = último `id` da página anterior).
